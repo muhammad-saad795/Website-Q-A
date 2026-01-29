@@ -1,0 +1,70 @@
+{
+    "strategies": [
+        {
+            "name": "all_valid",
+            "description": "Fill with plausible, valid values"
+        },
+        {
+            "name": "all_blank",
+            "description": "Leave everything empty to test required validation"
+        },
+        {
+            "name": "exceed_length",
+            "description": "Use very long text in fields"
+        },
+        {
+            "name": "wrong_type",
+            "description": "Deliberately use incorrect data formats"
+        }
+    ],
+    "field_types": {
+        "text": {
+            "all_valid": "John Doe",
+            "all_blank": "",
+            "exceed_length": "Lorem ipsum dolor sit amet consectetur adipiscing elit sed do eiusmod tempor incididunt ut labore et dolore magna aliqua ut enim ad minim veniam quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur excepteur sint occaecat cupidatat non proident sunt in culpa qui officia deserunt mollit anim id est laborum",
+            "wrong_type": "12345!@#$%"
+        },
+        "email": {
+            "all_valid": "test@example.com",
+            "all_blank": "",
+            "exceed_length": "verylongemailaddressthatexceedsnormallimits@averylongdomainnamethatprobablydoesntexist.com",
+            "wrong_type": "notanemail"
+        },
+        "password": {
+            "all_valid": "SecurePass123!",
+            "all_blank": "",
+            "exceed_length": "ThisIsAVeryLongPasswordThatExceedsNormalLimitsAndShouldTriggerValidationIfThereIsAMaxLengthConstraint123456789",
+            "wrong_type": "123"
+        },
+        "tel": {
+            "all_valid": "+1234567890",
+            "all_blank": "",
+            "exceed_length": "123456789012345678901234567890",
+            "wrong_type": "not-a-phone"
+        },
+        "number": {
+            "all_valid": "42",
+            "all_blank": "",
+            "exceed_length": "999999999999999999",
+            "wrong_type": "abc"
+        },
+        "date": {
+            "all_valid": "2024-01-15",
+            "all_blank": "",
+            "exceed_length": "2024-01-15",
+            "wrong_type": "not-a-date"
+        },
+        "search": {
+            "all_valid": "search query",
+            "all_blank": "",
+            "exceed_length": "very long search query that goes on and on and on and on and on and on and on and on",
+            "wrong_type": "!@#$%^&*()"
+        },
+        "select": {
+            "all_valid": "random",
+            "all_blank": "",
+            "exceed_length": "random",
+            "wrong_type": "random"
+        }
+    }
+}

@@ -1,0 +1,64 @@
+{
+    "strategies": [
+        {
+            "name": "all_valid",
+            "description": "Fill with plausible values"
+        },
+        {
+            "name": "all_blank",
+            "description": "Leave everything empty"
+        },
+        {
+            "name": "exceed_length",
+            "description": "Put very long text in fields"
+        },
+        {
+            "name": "wrong_type",
+            "description": "Deliberately use incorrect data formats"
+        }
+    ],
+    "field_types": {
+        "email": {
+            "all_valid": "tester@example.com",
+            "all_blank": "",
+            "exceed_length": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa@example.com",
+            "wrong_type": "not_an_email"
+        },
+        "tel": {
+            "all_valid": "1234567890",
+            "all_blank": "",
+            "exceed_length": "11111111111111111111111111111111111111111111111111",
+            "wrong_type": "abcde-fghij"
+        },
+        "date": {
+            "all_valid": "2024-12-25",
+            "all_blank": "",
+            "exceed_length": "20241225000000",
+            "wrong_type": "invalid-date"
+        },
+        "number": {
+            "all_valid": "42",
+            "all_blank": "",
+            "exceed_length": "99999999999999999999",
+            "wrong_type": "text_instead_of_number"
+        },
+        "url": {
+            "all_valid": "https://example.com",
+            "all_blank": "",
+            "exceed_length": "https://aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.com",
+            "wrong_type": "ftp://broken-url"
+        },
+        "password": {
+            "all_valid": "P@ssw0rd123!",
+            "all_blank": "",
+            "exceed_length": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "wrong_type": "sho rt"
+        },
+        "text": {
+            "all_valid": "Normal Text Entry",
+            "all_blank": "",
+            "exceed_length": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "wrong_type": "<script>alert('xss')</script>"
+        }
+    }
+}
