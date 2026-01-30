@@ -133,8 +133,15 @@ class PageLoader:
         result["visible_text"] = await self._extract_visible_text(page)
         result["layout_snapshot"] = await self._capture_layout_snapshot(page)
         result["discovered_urls"] = await self._capture_dynamic_links(page)
+        
+        # ── Interactive Route Discovery ──
+        logger.info("Starting interactive route discovery...")
         result["interactive_routes"] = await self._discover_interactive_routes(page)
-
+        
+        if page.url != url:
+            logger.info(f"Returning to original URL: {url}")
+            await page.goto(url, wait_until="domcontentloaded")
+            await page.wait_for_timeout(SETTLE_TIME_MS)
 
         # ── Add network & console logs ──
         result["network_requests"] = network_requests
@@ -158,7 +165,7 @@ class PageLoader:
             "console_errors": [],
             "layout_snapshot": None,
             "discovered_urls": [],
-            "interactive_routes":[]
+            "interactive_routes":[],
         }
 
         for attempt in range(1, RETRIES + 1):
@@ -188,15 +195,11 @@ class PageLoader:
 async def main():
     loader = PageLoader(headless=False)
     await loader.start()
-    result = await loader.load("https://www.qa-practice.com/elements/input/simple")
+    result = await loader.load("https://automationintesting.online/")
     await loader.stop()
 
     import json
     Path("result.json").write_text(json.dumps(result, indent=2))
-    from extractor import RawURLExtractor
-    url_extractor = RawURLExtractor()
-    urls = url_extractor.extract(result["html"])
-    print(json.dumps(urls,indent=4))
 
 
 if __name__ == "__main__":

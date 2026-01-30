@@ -1,41 +1,56 @@
 /**
- * Robust lazy-loading scroller.
- * Scrolls page down in increments, waits for new content, then scrolls back up.
- * Designed for infinite scroll and lazy-loaded content.
+ * Enhanced Lazy-Loading Scroller.
+ * Iteratively scrolls through the entire page to trigger lazy-loaded images, 
+ * infinite scrolls, and dynamic content.
  */
 
 (async () => {
-    const SCROLL_STEP = 400;     // Pixels to scroll per step
-    const WAIT_MS = 300;         // Wait after each scroll for content to load
-    const MAX_ITERATIONS = 2000; // Safety limit to prevent infinite loop
-    const BOTTOM_PAUSE_MS = 500; // Pause at the bottom
-
     const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
-    let lastHeight = document.body.scrollHeight;
-    let iterations = 0;
+    const WAIT_AFTER_STEP = 250;     // Wait after each segment
+    const WAIT_AT_BOTTOM = 1500;    // Wait for new content to trigger at the bottom
+    const MAX_SCROLL_ATTEMPTS = 100; // Safety cap
+    const VIEWPORT_PERCENT = 0.7;   // Scroll by 70% of viewport each time
 
     try {
-        // Scroll down incrementally
-        while (iterations < MAX_ITERATIONS) {
-            window.scrollBy(0, SCROLL_STEP);
-            await sleep(WAIT_MS);
+        let lastHeight = document.body.scrollHeight;
+        let attempts = 0;
+        let reachedBottom = false;
 
-            const newHeight = document.body.scrollHeight;
-            if (newHeight === lastHeight) {
-                break; // No new content loaded
+        while (attempts < MAX_SCROLL_ATTEMPTS) {
+            let currentPosition = window.scrollY + (window.innerHeight * VIEWPORT_PERCENT);
+            window.scrollTo(0, currentPosition);
+            await sleep(WAIT_AFTER_STEP);
+
+            // Check if we are at the bottom of the current document
+            if ((window.innerHeight + window.scrollY) >= document.body.scrollHeight - 5) {
+                // We hit the bottom, but wait to see if more content loads
+                await sleep(WAIT_AT_BOTTOM);
+
+                const newHeight = document.body.scrollHeight;
+                if (newHeight > lastHeight) {
+                    lastHeight = newHeight;
+                    // Reset or continue as the page grew
+                    continue;
+                } else {
+                    // Page didn't grow after a solid wait at bottom
+                    reachedBottom = true;
+                    break;
+                }
             }
-            lastHeight = newHeight;
-            iterations++;
+
+            attempts++;
         }
 
-        // Pause briefly at the bottom
-        await sleep(BOTTOM_PAUSE_MS);
+        // One final jump to absolute bottom just in case
+        window.scrollTo(0, document.body.scrollHeight);
+        await sleep(500);
 
-        // Scroll back up smoothly
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+        // Scroll back to top for further processing (like layout snapshots or text extraction)
+        window.scrollTo({ top: 0, behavior: 'auto' });
+        await sleep(500);
 
     } catch (err) {
-        console.warn("Scroll script error:", err);
+        console.warn("Enhanced Scroll Error:", err);
     }
 })();
