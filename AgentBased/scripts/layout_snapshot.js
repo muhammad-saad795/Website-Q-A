@@ -109,9 +109,16 @@
         const parent = el.parentElement;
         if (parent) {
             const prect = parent.getBoundingClientRect();
+            const pstyle = window.getComputedStyle(parent);
             snapshot.parent = {
                 tag: parent.tagName.toLowerCase(),
                 id: parent.id || null,
+                computed: {
+                    overflow: pstyle.overflow,
+                    overflowX: pstyle.overflowX,
+                    overflowY: pstyle.overflowY,
+                    position: pstyle.position
+                },
                 rect: {
                     x: prect.x,
                     y: prect.y,

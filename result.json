@@ -3,8 +3,8 @@
   "final_url": "https://automationintesting.online/",
   "http_status": 200,
   "status": "success",
-  "navigation_time_seconds": 1.0304976669722237,
-  "load_time_seconds": 4.463741248997394,
+  "navigation_time_seconds": 0.9098376260371879,
+  "load_time_seconds": 3.5766707260045223,
   "error": null,
   "html": "<!DOCTYPE html><html lang=\"en\" id=\"root\"><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"><link rel=\"stylesheet\" href=\"/_next/static/chunks/1518a2a431ab38f4.css\" data-precedence=\"next\"><link rel=\"stylesheet\" href=\"/_next/static/chunks/db016ef673052c75.css\" data-precedence=\"next\"><link rel=\"preload\" as=\"script\" fetchpriority=\"low\" href=\"/_next/static/chunks/61a4c3c2ee9303e8.js\"><script src=\"/_next/static/chunks/7ce1ed7507b2cf5e.js\" async=\"\"></script><script src=\"/_next/static/chunks/7d72be335d89f326.js\" async=\"\"></script><script src=\"/_next/static/chunks/f7b9a15115349e63.js\" async=\"\"></script><script src=\"/_next/static/chunks/turbopack-cf20ebdd80a8a033.js\" async=\"\"></script><script src=\"/_next/static/chunks/ff1a16fafef87110.js\" async=\"\"></script><script src=\"/_next/static/chunks/167df64cda48d4ef.js\" async=\"\"></script><script src=\"/_next/static/chunks/240461da8f3815e6.js\" async=\"\"></script><script src=\"/_next/static/chunks/7848b148d32f2f8e.js\" async=\"\"></script><script src=\"/_next/static/chunks/50148c138107e78f.js\" async=\"\"></script><script src=\"/_next/static/chunks/07454bb40b3fe9ff.js\" async=\"\"></script><script src=\"/_next/static/chunks/bb59222c52f4d089.js\" async=\"\"></script><link rel=\"preload\" href=\"https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.10.5/font/bootstrap-icons.min.css\" as=\"style\"><link rel=\"preload\" href=\"https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/css/bootstrap.min.css\" as=\"style\" crossorigin=\"anonymous\" integrity=\"sha384-SgOJa3DmI69IUzQ2PVdRZhwQ+dy64/BUtbMJw1MZ8t5HZApcHrRKUc4W0kG879m7\"><link rel=\"preload\" href=\"https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css\" as=\"style\"><link rel=\"preload\" href=\"https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.6/umd/popper.min.js\" as=\"script\" crossorigin=\"\" integrity=\"sha384-wHAiFfRlMFy6i5SRaxvfOCifBUQy1xHdJ/yoi7FRNXMRBu5WHdZYu1hA6ZOblgut\"><link rel=\"preload\" href=\"https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/js/bootstrap.bundle.min.js\" as=\"script\" crossorigin=\"\" integrity=\"sha384-k6d4wzSIapyDyv1kpU366/PK5hCdSbCRGRCMv+eplOQJWyd1fbcAu9OCUj5zNLiq\"><meta name=\"google\" content=\"notranslate\"><meta http-equiv=\"Content-Language\" content=\"en\"><title>Restful-booker-platform demo</title><meta name=\"description\" content=\"A platform for testing restful web services\"><link href=\"https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.10.5/font/bootstrap-icons.min.css\" rel=\"stylesheet\"><link href=\"https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/css/bootstrap.min.css\" rel=\"stylesheet\" integrity=\"sha384-SgOJa3DmI69IUzQ2PVdRZhwQ+dy64/BUtbMJw1MZ8t5HZApcHrRKUc4W0kG879m7\" crossorigin=\"anonymous\"><link href=\"https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css\" rel=\"stylesheet\"><script src=\"/_next/static/chunks/a6dad97d9634a72d.js\" nomodule=\"\"></script><script src=\"/_next/static/chunks/e81aee001b8b526e.js\"></script><script src=\"/_next/static/chunks/d5b30739a8fc0c6e.js\"></script><script src=\"/_next/static/chunks/d34feb2091b72dcb.js\"></script><script src=\"/_next/static/chunks/f9c2e4ca7062d5ee.js\"></script></head><body><div hidden=\"\"><!--$--><!--/$--></div><div id=\"root-container\"><div><nav class=\"navbar navbar-expand-lg navbar-light bg-white shadow-sm sticky-top\"><div class=\"container\"><a class=\"navbar-brand d-flex align-items-center\" href=\"/\"><span>Shady Meadows B&amp;B</span></a><button class=\"navbar-toggler\" type=\"button\" data-bs-toggle=\"collapse\" data-bs-target=\"#navbarNav\"><span class=\"navbar-toggler-icon\"></span></button><div class=\"collapse navbar-collapse\" id=\"navbarNav\"><ul class=\"navbar-nav ms-auto\"><li class=\"nav-item\"><a class=\"nav-link\" href=\"/#rooms\">Rooms</a></li><li class=\"nav-item\"><a class=\"nav-link\" href=\"/#booking\">Booking</a></li><li class=\"nav-item\"><a class=\"nav-link\" href=\"/#amenities\">Amenities</a></li><li class=\"nav-item\"><a class=\"nav-link\" href=\"/#location\">Location</a></li><li class=\"nav-item\"><a class=\"nav-link\" href=\"/#contact\">Contact</a></li><li class=\"nav-item\"><a class=\"nav-link\" href=\"/admin\">Admin</a></li></ul></div></div></nav><section class=\"hero py-5\" style=\"background-image: url(&quot;/images/rbp-logo.jpg&quot;);\"><div class=\"container py-5\"><div class=\"row py-5\"><div class=\"col-lg-8 hero-content text-center text-lg-start py-5\"><h1 class=\"display-4 fw-bold mb-4\">Welcome to Shady Meadows B&amp;B</h1><p class=\"lead mb-4\">Welcome to Shady Meadows, a delightful Bed &amp; Breakfast nestled in the hills on Newingtonfordburyshire. A place so beautiful you will never want to leave. All our rooms have comfortable beds and we provide breakfast from the locally sourced supermarket. It is a delightful place.</p><a href=\"#booking\" class=\"btn btn-primary btn-lg\">Book Now</a></div></div></div></section><div><section id=\"booking\" class=\"py-3\"><div class=\"container\"><div class=\"card shadow booking-card\"><div class=\"card-body p-4\"><h3 class=\"card-title text-center mb-4\">Check Availability &amp; Book Your Stay</h3><form><div class=\"row g-3\"><div class=\"col-md-6\"><label for=\"checkin\" class=\"form-label\">Check In</label><div class=\"react-datepicker-wrapper dateWrapper\"><div class=\"react-datepicker__input-container\"><input class=\"form-control\" type=\"text\" value=\"03/02/2026\"></div></div></div><div class=\"col-md-6\"><label for=\"checkout\" class=\"form-label\">Check Out</label><div class=\"react-datepicker-wrapper dateWrapper\"><div class=\"react-datepicker__input-container\"><input class=\"form-control\" type=\"text\" value=\"04/02/2026\"></div></div></div><div class=\"col-2\"></div><div class=\"col-8 mt-4\"><button type=\"button\" class=\"btn btn-primary w-100 py-2\">Check Availability</button></div><div class=\"col-2\"></div></div></form></div></div></div></section><section id=\"rooms\" class=\"section-divider\"><div class=\"container\"><div class=\"text-center mb-5\"><h2 class=\"display-5\">Our Rooms</h2><p class=\"lead text-muted\">Comfortable beds and delightful breakfast from locally sourced ingredients</p></div><div class=\"row g-4\"><div class=\"col-md-6 col-lg-4\"><div class=\"card h-100 shadow-sm room-card\"><div class=\"room-image\"><img class=\"card-img-top\" alt=\"Single Room\" src=\"/images/room1.jpg\"></div><div class=\"card-body\"><h5 class=\"card-title\">Single</h5><p class=\"card-text\">Aenean porttitor mauris sit amet lacinia molestie. In posuere accumsan aliquet. Maecenas sit amet nisl massa. Interdum et malesuada fames ac ante.</p><div class=\"card-text\"><div class=\"d-flex gap-3 mb-3 flex-wrap\"><span class=\"badge bg-light text-dark\"><i class=\"bi bi-tv me-1\"></i> TV</span><span class=\"badge bg-light text-dark\"><i class=\"bi bi-wifi me-1\"></i> WiFi</span><span class=\"badge bg-light text-dark\"><i class=\"bi bi-safe me-1\"></i> Safe</span></div></div></div><div class=\"card-footer bg-white d-flex justify-content-between align-items-center\"><div class=\"fw-bold fs-5\">\u00a3100 <small class=\"text-muted fw-normal\">per night</small></div><a href=\"/reservation/1?checkin=2026-02-03&amp;checkout=2026-02-04\" class=\"btn btn-primary\">Book now</a></div></div></div><div class=\"col-md-6 col-lg-4\"><div class=\"card h-100 shadow-sm room-card\"><div class=\"room-image\"><img class=\"card-img-top\" alt=\"Single Room\" src=\"/images/room2.jpg\"></div><div class=\"card-body\"><h5 class=\"card-title\">Double</h5><p class=\"card-text\">Vestibulum sollicitudin, lectus ac mollis consequat, lorem orci ultrices tellus, eleifend euismod tortor dui egestas erat. Phasellus et ipsum nisl. </p><div class=\"card-text\"><div class=\"d-flex gap-3 mb-3 flex-wrap\"><span class=\"badge bg-light text-dark\"><i class=\"bi bi-tv me-1\"></i> TV</span><span class=\"badge bg-light text-dark\"><i class=\"bi bi-speaker me-1\"></i> Radio</span><span class=\"badge bg-light text-dark\"><i class=\"bi bi-safe me-1\"></i> Safe</span></div></div></div><div class=\"card-footer bg-white d-flex justify-content-between align-items-center\"><div class=\"fw-bold fs-5\">\u00a3150 <small class=\"text-muted fw-normal\">per night</small></div><a href=\"/reservation/2?checkin=2026-02-03&amp;checkout=2026-02-04\" class=\"btn btn-primary\">Book now</a></div></div></div><div class=\"col-md-6 col-lg-4\"><div class=\"card h-100 shadow-sm room-card\"><div class=\"room-image\"><img class=\"card-img-top\" alt=\"Single Room\" src=\"/images/room3.jpg\"></div><div class=\"card-body\"><h5 class=\"card-title\">Suite</h5><p class=\"card-text\">Etiam metus metus, fringilla ac sagittis id, consequat vel neque. Nunc commodo quis nisl nec posuere. Etiam at accumsan ex. </p><div class=\"card-text\"><div class=\"d-flex gap-3 mb-3 flex-wrap\"><span class=\"badge bg-light text-dark\"><i class=\"bi bi-speaker me-1\"></i> Radio</span><span class=\"badge bg-light text-dark\"><i class=\"bi bi-wifi me-1\"></i> WiFi</span><span class=\"badge bg-light text-dark\"><i class=\"bi bi-safe me-1\"></i> Safe</span></div></div></div><div class=\"card-footer bg-white d-flex justify-content-between align-items-center\"><div class=\"fw-bold fs-5\">\u00a3225 <small class=\"text-muted fw-normal\">per night</small></div><a href=\"/reservation/3?checkin=2026-02-03&amp;checkout=2026-02-04\" class=\"btn btn-primary\">Book now</a></div></div></div></div></div></section></div><section id=\"location\" class=\"section-divider bg-light py-5\"><div class=\"container\"><div class=\"text-center mb-5\"><h2 class=\"display-5\">Our Location</h2><p class=\"lead text-muted\">Find us in the beautiful Newingtonfordburyshire countryside</p></div><div class=\"row g-4\"><div class=\"col-lg-6\"><div class=\"card shadow-sm h-100\"><div class=\"card-body p-0\"><div dir=\"ltr\" style=\"width: 100%; height: 100%; position: relative; display: inline-block; overflow: hidden; background: rgb(221, 221, 221); touch-action: none;\"><div class=\"pigeon-tiles-box\" style=\"position: absolute; top: calc(50% - 274.898px); left: calc(50% - 272px); overflow: hidden; will-change: transform; transform: scale(1, 1); transform-origin: left top; width: 544px; height: 549.797px;\"><div class=\"pigeon-tiles\" style=\"position: absolute; width: 768px; height: 768px; will-change: transform; transform: translate(-143.376px, -177.114px);\"><img width=\"256\" height=\"256\" loading=\"lazy\" alt=\"\" srcset=\"\" src=\"https://cartodb-basemaps-a.global.ssl.fastly.net/light_all/17/65998/42915.png\" style=\"position: absolute; left: 0px; top: 0px; will-change: transform; transform-origin: left top; opacity: 1;\"><img width=\"256\" height=\"256\" loading=\"lazy\" alt=\"\" srcset=\"\" src=\"https://cartodb-basemaps-a.global.ssl.fastly.net/light_all/17/65998/42916.png\" style=\"position: absolute; left: 0px; top: 256px; will-change: transform; transform-origin: left top; opacity: 1;\"><img width=\"256\" height=\"256\" loading=\"lazy\" alt=\"\" srcset=\"\" src=\"https://cartodb-basemaps-a.global.ssl.fastly.net/light_all/17/65998/42917.png\" style=\"position: absolute; left: 0px; top: 512px; will-change: transform; transform-origin: left top; opacity: 1;\"><img width=\"256\" height=\"256\" loading=\"lazy\" alt=\"\" srcset=\"\" src=\"https://cartodb-basemaps-a.global.ssl.fastly.net/light_all/17/65999/42915.png\" style=\"position: absolute; left: 256px; top: 0px; will-change: transform; transform-origin: left top; opacity: 1;\"><img width=\"256\" height=\"256\" loading=\"lazy\" alt=\"\" srcset=\"\" src=\"https://cartodb-basemaps-a.global.ssl.fastly.net/light_all/17/65999/42916.png\" style=\"position: absolute; left: 256px; top: 256px; will-change: transform; transform-origin: left top; opacity: 1;\"><img width=\"256\" height=\"256\" loading=\"lazy\" alt=\"\" srcset=\"\" src=\"https://cartodb-basemaps-a.global.ssl.fastly.net/light_all/17/65999/42917.png\" style=\"position: absolute; left: 256px; top: 512px; will-change: transform; transform-origin: left top; opacity: 1;\"><img width=\"256\" height=\"256\" loading=\"lazy\" alt=\"\" srcset=\"\" src=\"https://cartodb-basemaps-a.global.ssl.fastly.net/light_all/17/66000/42915.png\" style=\"position: absolute; left: 512px; top: 0px; will-change: transform; transform-origin: left top; opacity: 1;\"><img width=\"256\" height=\"256\" loading=\"lazy\" alt=\"\" srcset=\"\" src=\"https://cartodb-basemaps-a.global.ssl.fastly.net/light_all/17/66000/42916.png\" style=\"position: absolute; left: 512px; top: 256px; will-change: transform; transform-origin: left top; opacity: 1;\"><img width=\"256\" height=\"256\" loading=\"lazy\" alt=\"\" srcset=\"\" src=\"https://cartodb-basemaps-a.global.ssl.fastly.net/light_all/17/66000/42917.png\" style=\"position: absolute; left: 512px; top: 512px; will-change: transform; transform-origin: left top; opacity: 1;\"></div></div><div class=\"pigeon-overlays\" style=\"position: absolute; top: calc(50% - 274.898px); left: calc(50% - 272px); width: 544px; height: 549.797px;\"><div class=\"pigeon-click-block\" style=\"position: absolute; transform: translate(257.5px, 241.898px); pointer-events: none; cursor: pointer;\"><svg width=\"29\" height=\"34\" viewBox=\"0 0 61 71\" fill=\"none\" xmlns=\"http://www.w3.org/2000/svg\"><g style=\"pointer-events: auto;\"><path d=\"M52 31.5C52 36.8395 49.18 42.314 45.0107 47.6094C40.8672 52.872 35.619 57.678 31.1763 61.6922C30.7916 62.0398 30.2084 62.0398 29.8237 61.6922C25.381 57.678 20.1328 52.872 15.9893 47.6094C11.82 42.314 9 36.8395 9 31.5C9 18.5709 18.6801 9 30.5 9C42.3199 9 52 18.5709 52 31.5Z\" fill=\"#93C0D0\" stroke=\"white\" stroke-width=\"4\"></path><circle cx=\"30.5\" cy=\"30.5\" r=\"8.5\" fill=\"white\" opacity=\"0.6\"></circle></g></svg></div></div><div class=\"pigeon-attribution\" style=\"position: absolute; bottom: 0px; right: 0px; font-size: 11px; padding: 2px 5px; background: rgba(255, 255, 255, 0.7); font-family: &quot;Helvetica Neue&quot;, Helvetica, Arial, sans-serif; color: rgb(51, 51, 51);\"><span><a href=\"https://pigeon-maps.js.org/\" target=\"_blank\" rel=\"noreferrer noopener\" style=\"color: rgb(0, 120, 168); text-decoration: none;\">Pigeon</a> | </span><span> \u00a9 <a href=\"https://www.openstreetmap.org/copyright\" target=\"_blank\" rel=\"noreferrer noopener\" style=\"color: rgb(0, 120, 168); text-decoration: none;\">OpenStreetMap</a> contributors</span></div></div></div></div></div><div class=\"col-lg-6\"><div class=\"card shadow-sm h-100\"><div class=\"card-body\"><h3 class=\"h4 mb-4\">Contact Information</h3><div class=\"d-flex mb-4\"><div class=\"me-3 text-primary\"><i class=\"bi bi-geo-alt fs-4\"></i></div><div><h5>Address</h5><p class=\"mb-0\">Shady Meadows B&amp;B, Shadows valley, Newingtonfordburyshire, Dilbery, N1 1AA</p></div></div><div class=\"d-flex mb-4\"><div class=\"me-3 text-primary\"><i class=\"bi bi-telephone fs-4\"></i></div><div><h5>Phone</h5><p class=\"mb-0\">012345678901</p></div></div><div class=\"d-flex mb-4\"><div class=\"me-3 text-primary\"><i class=\"bi bi-envelope fs-4\"></i></div><div><h5>Email</h5><p class=\"mb-0\">fake@fakeemail.com</p></div></div><hr class=\"my-4\"><h4 class=\"h5 mb-3\">Getting Here</h4><p>Welcome to Shady Meadows, a delightful Bed &amp; Breakfast nestled in the hills on Newingtonfordburyshire. A place so beautiful you will never want to leave. All our rooms have comfortable beds and we provide breakfast from the locally sourced supermarket. It is a delightful place.</p></div></div></div></div></div></section><section id=\"contact\" class=\"py-5\"><div class=\"container\"><div class=\"row justify-content-center\"><div class=\"col-lg-8\"><div class=\"card shadow\"><div class=\"card-body p-4\"><h3 class=\"h4 mb-4 text-center\">Send Us a Message</h3><form action=\"\"><div class=\"mb-3\"><label for=\"name\" class=\"form-label\">Name</label><input data-testid=\"ContactName\" class=\"form-control\" id=\"name\" type=\"text\"></div><div class=\"mb-3\"><label for=\"email\" class=\"form-label\">Email</label><input data-testid=\"ContactEmail\" class=\"form-control\" id=\"email\" type=\"email\"></div><div class=\"mb-3\"><label for=\"phone\" class=\"form-label\">Phone</label><input data-testid=\"ContactPhone\" class=\"form-control\" id=\"phone\" type=\"tel\"></div><div class=\"mb-3\"><label for=\"subject\" class=\"form-label\">Subject</label><input data-testid=\"ContactSubject\" class=\"form-control\" id=\"subject\" type=\"text\"></div><div class=\"mb-4\"><label for=\"message\" class=\"form-label\">Message</label><textarea data-testid=\"ContactDescription\" class=\"form-control\" id=\"description\" rows=\"5\"></textarea></div><div class=\"d-grid\"><button type=\"button\" class=\"btn btn-primary\">Submit</button></div></form><br></div></div></div></div></div></section><footer class=\"bg-dark text-white py-5\"><div class=\"container\"><div class=\"row g-4\"><div class=\"col-md-4\"><h5 class=\"mb-3\">Shady Meadows B&amp;B</h5><p class=\"mb-3\">Welcome to Shady Meadows, a delightful Bed &amp; Breakfast nestled in the hills on Newingtonfordburyshire. A place so beautiful you will never want to leave. All our rooms have comfortable beds and we provide breakfast from the locally sourced supermarket. It is a delightful place.</p><div class=\"d-flex gap-2\"><a href=\"#\" class=\"btn btn-sm btn-outline-light rounded-circle\"><i class=\"bi bi-facebook\"></i></a><a href=\"#\" class=\"btn btn-sm btn-outline-light rounded-circle\"><i class=\"bi bi-instagram\"></i></a><a href=\"#\" class=\"btn btn-sm btn-outline-light rounded-circle\"><i class=\"bi bi-twitter\"></i></a></div></div><div class=\"col-md-4\"><h5 class=\"mb-3\">Contact Us</h5><ul class=\"list-unstyled mb-0\"><li class=\"mb-2\"><i class=\"bi bi-geo-alt me-2\"></i> Shady Meadows B&amp;B, Shadows valley, Newingtonfordburyshire, Dilbery, N1 1AA</li><li class=\"mb-2\"><i class=\"bi bi-telephone me-2\"></i> 012345678901</li><li><i class=\"bi bi-envelope me-2\"></i> fake@fakeemail.com</li></ul></div><div class=\"col-md-4\"><h5 class=\"mb-3\">Quick Links</h5><ul class=\"list-unstyled mb-0\"><li class=\"mb-2\"><a href=\"#\" class=\"text-white text-decoration-none\">Home</a></li><li class=\"mb-2\"><a href=\"#\" class=\"text-white text-decoration-none\">Rooms</a></li><li class=\"mb-2\"><a href=\"#\" class=\"text-white text-decoration-none\">Booking</a></li><li><a href=\"#\" class=\"text-white text-decoration-none\">Contact</a></li></ul></div></div><hr class=\"my-4\"><div class=\"text-center\"><small>restful-booker-platform v2.1 Created by <a href=\"http://www.mwtestconsultancy.co.uk\">Mark Winteringham</a> - \u00a9 2019-25 <a href=\"/cookie\">Cookie-Policy</a> - <a href=\"/privacy\">Privacy-Policy</a> - <a href=\"/admin\">Admin panel</a> </small></div></div></footer></div><!--$--><!--/$--></div><script src=\"/_next/static/chunks/61a4c3c2ee9303e8.js\" id=\"_R_\" async=\"\"></script><script>(self.__next_f=self.__next_f||[]).push([0])</script><script>self.__next_f.push([1,\"1:\\\"$Sreact.fragment\\\"\\n2:I[39756,[\\\"/_next/static/chunks/ff1a16fafef87110.js\\\",\\\"/_next/static/chunks/167df64cda48d4ef.js\\\"],\\\"default\\\"]\\n3:I[37457,[\\\"/_next/static/chunks/ff1a16fafef87110.js\\\",\\\"/_next/static/chunks/167df64cda48d4ef.js\\\"],\\\"default\\\"]\\n4:I[79520,[\\\"/_next/static/chunks/240461da8f3815e6.js\\\"],\\\"\\\"]\\n5:I[47257,[\\\"/_next/static/chunks/ff1a16fafef87110.js\\\",\\\"/_next/static/chunks/167df64cda48d4ef.js\\\"],\\\"ClientPageRoot\\\"]\\n6:I[52683,[\\\"/_next/static/chunks/240461da8f3815e6.js\\\",\\\"/_next/static/chunks/7848b148d32f2f8e.js\\\",\\\"/_next/static/chunks/50148c138107e78f.js\\\",\\\"/_next/static/chunks/07454bb40b3fe9ff.js\\\",\\\"/_next/static/chunks/bb59222c52f4d089.js\\\"],\\\"default\\\"]\\n9:I[97367,[\\\"/_next/static/chunks/ff1a16fafef87110.js\\\",\\\"/_next/static/chunks/167df64cda48d4ef.js\\\"],\\\"OutletBoundary\\\"]\\na:\\\"$Sreact.suspense\\\"\\nc:I[97367,[\\\"/_next/static/chunks/ff1a16fafef87110.js\\\",\\\"/_next/static/chunks/167df64cda48d4ef.js\\\"],\\\"ViewportBoundary\\\"]\\ne:I[97367,[\\\"/_next/static/chunks/ff1a16fafef87110.js\\\",\\\"/_next/static/chunks/167df64cda48d4ef.js\\\"],\\\"MetadataBoundary\\\"]\\n10:I[68027,[\\\"/_next/static/chunks/ff1a16fafef87110.js\\\",\\\"/_next/static/chunks/167df64cda48d4ef.js\\\"],\\\"default\\\"]\\n:HL[\\\"/_next/static/chunks/1518a2a431ab38f4.css\\\",\\\"style\\\"]\\n:HL[\\\"/_next/static/chunks/db016ef673052c75.css\\\",\\\"style\\\"]\\n:HL[\\\"https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.10.5/font/bootstrap-icons.min.css\\\",\\\"style\\\"]\\n:HL[\\\"https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/css/bootstrap.min.css\\\",\\\"style\\\",{\\\"crossOrigin\\\":\\\"anonymous\\\",\\\"integrity\\\":\\\"sha384-SgOJa3DmI69IUzQ2PVdRZhwQ+dy64/BUtbMJw1MZ8t5HZApcHrRKUc4W0kG879m7\\\"}]\\n:HL[\\\"https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css\\\",\\\"style\\\"]\\n\"])</script><script>self.__next_f.push([1,\"0:{\\\"P\\\":null,\\\"b\\\":\\\"ZJsDS1lBiHx-ODGmxn6Ez\\\",\\\"c\\\":[\\\"\\\",\\\"\\\"],\\\"q\\\":\\\"\\\",\\\"i\\\":false,\\\"f\\\":[[[\\\"\\\",{\\\"children\\\":[\\\"__PAGE__\\\",{}]},\\\"$undefined\\\",\\\"$undefined\\\",true],[[\\\"$\\\",\\\"$1\\\",\\\"c\\\",{\\\"children\\\":[[[\\\"$\\\",\\\"link\\\",\\\"0\\\",{\\\"rel\\\":\\\"stylesheet\\\",\\\"href\\\":\\\"/_next/static/chunks/1518a2a431ab38f4.css\\\",\\\"precedence\\\":\\\"next\\\",\\\"crossOrigin\\\":\\\"$undefined\\\",\\\"nonce\\\":\\\"$undefined\\\"}],[\\\"$\\\",\\\"script\\\",\\\"script-0\\\",{\\\"src\\\":\\\"/_next/static/chunks/240461da8f3815e6.js\\\",\\\"async\\\":true,\\\"nonce\\\":\\\"$undefined\\\"}]],[\\\"$\\\",\\\"html\\\",null,{\\\"lang\\\":\\\"en\\\",\\\"id\\\":\\\"root\\\",\\\"children\\\":[[\\\"$\\\",\\\"head\\\",null,{\\\"children\\\":[[\\\"$\\\",\\\"meta\\\",null,{\\\"name\\\":\\\"google\\\",\\\"content\\\":\\\"notranslate\\\"}],[\\\"$\\\",\\\"meta\\\",null,{\\\"httpEquiv\\\":\\\"Content-Language\\\",\\\"content\\\":\\\"en\\\"}],[\\\"$\\\",\\\"link\\\",null,{\\\"href\\\":\\\"https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.10.5/font/bootstrap-icons.min.css\\\",\\\"rel\\\":\\\"stylesheet\\\"}],[\\\"$\\\",\\\"link\\\",null,{\\\"href\\\":\\\"https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/css/bootstrap.min.css\\\",\\\"rel\\\":\\\"stylesheet\\\",\\\"integrity\\\":\\\"sha384-SgOJa3DmI69IUzQ2PVdRZhwQ+dy64/BUtbMJw1MZ8t5HZApcHrRKUc4W0kG879m7\\\",\\\"crossOrigin\\\":\\\"anonymous\\\"}],[\\\"$\\\",\\\"link\\\",null,{\\\"href\\\":\\\"https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css\\\",\\\"rel\\\":\\\"stylesheet\\\"}]]}],[\\\"$\\\",\\\"body\\\",null,{\\\"children\\\":[[\\\"$\\\",\\\"div\\\",null,{\\\"id\\\":\\\"root-container\\\",\\\"children\\\":[\\\"$\\\",\\\"$L2\\\",null,{\\\"parallelRouterKey\\\":\\\"children\\\",\\\"error\\\":\\\"$undefined\\\",\\\"errorStyles\\\":\\\"$undefined\\\",\\\"errorScripts\\\":\\\"$undefined\\\",\\\"template\\\":[\\\"$\\\",\\\"$L3\\\",null,{}],\\\"templateStyles\\\":\\\"$undefined\\\",\\\"templateScripts\\\":\\\"$undefined\\\",\\\"notFound\\\":[[[\\\"$\\\",\\\"title\\\",null,{\\\"children\\\":\\\"404: This page could not be found.\\\"}],[\\\"$\\\",\\\"div\\\",null,{\\\"style\\\":{\\\"fontFamily\\\":\\\"system-ui,\\\\\\\"Segoe UI\\\\\\\",Roboto,Helvetica,Arial,sans-serif,\\\\\\\"Apple Color Emoji\\\\\\\",\\\\\\\"Segoe UI Emoji\\\\\\\"\\\",\\\"height\\\":\\\"100vh\\\",\\\"textAlign\\\":\\\"center\\\",\\\"display\\\":\\\"flex\\\",\\\"flexDirection\\\":\\\"column\\\",\\\"alignItems\\\":\\\"center\\\",\\\"justifyContent\\\":\\\"center\\\"},\\\"children\\\":[\\\"$\\\",\\\"div\\\",null,{\\\"children\\\":[[\\\"$\\\",\\\"style\\\",null,{\\\"dangerouslySetInnerHTML\\\":{\\\"__html\\\":\\\"body{color:#000;background:#fff;margin:0}.next-error-h1{border-right:1px solid rgba(0,0,0,.3)}@media (prefers-color-scheme:dark){body{color:#fff;background:#000}.next-error-h1{border-right:1px solid rgba(255,255,255,.3)}}\\\"}}],[\\\"$\\\",\\\"h1\\\",null,{\\\"className\\\":\\\"next-error-h1\\\",\\\"style\\\":{\\\"display\\\":\\\"inline-block\\\",\\\"margin\\\":\\\"0 20px 0 0\\\",\\\"padding\\\":\\\"0 23px 0 0\\\",\\\"fontSize\\\":24,\\\"fontWeight\\\":500,\\\"verticalAlign\\\":\\\"top\\\",\\\"lineHeight\\\":\\\"49px\\\"},\\\"children\\\":404}],[\\\"$\\\",\\\"div\\\",null,{\\\"style\\\":{\\\"display\\\":\\\"inline-block\\\"},\\\"children\\\":[\\\"$\\\",\\\"h2\\\",null,{\\\"style\\\":{\\\"fontSize\\\":14,\\\"fontWeight\\\":400,\\\"lineHeight\\\":\\\"49px\\\",\\\"margin\\\":0},\\\"children\\\":\\\"This page could not be found.\\\"}]}]]}]}]],[]],\\\"forbidden\\\":\\\"$undefined\\\",\\\"unauthorized\\\":\\\"$undefined\\\"}]}],[\\\"$\\\",\\\"$L4\\\",null,{\\\"src\\\":\\\"https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.6/umd/popper.min.js\\\",\\\"integrity\\\":\\\"sha384-wHAiFfRlMFy6i5SRaxvfOCifBUQy1xHdJ/yoi7FRNXMRBu5WHdZYu1hA6ZOblgut\\\",\\\"crossOrigin\\\":\\\"anonymous\\\",\\\"strategy\\\":\\\"afterInteractive\\\"}],[\\\"$\\\",\\\"$L4\\\",null,{\\\"src\\\":\\\"https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/js/bootstrap.bundle.min.js\\\",\\\"integrity\\\":\\\"sha384-k6d4wzSIapyDyv1kpU366/PK5hCdSbCRGRCMv+eplOQJWyd1fbcAu9OCUj5zNLiq\\\",\\\"crossOrigin\\\":\\\"anonymous\\\",\\\"strategy\\\":\\\"afterInteractive\\\"}]]}]]}]]}],{\\\"children\\\":[[\\\"$\\\",\\\"$1\\\",\\\"c\\\",{\\\"children\\\":[[\\\"$\\\",\\\"$L5\\\",null,{\\\"Component\\\":\\\"$6\\\",\\\"serverProvidedParams\\\":{\\\"searchParams\\\":{},\\\"params\\\":{},\\\"promises\\\":[\\\"$@7\\\",\\\"$@8\\\"]}}],[[\\\"$\\\",\\\"link\\\",\\\"0\\\",{\\\"rel\\\":\\\"stylesheet\\\",\\\"href\\\":\\\"/_next/static/chunks/db016ef673052c75.css\\\",\\\"precedence\\\":\\\"next\\\",\\\"crossOrigin\\\":\\\"$undefined\\\",\\\"nonce\\\":\\\"$undefined\\\"}],[\\\"$\\\",\\\"script\\\",\\\"script-0\\\",{\\\"src\\\":\\\"/_next/static/chunks/7848b148d32f2f8e.js\\\",\\\"async\\\":true,\\\"nonce\\\":\\\"$undefined\\\"}],[\\\"$\\\",\\\"script\\\",\\\"script-1\\\",{\\\"src\\\":\\\"/_next/static/chunks/50148c138107e78f.js\\\",\\\"async\\\":true,\\\"nonce\\\":\\\"$undefined\\\"}],[\\\"$\\\",\\\"script\\\",\\\"script-2\\\",{\\\"src\\\":\\\"/_next/static/chunks/07454bb40b3fe9ff.js\\\",\\\"async\\\":true,\\\"nonce\\\":\\\"$undefined\\\"}],[\\\"$\\\",\\\"script\\\",\\\"script-3\\\",{\\\"src\\\":\\\"/_next/static/chunks/bb59222c52f4d089.js\\\",\\\"async\\\":true,\\\"nonce\\\":\\\"$undefined\\\"}]],[\\\"$\\\",\\\"$L9\\\",null,{\\\"children\\\":[\\\"$\\\",\\\"$a\\\",null,{\\\"name\\\":\\\"Next.MetadataOutlet\\\",\\\"children\\\":\\\"$@b\\\"}]}]]}],{},null,false,false]},null,false,false],[\\\"$\\\",\\\"$1\\\",\\\"h\\\",{\\\"children\\\":[null,[\\\"$\\\",\\\"$Lc\\\",null,{\\\"children\\\":\\\"$@d\\\"}],[\\\"$\\\",\\\"div\\\",null,{\\\"hidden\\\":true,\\\"children\\\":[\\\"$\\\",\\\"$Le\\\",null,{\\\"children\\\":[\\\"$\\\",\\\"$a\\\",null,{\\\"name\\\":\\\"Next.Metadata\\\",\\\"children\\\":\\\"$@f\\\"}]}]}],null]}],false]],\\\"m\\\":\\\"$undefined\\\",\\\"G\\\":[\\\"$10\\\",[]],\\\"S\\\":true}\\n\"])</script><script>self.__next_f.push([1,\"7:{}\\n8:\\\"$0:f:0:1:1:children:0:props:children:0:props:serverProvidedParams:params\\\"\\n\"])</script><script>self.__next_f.push([1,\"d:[[\\\"$\\\",\\\"meta\\\",\\\"0\\\",{\\\"charSet\\\":\\\"utf-8\\\"}],[\\\"$\\\",\\\"meta\\\",\\\"1\\\",{\\\"name\\\":\\\"viewport\\\",\\\"content\\\":\\\"width=device-width, initial-scale=1\\\"}]]\\n\"])</script><script>self.__next_f.push([1,\"f:[[\\\"$\\\",\\\"title\\\",\\\"0\\\",{\\\"children\\\":\\\"Restful-booker-platform demo\\\"}],[\\\"$\\\",\\\"meta\\\",\\\"1\\\",{\\\"name\\\":\\\"description\\\",\\\"content\\\":\\\"A platform for testing restful web services\\\"}]]\\nb:null\\n\"])</script><script defer=\"\" src=\"https://static.cloudflareinsights.com/beacon.min.js/vcd15cbe7772f49c399c6a5babf22c1241717689176015\" integrity=\"sha512-ZpsOmlRQV6y907TI0dKBHq9Md29nnaEIPlkf84rnaERnq6zvWvPUqr2ft8M1aS28oN72PdrCzSjY4U6VaAw1EQ==\" data-cf-beacon=\"{&quot;version&quot;:&quot;2024.11.0&quot;,&quot;token&quot;:&quot;215b018336bd477a8e830ec1c21dbf71&quot;,&quot;r&quot;:1,&quot;server_timing&quot;:{&quot;name&quot;:{&quot;cfCacheStatus&quot;:true,&quot;cfEdge&quot;:true,&quot;cfExtPri&quot;:true,&quot;cfL4&quot;:true,&quot;cfOrigin&quot;:true,&quot;cfSpeedBrain&quot;:true},&quot;location_startswith&quot;:null}}\" crossorigin=\"anonymous\"></script>\n<script src=\"https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.6/umd/popper.min.js\" integrity=\"sha384-wHAiFfRlMFy6i5SRaxvfOCifBUQy1xHdJ/yoi7FRNXMRBu5WHdZYu1hA6ZOblgut\" crossorigin=\"anonymous\" data-nscript=\"afterInteractive\"></script><script src=\"https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/js/bootstrap.bundle.min.js\" integrity=\"sha384-k6d4wzSIapyDyv1kpU366/PK5hCdSbCRGRCMv+eplOQJWyd1fbcAu9OCUj5zNLiq\" crossorigin=\"anonymous\" data-nscript=\"afterInteractive\"></script><next-route-announcer style=\"position: absolute;\"></next-route-announcer></body></html>",
   "visible_text": "Shady Meadows B&B\nRooms\nBooking\nAmenities\nLocation\nContact\nAdmin\nWelcome to\nShady Meadows B&B\nWelcome to Shady Meadows, a delightful Bed & Breakfast nestled in the hills on Newingtonfordburyshire. A place so beautiful you will never want to leave. All our rooms have comfortable beds and we provide breakfast from the locally sourced supermarket. It is a delightful place.\nBook Now\nCheck Availability & Book Your Stay\nCheck In\nCheck Out\nCheck Availability\nOur Rooms\nComfortable beds and delightful breakfast from locally sourced ingredients\nSingle\nAenean porttitor mauris sit amet lacinia molestie. In posuere accumsan aliquet. Maecenas sit amet nisl massa. Interdum et malesuada fames ac ante.\nTV\nWiFi\nSafe\n\u00a3\n100\nper night\nBook now\nDouble\nVestibulum sollicitudin, lectus ac mollis consequat, lorem orci ultrices tellus, eleifend euismod tortor dui egestas erat. Phasellus et ipsum nisl.\nTV\nRadio\nSafe\n\u00a3\n150\nper night\nBook now\nSuite\nEtiam metus metus, fringilla ac sagittis id, consequat vel neque. Nunc commodo quis nisl nec posuere. Etiam at accumsan ex.\nRadio\nWiFi\nSafe\n\u00a3\n225\nper night\nBook now\nOur Location\nFind us in the beautiful\nNewingtonfordburyshire\ncountryside\nPigeon\n|\n\u00a9\nOpenStreetMap\ncontributors\nContact Information\nAddress\nShady Meadows B&B\n,\nShadows valley\n,\nNewingtonfordburyshire\n,\nDilbery\n,\nN1 1AA\nPhone\n012345678901\nEmail\nfake@fakeemail.com\nGetting Here\nWelcome to Shady Meadows, a delightful Bed & Breakfast nestled in the hills on Newingtonfordburyshire. A place so beautiful you will never want to leave. All our rooms have comfortable beds and we provide breakfast from the locally sourced supermarket. It is a delightful place.\nSend Us a Message\nName\nEmail\nPhone\nSubject\nMessage\nSubmit\nShady Meadows B&B\nWelcome to Shady Meadows, a delightful Bed & Breakfast nestled in the hills on Newingtonfordburyshire. A place so beautiful you will never want to leave. All our rooms have comfortable beds and we provide breakfast from the locally sourced supermarket. It is a delightful place.\nContact Us\nShady Meadows B&B\n,\nShadows valley\n,\nNewingtonfordburyshire\n,\nDilbery\n,\nN1 1AA\n012345678901\nfake@fakeemail.com\nQuick Links\nHome\nRooms\nBooking\nContact\nrestful-booker-platform v\n2.1\nCreated by\nMark Winteringham\n- \u00a9 2019-25\nCookie-Policy\n-\nPrivacy-Policy\n-\nAdmin panel",
@@ -16,37 +16,7 @@
       "resource_type": "document"
     },
     {
-      "url": "https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.10.5/font/bootstrap-icons.min.css",
-      "status": 200,
-      "method": "GET",
-      "resource_type": "stylesheet"
-    },
-    {
-      "url": "https://automationintesting.online/_next/static/chunks/1518a2a431ab38f4.css",
-      "status": 200,
-      "method": "GET",
-      "resource_type": "stylesheet"
-    },
-    {
-      "url": "https://automationintesting.online/_next/static/chunks/61a4c3c2ee9303e8.js",
-      "status": 200,
-      "method": "GET",
-      "resource_type": "script"
-    },
-    {
-      "url": "https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css",
-      "status": 200,
-      "method": "GET",
-      "resource_type": "stylesheet"
-    },
-    {
-      "url": "https://automationintesting.online/_next/static/chunks/db016ef673052c75.css",
-      "status": 200,
-      "method": "GET",
-      "resource_type": "stylesheet"
-    },
-    {
-      "url": "https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.6/umd/popper.min.js",
+      "url": "https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/js/bootstrap.bundle.min.js",
       "status": 200,
       "method": "GET",
       "resource_type": "script"
@@ -58,10 +28,22 @@
       "resource_type": "stylesheet"
     },
     {
-      "url": "https://automationintesting.online/_next/static/chunks/7d72be335d89f326.js",
+      "url": "https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css",
+      "status": 200,
+      "method": "GET",
+      "resource_type": "stylesheet"
+    },
+    {
+      "url": "https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.6/umd/popper.min.js",
       "status": 200,
       "method": "GET",
       "resource_type": "script"
+    },
+    {
+      "url": "https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.10.5/font/bootstrap-icons.min.css",
+      "status": 200,
+      "method": "GET",
+      "resource_type": "stylesheet"
     },
     {
       "url": "https://static.cloudflareinsights.com/beacon.min.js/vcd15cbe7772f49c399c6a5babf22c1241717689176015",
@@ -70,7 +52,19 @@
       "resource_type": "script"
     },
     {
-      "url": "https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/js/bootstrap.bundle.min.js",
+      "url": "https://automationintesting.online/_next/static/chunks/1518a2a431ab38f4.css",
+      "status": 200,
+      "method": "GET",
+      "resource_type": "stylesheet"
+    },
+    {
+      "url": "https://automationintesting.online/_next/static/chunks/db016ef673052c75.css",
+      "status": 200,
+      "method": "GET",
+      "resource_type": "stylesheet"
+    },
+    {
+      "url": "https://automationintesting.online/_next/static/chunks/61a4c3c2ee9303e8.js",
       "status": 200,
       "method": "GET",
       "resource_type": "script"
@@ -82,13 +76,19 @@
       "resource_type": "script"
     },
     {
+      "url": "https://automationintesting.online/_next/static/chunks/7d72be335d89f326.js",
+      "status": 200,
+      "method": "GET",
+      "resource_type": "script"
+    },
+    {
       "url": "https://automationintesting.online/_next/static/chunks/ff1a16fafef87110.js",
       "status": 200,
       "method": "GET",
       "resource_type": "script"
     },
     {
-      "url": "https://automationintesting.online/_next/static/chunks/f7b9a15115349e63.js",
+      "url": "https://automationintesting.online/_next/static/chunks/240461da8f3815e6.js",
       "status": 200,
       "method": "GET",
       "resource_type": "script"
@@ -100,7 +100,7 @@
       "resource_type": "script"
     },
     {
-      "url": "https://automationintesting.online/_next/static/chunks/240461da8f3815e6.js",
+      "url": "https://automationintesting.online/_next/static/chunks/f7b9a15115349e63.js",
       "status": 200,
       "method": "GET",
       "resource_type": "script"
@@ -154,18 +154,6 @@
       "resource_type": "font"
     },
     {
-      "url": "https://automationintesting.online/images/rbp-logo.jpg",
-      "status": 200,
-      "method": "GET",
-      "resource_type": "image"
-    },
-    {
-      "url": "https://cartodb-basemaps-a.global.ssl.fastly.net/light_all/17/65998/42915.png",
-      "status": 200,
-      "method": "GET",
-      "resource_type": "image"
-    },
-    {
       "url": "https://cartodb-basemaps-a.global.ssl.fastly.net/light_all/17/65999/42916.png",
       "status": 200,
       "method": "GET",
@@ -178,7 +166,7 @@
       "resource_type": "image"
     },
     {
-      "url": "https://cartodb-basemaps-a.global.ssl.fastly.net/light_all/17/65999/42917.png",
+      "url": "https://cartodb-basemaps-a.global.ssl.fastly.net/light_all/17/65998/42915.png",
       "status": 200,
       "method": "GET",
       "resource_type": "image"
@@ -190,19 +178,13 @@
       "resource_type": "image"
     },
     {
-      "url": "https://cartodb-basemaps-a.global.ssl.fastly.net/light_all/17/66000/42917.png",
-      "status": 200,
-      "method": "GET",
-      "resource_type": "image"
-    },
-    {
       "url": "https://cartodb-basemaps-a.global.ssl.fastly.net/light_all/17/65998/42917.png",
       "status": 200,
       "method": "GET",
       "resource_type": "image"
     },
     {
-      "url": "https://cartodb-basemaps-a.global.ssl.fastly.net/light_all/17/66000/42915.png",
+      "url": "https://cartodb-basemaps-a.global.ssl.fastly.net/light_all/17/65999/42917.png",
       "status": 200,
       "method": "GET",
       "resource_type": "image"
@@ -214,19 +196,31 @@
       "resource_type": "image"
     },
     {
+      "url": "https://cartodb-basemaps-a.global.ssl.fastly.net/light_all/17/66000/42917.png",
+      "status": 200,
+      "method": "GET",
+      "resource_type": "image"
+    },
+    {
+      "url": "https://cartodb-basemaps-a.global.ssl.fastly.net/light_all/17/66000/42915.png",
+      "status": 200,
+      "method": "GET",
+      "resource_type": "image"
+    },
+    {
       "url": "https://automationintesting.online/api/room",
       "status": 200,
       "method": "GET",
       "resource_type": "fetch"
     },
     {
-      "url": "https://automationintesting.online/images/room1.jpg",
+      "url": "https://automationintesting.online/images/rbp-logo.jpg",
       "status": 200,
       "method": "GET",
       "resource_type": "image"
     },
     {
-      "url": "https://automationintesting.online/images/room3.jpg",
+      "url": "https://automationintesting.online/images/room1.jpg",
       "status": 200,
       "method": "GET",
       "resource_type": "image"
@@ -238,13 +232,19 @@
       "resource_type": "image"
     },
     {
-      "url": "https://automationintesting.online/privacy?_rsc=1r34m",
+      "url": "https://automationintesting.online/images/room3.jpg",
+      "status": 200,
+      "method": "GET",
+      "resource_type": "image"
+    },
+    {
+      "url": "https://automationintesting.online/admin?_rsc=1r34m",
       "status": 200,
       "method": "GET",
       "resource_type": "fetch"
     },
     {
-      "url": "https://automationintesting.online/admin?_rsc=1r34m",
+      "url": "https://automationintesting.online/privacy?_rsc=1r34m",
       "status": 200,
       "method": "GET",
       "resource_type": "fetch"
@@ -256,19 +256,13 @@
       "resource_type": "fetch"
     },
     {
-      "url": "https://automationintesting.online/privacy?_rsc=1pn8p",
-      "status": 200,
-      "method": "GET",
-      "resource_type": "fetch"
-    },
-    {
-      "url": "https://automationintesting.online/privacy?_rsc=nn07o",
-      "status": 200,
-      "method": "GET",
-      "resource_type": "fetch"
-    },
-    {
       "url": "https://automationintesting.online/admin?_rsc=1pn8p",
+      "status": 200,
+      "method": "GET",
+      "resource_type": "fetch"
+    },
+    {
+      "url": "https://automationintesting.online/admin?_rsc=nn07o",
       "status": 200,
       "method": "GET",
       "resource_type": "fetch"
@@ -286,6 +280,18 @@
       "resource_type": "fetch"
     },
     {
+      "url": "https://automationintesting.online/privacy?_rsc=1pn8p",
+      "status": 200,
+      "method": "GET",
+      "resource_type": "fetch"
+    },
+    {
+      "url": "https://automationintesting.online/_next/static/chunks/d5b30739a8fc0c6e.js",
+      "status": 200,
+      "method": "GET",
+      "resource_type": "script"
+    },
+    {
       "url": "https://automationintesting.online/_next/static/chunks/e81aee001b8b526e.js",
       "status": 200,
       "method": "GET",
@@ -296,12 +302,6 @@
       "status": 200,
       "method": "GET",
       "resource_type": "fetch"
-    },
-    {
-      "url": "https://automationintesting.online/_next/static/chunks/d5b30739a8fc0c6e.js",
-      "status": 200,
-      "method": "GET",
-      "resource_type": "script"
     },
     {
       "url": "https://automationintesting.online/privacy?_rsc=1148h",
@@ -322,16 +322,16 @@
       "resource_type": "fetch"
     },
     {
-      "url": "https://automationintesting.online/_next/static/chunks/d34feb2091b72dcb.js",
-      "status": 200,
-      "method": "GET",
-      "resource_type": "script"
-    },
-    {
       "url": "https://automationintesting.online/cookie?_rsc=1a2fr",
       "status": 200,
       "method": "GET",
       "resource_type": "fetch"
+    },
+    {
+      "url": "https://automationintesting.online/_next/static/chunks/d34feb2091b72dcb.js",
+      "status": 200,
+      "method": "GET",
+      "resource_type": "script"
     },
     {
       "url": "https://automationintesting.online/_next/static/chunks/f9c2e4ca7062d5ee.js",
@@ -401,6 +401,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 62.5,
             "y": 8,
@@ -461,6 +467,12 @@
         "parent": {
           "tag": "li",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 734.421875,
             "y": 8,
@@ -521,6 +533,12 @@
         "parent": {
           "tag": "li",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 802.359375,
             "y": 8,
@@ -581,6 +599,12 @@
         "parent": {
           "tag": "li",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 880.53125,
             "y": 8,
@@ -641,6 +665,12 @@
         "parent": {
           "tag": "li",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 971.359375,
             "y": 8,
@@ -701,6 +731,12 @@
         "parent": {
           "tag": "li",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 1051.5625,
             "y": 8,
@@ -761,6 +797,12 @@
         "parent": {
           "tag": "li",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 1125.453125,
             "y": 8,
@@ -823,6 +865,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "relative"
+          },
           "rect": {
             "x": 62.5,
             "y": 200,
@@ -883,6 +931,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "relative"
+          },
           "rect": {
             "x": 99.5,
             "y": 820.96875,
@@ -943,6 +997,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "relative"
+          },
           "rect": {
             "x": 640.5,
             "y": 820.96875,
@@ -1006,6 +1066,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 271.828125,
             "y": 882.96875,
@@ -1067,6 +1133,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 75.5,
             "y": 1603.4375,
@@ -1128,6 +1200,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 455.5,
             "y": 1603.4375,
@@ -1189,6 +1267,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 835.5,
             "y": 1603.4375,
@@ -1247,6 +1331,12 @@
         "parent": {
           "tag": "span",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 421.890625,
             "y": 2465.328125,
@@ -1305,6 +1395,12 @@
         "parent": {
           "tag": "span",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 465.140625,
             "y": 2465.328125,
@@ -1365,6 +1461,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 289.5,
             "y": 2656.625,
@@ -1425,6 +1527,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 289.5,
             "y": 2742.625,
@@ -1485,6 +1593,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 289.5,
             "y": 2828.625,
@@ -1545,6 +1659,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 289.5,
             "y": 2914.625,
@@ -1605,6 +1725,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 289.5,
             "y": 3000.625,
@@ -1666,6 +1792,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 289.5,
             "y": 3190.625,
@@ -1729,6 +1861,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 74.5,
             "y": 3597.625,
@@ -1792,6 +1930,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 74.5,
             "y": 3597.625,
@@ -1855,6 +1999,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 74.5,
             "y": 3597.625,
@@ -1916,6 +2066,12 @@
         "parent": {
           "tag": "li",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 834.5,
             "y": 3413.625,
@@ -1977,6 +2133,12 @@
         "parent": {
           "tag": "li",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 834.5,
             "y": 3445.625,
@@ -2038,6 +2200,12 @@
         "parent": {
           "tag": "li",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 834.5,
             "y": 3477.625,
@@ -2099,6 +2267,12 @@
         "parent": {
           "tag": "li",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 834.5,
             "y": 3509.625,
@@ -2157,6 +2331,12 @@
         "parent": {
           "tag": "small",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 251.296875,
             "y": 3680.625,
@@ -2215,6 +2395,12 @@
         "parent": {
           "tag": "small",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 251.296875,
             "y": 3680.625,
@@ -2273,6 +2459,12 @@
         "parent": {
           "tag": "small",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 251.296875,
             "y": 3680.625,
@@ -2331,6 +2523,12 @@
         "parent": {
           "tag": "small",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 251.296875,
             "y": 3680.625,
@@ -2389,6 +2587,12 @@
         "parent": {
           "tag": "body",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 0,
             "y": 0,
@@ -2447,6 +2651,12 @@
         "parent": {
           "tag": "div",
           "id": "root-container",
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 0,
             "y": 0,
@@ -2512,6 +2722,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 0,
             "y": 0,
@@ -2572,6 +2788,12 @@
         "parent": {
           "tag": "nav",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "sticky"
+          },
           "rect": {
             "x": 0,
             "y": 0,
@@ -2633,6 +2855,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 62.5,
             "y": 8,
@@ -2694,6 +2922,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 0,
             "y": 0,
@@ -2755,6 +2989,12 @@
         "parent": {
           "tag": "section",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "relative"
+          },
           "rect": {
             "x": 0,
             "y": 56,
@@ -2816,6 +3056,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 62.5,
             "y": 104,
@@ -2880,6 +3126,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 62.5,
             "y": 152,
@@ -2938,6 +3190,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 0,
             "y": 0,
@@ -2998,6 +3256,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 0,
             "y": 790.375,
@@ -3058,6 +3322,12 @@
         "parent": {
           "tag": "section",
           "id": "booking",
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 0,
             "y": 790.375,
@@ -3120,6 +3390,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 62.5,
             "y": 706.375,
@@ -3181,6 +3457,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "relative"
+          },
           "rect": {
             "x": 74.5,
             "y": 706.375,
@@ -3242,6 +3524,12 @@
         "parent": {
           "tag": "form",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 99.5,
             "y": 772.96875,
@@ -3302,6 +3590,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 91.5,
             "y": 772.96875,
@@ -3363,6 +3657,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 91.5,
             "y": 788.96875,
@@ -3423,6 +3723,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 99.5,
             "y": 820.96875,
@@ -3483,6 +3789,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 91.5,
             "y": 772.96875,
@@ -3544,6 +3856,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 632.5,
             "y": 788.96875,
@@ -3604,6 +3922,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 640.5,
             "y": 820.96875,
@@ -3664,6 +3988,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 91.5,
             "y": 772.96875,
@@ -3725,6 +4055,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 91.5,
             "y": 772.96875,
@@ -3785,6 +4121,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 91.5,
             "y": 772.96875,
@@ -3845,6 +4187,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 0,
             "y": 790.375,
@@ -3905,6 +4253,12 @@
         "parent": {
           "tag": "section",
           "id": "rooms",
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 0,
             "y": 965.96875,
@@ -3966,6 +4320,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 62.5,
             "y": 1045.96875,
@@ -4027,6 +4387,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 62.5,
             "y": 1045.96875,
@@ -4088,6 +4454,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 62.5,
             "y": 1165.5625,
@@ -4151,6 +4523,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 62.5,
             "y": 1189.5625,
@@ -4211,6 +4589,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "relative"
+          },
           "rect": {
             "x": 74.5,
             "y": 1189.5625,
@@ -4271,6 +4655,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "relative"
+          },
           "rect": {
             "x": 74.5,
             "y": 1189.5625,
@@ -4331,6 +4721,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 75.5,
             "y": 1390.5625,
@@ -4394,6 +4790,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 91.5,
             "y": 1550.5625,
@@ -4458,6 +4860,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "relative"
+          },
           "rect": {
             "x": 74.5,
             "y": 1189.5625,
@@ -4519,6 +4927,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 75.5,
             "y": 1603.4375,
@@ -4580,6 +4994,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 62.5,
             "y": 1165.5625,
@@ -4643,6 +5063,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 442.5,
             "y": 1189.5625,
@@ -4703,6 +5129,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "relative"
+          },
           "rect": {
             "x": 454.5,
             "y": 1189.5625,
@@ -4763,6 +5195,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "relative"
+          },
           "rect": {
             "x": 454.5,
             "y": 1189.5625,
@@ -4823,6 +5261,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 455.5,
             "y": 1390.5625,
@@ -4886,6 +5330,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 471.5,
             "y": 1550.5625,
@@ -4950,6 +5400,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "relative"
+          },
           "rect": {
             "x": 454.5,
             "y": 1189.5625,
@@ -5011,6 +5467,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 455.5,
             "y": 1603.4375,
@@ -5072,6 +5534,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 62.5,
             "y": 1165.5625,
@@ -5135,6 +5603,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 822.5,
             "y": 1189.5625,
@@ -5195,6 +5669,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "relative"
+          },
           "rect": {
             "x": 834.5,
             "y": 1189.5625,
@@ -5255,6 +5735,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "relative"
+          },
           "rect": {
             "x": 834.5,
             "y": 1189.5625,
@@ -5315,6 +5801,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 835.5,
             "y": 1390.5625,
@@ -5378,6 +5870,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 851.5,
             "y": 1526.5625,
@@ -5442,6 +5940,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "relative"
+          },
           "rect": {
             "x": 834.5,
             "y": 1189.5625,
@@ -5503,6 +6007,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 835.5,
             "y": 1603.4375,
@@ -5565,6 +6075,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 0,
             "y": 0,
@@ -5625,6 +6141,12 @@
         "parent": {
           "tag": "section",
           "id": "location",
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 0,
             "y": 1739.4375,
@@ -5686,6 +6208,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 62.5,
             "y": 1787.4375,
@@ -5747,6 +6275,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 62.5,
             "y": 1787.4375,
@@ -5807,6 +6341,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 62.5,
             "y": 1907.03125,
@@ -5869,6 +6409,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 62.5,
             "y": 1931.03125,
@@ -5930,6 +6476,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "relative"
+          },
           "rect": {
             "x": 74.5,
             "y": 1931.03125,
@@ -5988,6 +6540,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 75.5,
             "y": 1932.03125,
@@ -6048,6 +6606,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "hidden",
+            "overflowX": "hidden",
+            "overflowY": "hidden",
+            "position": "relative"
+          },
           "rect": {
             "x": 75.5,
             "y": 1932.03125,
@@ -6108,6 +6672,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "hidden",
+            "overflowX": "hidden",
+            "overflowY": "hidden",
+            "position": "absolute"
+          },
           "rect": {
             "x": 75.5,
             "y": 1932.03125,
@@ -6168,6 +6738,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "hidden",
+            "overflowX": "hidden",
+            "overflowY": "hidden",
+            "position": "relative"
+          },
           "rect": {
             "x": 75.5,
             "y": 1932.03125,
@@ -6228,6 +6804,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "absolute"
+          },
           "rect": {
             "x": 75.5,
             "y": 1932.03125,
@@ -6288,6 +6870,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "hidden",
+            "overflowX": "hidden",
+            "overflowY": "hidden",
+            "position": "relative"
+          },
           "rect": {
             "x": 75.5,
             "y": 1932.03125,
@@ -6348,6 +6936,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 62.5,
             "y": 1907.03125,
@@ -6410,6 +7004,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 632.5,
             "y": 1931.03125,
@@ -6470,6 +7070,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "relative"
+          },
           "rect": {
             "x": 644.5,
             "y": 1931.03125,
@@ -6531,6 +7137,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 645.5,
             "y": 1932.03125,
@@ -6592,6 +7204,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 661.5,
             "y": 2000.828125,
@@ -6650,6 +7268,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 661.5,
             "y": 2000.828125,
@@ -6711,6 +7335,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 645.5,
             "y": 1932.03125,
@@ -6772,6 +7402,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 661.5,
             "y": 2104.828125,
@@ -6830,6 +7466,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 661.5,
             "y": 2104.828125,
@@ -6891,6 +7533,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 645.5,
             "y": 1932.03125,
@@ -6952,6 +7600,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 661.5,
             "y": 2184.828125,
@@ -7010,6 +7664,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 661.5,
             "y": 2184.828125,
@@ -7070,6 +7730,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 0,
             "y": 0,
@@ -7130,6 +7796,12 @@
         "parent": {
           "tag": "section",
           "id": "contact",
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 0,
             "y": 2530.828125,
@@ -7191,6 +7863,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 62.5,
             "y": 2578.828125,
@@ -7251,6 +7929,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 62.5,
             "y": 2578.828125,
@@ -7312,6 +7996,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 252.5,
             "y": 2578.828125,
@@ -7373,6 +8063,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "relative"
+          },
           "rect": {
             "x": 264.5,
             "y": 2578.828125,
@@ -7433,6 +8129,12 @@
         "parent": {
           "tag": "form",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 289.5,
             "y": 2656.625,
@@ -7493,6 +8195,12 @@
         "parent": {
           "tag": "form",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 289.5,
             "y": 2656.625,
@@ -7553,6 +8261,12 @@
         "parent": {
           "tag": "form",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 289.5,
             "y": 2656.625,
@@ -7613,6 +8327,12 @@
         "parent": {
           "tag": "form",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 289.5,
             "y": 2656.625,
@@ -7673,6 +8393,12 @@
         "parent": {
           "tag": "form",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 289.5,
             "y": 2656.625,
@@ -7733,6 +8459,12 @@
         "parent": {
           "tag": "form",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 289.5,
             "y": 2656.625,
@@ -7795,6 +8527,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 0,
             "y": 0,
@@ -7855,6 +8593,12 @@
         "parent": {
           "tag": "footer",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 0,
             "y": 3325.625,
@@ -7916,6 +8660,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 62.5,
             "y": 3349.625,
@@ -7976,6 +8726,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 62.5,
             "y": 3349.625,
@@ -8037,6 +8793,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 62.5,
             "y": 3373.625,
@@ -8097,6 +8859,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 62.5,
             "y": 3349.625,
@@ -8157,6 +8925,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 62.5,
             "y": 3349.625,
@@ -8217,6 +8991,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 62.5,
             "y": 3349.625,
@@ -8226,7 +9006,7 @@
         }
       }
     ],
-    "timestamp": 1770117903205
+    "timestamp": 1770119597687
   },
   "layout_snapshot_mobile": {
     "viewport": {
@@ -8288,6 +9068,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 0,
             "y": 8,
@@ -8348,6 +9134,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 0,
             "y": 8,
@@ -8410,6 +9202,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "relative"
+          },
           "rect": {
             "x": 0,
             "y": 200,
@@ -8470,6 +9268,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "relative"
+          },
           "rect": {
             "x": 37,
             "y": 969.21875,
@@ -8530,6 +9334,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "relative"
+          },
           "rect": {
             "x": 37,
             "y": 1055.21875,
@@ -8593,6 +9403,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 79.328125,
             "y": 1117.21875,
@@ -8654,6 +9470,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 13,
             "y": 1876.890625,
@@ -8715,6 +9537,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 13,
             "y": 2370.765625,
@@ -8776,6 +9604,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 13,
             "y": 2864.640625,
@@ -8834,6 +9668,12 @@
         "parent": {
           "tag": "span",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 149.390625,
             "y": 3239.9375,
@@ -8892,6 +9732,12 @@
         "parent": {
           "tag": "span",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 192.640625,
             "y": 3239.9375,
@@ -8952,6 +9798,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 37,
             "y": 4097.09375,
@@ -9012,6 +9864,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 37,
             "y": 4183.09375,
@@ -9072,6 +9930,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 37,
             "y": 4269.09375,
@@ -9132,6 +9996,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 37,
             "y": 4355.09375,
@@ -9192,6 +10062,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 37,
             "y": 4441.09375,
@@ -9253,6 +10129,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 37,
             "y": 4631.09375,
@@ -9316,6 +10198,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 12,
             "y": 5038.09375,
@@ -9379,6 +10267,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 12,
             "y": 5038.09375,
@@ -9442,6 +10336,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 12,
             "y": 5038.09375,
@@ -9503,6 +10403,12 @@
         "parent": {
           "tag": "li",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 12,
             "y": 5309.09375,
@@ -9564,6 +10470,12 @@
         "parent": {
           "tag": "li",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 12,
             "y": 5341.09375,
@@ -9625,6 +10537,12 @@
         "parent": {
           "tag": "li",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 12,
             "y": 5373.09375,
@@ -9686,6 +10604,12 @@
         "parent": {
           "tag": "li",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 12,
             "y": 5405.09375,
@@ -9744,6 +10668,12 @@
         "parent": {
           "tag": "small",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 15.953125,
             "y": 5481.09375,
@@ -9802,6 +10732,12 @@
         "parent": {
           "tag": "small",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 15.953125,
             "y": 5481.09375,
@@ -9860,6 +10796,12 @@
         "parent": {
           "tag": "small",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 15.953125,
             "y": 5481.09375,
@@ -9918,6 +10860,12 @@
         "parent": {
           "tag": "small",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 15.953125,
             "y": 5481.09375,
@@ -9976,6 +10924,12 @@
         "parent": {
           "tag": "body",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 0,
             "y": 0,
@@ -10034,6 +10988,12 @@
         "parent": {
           "tag": "div",
           "id": "root-container",
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 0,
             "y": 0,
@@ -10099,6 +11059,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 0,
             "y": 0,
@@ -10159,6 +11125,12 @@
         "parent": {
           "tag": "nav",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "sticky"
+          },
           "rect": {
             "x": 0,
             "y": 0,
@@ -10220,6 +11192,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 0,
             "y": 0,
@@ -10281,6 +11259,12 @@
         "parent": {
           "tag": "section",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "relative"
+          },
           "rect": {
             "x": 0,
             "y": 56,
@@ -10342,6 +11326,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 0,
             "y": 104,
@@ -10406,6 +11396,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 0,
             "y": 152,
@@ -10464,6 +11460,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 0,
             "y": 0,
@@ -10524,6 +11526,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 0,
             "y": 916.90625,
@@ -10584,6 +11592,12 @@
         "parent": {
           "tag": "section",
           "id": "booking",
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 0,
             "y": 916.90625,
@@ -10646,6 +11660,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 0,
             "y": 832.90625,
@@ -10707,6 +11727,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "relative"
+          },
           "rect": {
             "x": 12,
             "y": 832.90625,
@@ -10768,6 +11794,12 @@
         "parent": {
           "tag": "form",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 37,
             "y": 921.21875,
@@ -10828,6 +11860,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 29,
             "y": 921.21875,
@@ -10889,6 +11927,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 29,
             "y": 937.21875,
@@ -10949,6 +11993,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 37,
             "y": 969.21875,
@@ -11009,6 +12059,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 29,
             "y": 921.21875,
@@ -11070,6 +12126,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 29,
             "y": 1023.21875,
@@ -11130,6 +12192,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 37,
             "y": 1055.21875,
@@ -11190,6 +12258,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 29,
             "y": 921.21875,
@@ -11251,6 +12325,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 29,
             "y": 921.21875,
@@ -11311,6 +12391,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 29,
             "y": 921.21875,
@@ -11371,6 +12457,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 0,
             "y": 916.90625,
@@ -11431,6 +12523,12 @@
         "parent": {
           "tag": "section",
           "id": "rooms",
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 0,
             "y": 1200.21875,
@@ -11492,6 +12590,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 0,
             "y": 1280.21875,
@@ -11553,6 +12657,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 0,
             "y": 1280.21875,
@@ -11614,6 +12724,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 0,
             "y": 1439.015625,
@@ -11677,6 +12793,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 0,
             "y": 1463.015625,
@@ -11737,6 +12859,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "relative"
+          },
           "rect": {
             "x": 12,
             "y": 1463.015625,
@@ -11797,6 +12925,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "relative"
+          },
           "rect": {
             "x": 12,
             "y": 1463.015625,
@@ -11857,6 +12991,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 13,
             "y": 1664.015625,
@@ -11920,6 +13060,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 29,
             "y": 1824.015625,
@@ -11984,6 +13130,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "relative"
+          },
           "rect": {
             "x": 12,
             "y": 1463.015625,
@@ -12045,6 +13197,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 13,
             "y": 1876.890625,
@@ -12106,6 +13264,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 0,
             "y": 1439.015625,
@@ -12169,6 +13333,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 0,
             "y": 1956.890625,
@@ -12229,6 +13399,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "relative"
+          },
           "rect": {
             "x": 12,
             "y": 1956.890625,
@@ -12289,6 +13465,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "relative"
+          },
           "rect": {
             "x": 12,
             "y": 1956.890625,
@@ -12349,6 +13531,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 13,
             "y": 2157.890625,
@@ -12412,6 +13600,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 29,
             "y": 2317.890625,
@@ -12476,6 +13670,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "relative"
+          },
           "rect": {
             "x": 12,
             "y": 1956.890625,
@@ -12537,6 +13737,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 13,
             "y": 2370.765625,
@@ -12598,6 +13804,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 0,
             "y": 1439.015625,
@@ -12661,6 +13873,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 0,
             "y": 2450.765625,
@@ -12721,6 +13939,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "relative"
+          },
           "rect": {
             "x": 12,
             "y": 2450.765625,
@@ -12781,6 +14005,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "relative"
+          },
           "rect": {
             "x": 12,
             "y": 2450.765625,
@@ -12841,6 +14071,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 13,
             "y": 2651.765625,
@@ -12904,6 +14140,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 29,
             "y": 2811.765625,
@@ -12968,6 +14210,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "relative"
+          },
           "rect": {
             "x": 12,
             "y": 2450.765625,
@@ -13029,6 +14277,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 13,
             "y": 2864.640625,
@@ -13091,6 +14345,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 0,
             "y": 0,
@@ -13151,6 +14411,12 @@
         "parent": {
           "tag": "section",
           "id": "location",
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 0,
             "y": 3000.640625,
@@ -13212,6 +14478,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 0,
             "y": 3048.640625,
@@ -13273,6 +14545,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 0,
             "y": 3048.640625,
@@ -13333,6 +14611,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 0,
             "y": 3207.4375,
@@ -13395,6 +14679,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 0,
             "y": 3231.4375,
@@ -13456,6 +14746,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "relative"
+          },
           "rect": {
             "x": 12,
             "y": 3231.4375,
@@ -13514,6 +14810,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 13,
             "y": 3232.4375,
@@ -13574,6 +14876,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "hidden",
+            "overflowX": "hidden",
+            "overflowY": "hidden",
+            "position": "relative"
+          },
           "rect": {
             "x": 13,
             "y": 3232.4375,
@@ -13634,6 +14942,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "hidden",
+            "overflowX": "hidden",
+            "overflowY": "hidden",
+            "position": "absolute"
+          },
           "rect": {
             "x": 13,
             "y": 3232.4375,
@@ -13694,6 +15008,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "hidden",
+            "overflowX": "hidden",
+            "overflowY": "hidden",
+            "position": "relative"
+          },
           "rect": {
             "x": 13,
             "y": 3232.4375,
@@ -13754,6 +15074,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "absolute"
+          },
           "rect": {
             "x": 13,
             "y": 3232.4375,
@@ -13814,6 +15140,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "hidden",
+            "overflowX": "hidden",
+            "overflowY": "hidden",
+            "position": "relative"
+          },
           "rect": {
             "x": 13,
             "y": 3232.4375,
@@ -13874,6 +15206,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 0,
             "y": 3207.4375,
@@ -13936,6 +15274,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 0,
             "y": 3281.4375,
@@ -13996,6 +15340,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "relative"
+          },
           "rect": {
             "x": 12,
             "y": 3281.4375,
@@ -14057,6 +15407,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 13,
             "y": 3282.4375,
@@ -14118,6 +15474,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 29,
             "y": 3348.265625,
@@ -14176,6 +15538,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 29,
             "y": 3348.265625,
@@ -14237,6 +15605,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 13,
             "y": 3282.4375,
@@ -14298,6 +15672,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 29,
             "y": 3476.265625,
@@ -14356,6 +15736,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 29,
             "y": 3476.265625,
@@ -14417,6 +15803,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 13,
             "y": 3282.4375,
@@ -14478,6 +15870,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 29,
             "y": 3556.265625,
@@ -14536,6 +15934,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 29,
             "y": 3556.265625,
@@ -14596,6 +16000,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 0,
             "y": 0,
@@ -14656,6 +16066,12 @@
         "parent": {
           "tag": "section",
           "id": "contact",
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 0,
             "y": 3974.265625,
@@ -14717,6 +16133,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 0,
             "y": 4022.265625,
@@ -14777,6 +16199,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 0,
             "y": 4022.265625,
@@ -14838,6 +16266,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 0,
             "y": 4022.265625,
@@ -14899,6 +16333,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "relative"
+          },
           "rect": {
             "x": 12,
             "y": 4022.265625,
@@ -14959,6 +16399,12 @@
         "parent": {
           "tag": "form",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 37,
             "y": 4097.09375,
@@ -15019,6 +16465,12 @@
         "parent": {
           "tag": "form",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 37,
             "y": 4097.09375,
@@ -15079,6 +16531,12 @@
         "parent": {
           "tag": "form",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 37,
             "y": 4097.09375,
@@ -15139,6 +16597,12 @@
         "parent": {
           "tag": "form",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 37,
             "y": 4097.09375,
@@ -15199,6 +16663,12 @@
         "parent": {
           "tag": "form",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 37,
             "y": 4097.09375,
@@ -15259,6 +16729,12 @@
         "parent": {
           "tag": "form",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 37,
             "y": 4097.09375,
@@ -15321,6 +16797,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 0,
             "y": 0,
@@ -15381,6 +16863,12 @@
         "parent": {
           "tag": "footer",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 0,
             "y": 4766.09375,
@@ -15442,6 +16930,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 0,
             "y": 4790.09375,
@@ -15502,6 +16996,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 0,
             "y": 4790.09375,
@@ -15563,6 +17063,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 0,
             "y": 4814.09375,
@@ -15623,6 +17129,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 0,
             "y": 4790.09375,
@@ -15683,6 +17195,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 0,
             "y": 4790.09375,
@@ -15743,6 +17261,12 @@
         "parent": {
           "tag": "div",
           "id": null,
+          "computed": {
+            "overflow": "visible",
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "position": "static"
+          },
           "rect": {
             "x": 0,
             "y": 4790.09375,
@@ -15752,7 +17276,7 @@
         }
       }
     ],
-    "timestamp": 1770117902053
+    "timestamp": 1770119596495
   },
   "discovered_urls": [
     "http://www.mwtestconsultancy.co.uk/",

@@ -136,10 +136,33 @@ class LayoutValidator:
             x = rect.get('x', 0)
             width = rect.get('width', 0)
             computed = elem.get('computed', {})
-            
+            # Skip fixed/sticky elements - they are handled by _check_fixed_position_issues
+            if computed.get('position') in ['fixed', 'sticky']:
+                continue
+                
             # Check if element overflows right edge
             right_edge = x + width
             if right_edge > vp_width + self.overflow_tolerance:
+                # CHECK PARENT: If parent fits in viewport, assume child is clipped/scrolled
+                # This handles carousels, sliders, and hidden overflow containers
+                parent = elem.get('parent', {})
+                parent_rect = parent.get('rect', {})
+                parent_tag = parent.get('tag', '').lower()
+                
+                if parent_rect and parent_tag not in ['body', 'html', 'main']:
+                    parent_right = parent_rect.get('x', 0) + parent_rect.get('width', 0)
+                    # If parent ends within viewport (with tolerance), ignore child overflow
+                    if parent_right <= vp_width + self.overflow_tolerance:
+                        # ENSURE parent actually handles overflow
+                        # Don't just assume; check if overflow is hidden/scroll/auto
+                        p_computed = parent.get('computed', {})
+                        p_overflow = p_computed.get('overflow', 'visible')
+                        p_overflow_x = p_computed.get('overflowX', 'visible')
+                        
+                        # If parent explicitly clips or scrolls content, this overflow is intentional
+                        if any(v in ['hidden', 'scroll', 'auto', 'clip'] for v in [p_overflow, p_overflow_x]):
+                            continue
+
                 overflow_amount = right_edge - vp_width
                 
                 # More serious if it's interactive
@@ -403,18 +426,14 @@ class LayoutValidator:
                 'total_issues': total_issues,
                 'critical': critical_count,
                 'warnings': warning_count,
-                'info': info_count
-            },
-            'by_severity': {
-                k: [self._issue_to_dict(i) for i in v]
-                for k, v in by_severity.items()
-            },
-            'by_category': {
-                k: len(v) for k, v in by_category.items()
-            },
-            'by_viewport': {
-                'desktop': len(by_viewport['desktop']),
-                'mobile': len(by_viewport['mobile'])
+                'info': info_count,
+                'by_viewport': {
+                    'desktop': len(by_viewport['desktop']),
+                    'mobile': len(by_viewport['mobile'])
+                },
+                'by_category': {
+                    k: len(v) for k, v in by_category.items()
+                }
             },
             'issues': [self._issue_to_dict(i) for i in self.issues]
         }
@@ -452,21 +471,26 @@ class LayoutValidator:
         
         # By viewport
         print(f"\n🖥️  Issues by Viewport:")
-        print(f"   Desktop: {report['by_viewport']['desktop']}")
-        print(f"   Mobile: {report['by_viewport']['mobile']}")
+        print(f"   Desktop: {report['summary']['by_viewport']['desktop']}")
+        print(f"   Mobile: {report['summary']['by_viewport']['mobile']}")
         
         # By category
-        if report['by_category']:
+        if report['summary']['by_category']:
             print(f"\n📑 Issues by Category:")
-            for category, count in sorted(report['by_category'].items(), key=lambda x: -x[1]):
+            for category, count in sorted(report['summary']['by_category'].items(), key=lambda x: -x[1]):
                 print(f"   {category}: {count}")
+        
+        # Group issues for detail sections
+        by_severity_detail = {'CRITICAL': [], 'WARNING': [], 'INFO': []}
+        for issue in report['issues']:
+            by_severity_detail[issue['severity']].append(issue)
         
         # Critical issues detail
         if report['summary']['critical'] > 0:
             print(f"\n{'='*80}")
             print("🔴 CRITICAL ISSUES (Must Fix)")
             print("="*80)
-            for i, issue in enumerate(report['by_severity']['CRITICAL'], 1):
+            for i, issue in enumerate(by_severity_detail['CRITICAL'], 1):
                 self._print_issue_detail(i, issue)
         
         # Warning issues detail
@@ -474,11 +498,11 @@ class LayoutValidator:
             print(f"\n{'='*80}")
             print("⚠️  WARNINGS")
             print("="*80)
-            for i, issue in enumerate(report['by_severity']['WARNING'], 1):
+            for i, issue in enumerate(by_severity_detail['WARNING'], 1):
                 self._print_issue_detail(i, issue)
         elif report['summary']['warnings'] > 10:
             print(f"\n⚠️  {report['summary']['warnings']} warnings found (showing first 5)")
-            for i, issue in enumerate(report['by_severity']['WARNING'][:5], 1):
+            for i, issue in enumerate(by_severity_detail['WARNING'][:5], 1):
                 self._print_issue_detail(i, issue)
         
         # Info issues summary

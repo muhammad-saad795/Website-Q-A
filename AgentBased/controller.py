@@ -4,6 +4,7 @@ from collections import deque
 from loader import PageLoader
 from url_verifier import URLVerifier
 from qa_llm import verify_page_text
+from layout_validator import LayoutValidator
 
 async def main():
     # Initialize Queue and Hash Set (Deduplication)
@@ -14,7 +15,7 @@ async def main():
     loader = PageLoader()
     await loader.start()
     
-    start_url = "https://lh3.googleusercontent.com/a/ACg8ocL6fTu2J_OcttavxuH7RfxBbfTZl-gZPxfR1pWMEranS4-12u0=s384-c"
+    start_url = "https://practice.qabrains.com/"
     seen_urls.add(start_url) # Mark start URL as seen
     result = await loader.load(start_url)
     await loader.stop()
@@ -74,6 +75,20 @@ async def main():
         print("\nURLs in Queue:")
         for url in url_queue:
             print(url)
+
+        # Layout Validation
+    print("\nRunning Layout Validation...")
+    validator = LayoutValidator()
+    if result.get("layout_snapshot_desktop"):
+        validator.validate_snapshot(result["layout_snapshot_desktop"], "desktop")
+    if result.get("layout_snapshot_mobile"):
+        validator.validate_snapshot(result["layout_snapshot_mobile"], "mobile")
+    
+    validator.print_detailed_report()
+    
+    # Save validation report
+    with open("validation_report.json", "w") as f:
+        json.dump(validator.generate_report(), f, indent=2)
 
 
 if __name__ == "__main__":
