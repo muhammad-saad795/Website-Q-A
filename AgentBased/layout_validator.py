@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 """
-Layout Validator - Analyzes layout snapshots for common issues
+Layout Validator - Production-Grade Layout Analysis Tool
 Validates both mobile and desktop layouts from result.json
+Reports detailed, actionable issues with element context
 """
 
 import json
 from typing import Dict, List, Any, Tuple
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import Enum
 
 
@@ -19,17 +20,26 @@ class Severity(Enum):
 
 @dataclass
 class LayoutIssue:
-    """Represents a layout validation issue"""
+    """Represents a layout validation issue with full context"""
     severity: Severity
     category: str
     message: str
     element: Dict[str, Any]
     viewport_type: str  # 'desktop' or 'mobile'
     details: Dict[str, Any] = None
+    recommendation: str = ""
 
 
 class LayoutValidator:
-    """Validates layout snapshots for common issues"""
+    """
+    Production-grade layout validator
+    
+    Detects genuine layout issues while ignoring intentional design patterns:
+    - Off-canvas sidebars/menus
+    - Below-the-fold content
+    - Hidden/collapsed elements
+    - Decorative elements
+    """
     
     def __init__(self, config: Dict[str, Any] = None):
         """
@@ -42,11 +52,15 @@ class LayoutValidator:
         
         # Default thresholds
         self.overflow_tolerance = self.config.get('overflow_tolerance_px', 5)
-        self.offscreen_tolerance = self.config.get('offscreen_tolerance_px', 10)
         self.min_interactive_size = self.config.get('min_interactive_size_px', 44)
-        self.overlap_threshold = self.config.get('overlap_threshold', 0.1)
+        
+        # Allowable padding for small icon buttons
+        self.min_icon_size = self.config.get('min_icon_size_px', 20)
         
         self.issues: List[LayoutIssue] = []
+        
+        # Track known design patterns to avoid false positives
+        self.off_canvas_selectors = ['sidebar', 'drawer', 'menu', 'nav']
     
     def validate_snapshot(self, snapshot_data: Dict[str, Any], viewport_type: str) -> List[LayoutIssue]:
         """
@@ -65,214 +79,217 @@ class LayoutValidator:
         viewport_width = viewport.get('width', 0)
         viewport_height = viewport.get('height', 0)
         
-        print(f"\n{'='*60}")
-        print(f"Validating {viewport_type.upper()} layout ({viewport_width}x{viewport_height})")
-        print(f"Analyzing {len(elements)} elements...")
-        print(f"{'='*60}\n")
+        print(f"\n{'='*80}")
+        print(f"🔍 Analyzing {viewport_type.upper()} Layout ({viewport_width}x{viewport_height})")
+        print(f"{'='*80}")
+        print(f"📊 Processing {len(elements)} elements...")
         
         # Run all validation checks
-        self._check_viewport_overflow(elements, viewport_width, viewport_height, viewport_type)
-        self._check_offscreen_elements(elements, viewport_width, viewport_height, viewport_type)
-        self._check_viewport_consistency(elements, viewport_width, viewport_height, viewport_type)
-        self._check_zero_size_elements(elements, viewport_type)
-        self._check_text_overflow(elements, viewport_type)
-        self._check_interactive_element_size(elements, viewport_type)
-        self._check_element_overlaps(elements, viewport_type)
-        self._check_negative_positioning(elements, viewport_type)
+        self._check_horizontal_overflow(elements, viewport_width, viewport_type)
+        self._check_broken_interactive_elements(elements, viewport_type)
+        self._check_text_rendering_issues(elements, viewport_type)
+        self._check_fixed_position_issues(elements, viewport_width, viewport_height, viewport_type)
+        
+        # Only check touch targets on mobile
+        if viewport_type == 'mobile':
+            self._check_touch_targets(elements, viewport_type)
         
         return self.issues
     
-    def _check_viewport_overflow(self, elements: List[Dict], vp_width: int, vp_height: int, viewport_type: str):
-        """Check for elements extending beyond viewport boundaries"""
-        for elem in elements:
-            rect = elem.get('rect', {})
-            x = rect.get('x', 0)
-            width = rect.get('width', 0)
-            
-            # Check horizontal overflow
-            right_edge = x + width
-            if right_edge > vp_width + self.overflow_tolerance:
-                overflow_amount = right_edge - vp_width
-                self.issues.append(LayoutIssue(
-                    severity=Severity.CRITICAL if overflow_amount > 50 else Severity.WARNING,
-                    category="VIEWPORT_OVERFLOW",
-                    message=f"Element extends {overflow_amount:.1f}px beyond right edge of viewport",
-                    element=self._simplify_element(elem),
-                    viewport_type=viewport_type,
-                    details={
-                        'element_right': right_edge,
-                        'viewport_width': vp_width,
-                        'overflow_px': overflow_amount
-                    }
-                ))
-            
-            # Check if element starts before left edge
-            if x < -self.overflow_tolerance:
-                self.issues.append(LayoutIssue(
-                    severity=Severity.WARNING,
-                    category="VIEWPORT_OVERFLOW",
-                    message=f"Element starts {abs(x):.1f}px before left edge of viewport",
-                    element=self._simplify_element(elem),
-                    viewport_type=viewport_type,
-                    details={'element_x': x}
-                ))
+    def _is_off_canvas_element(self, elem: Dict) -> bool:
+        """
+        Detect if element is an intentional off-canvas design (sidebar/drawer)
+        These are NOT layout bugs - they're supposed to be hidden until triggered
+        """
+        elem_id = (elem.get('id') or '').lower()
+        computed = elem.get('computed', {})
+        position = computed.get('position', 'static')
+        
+        # Fixed/absolute positioned sidebars/menus are intentional
+        if position in ['fixed', 'absolute']:
+            for selector in self.off_canvas_selectors:
+                if selector in elem_id:
+                    return True
+                for cls in elem.get('classes', []):
+                    if selector in cls.lower():
+                        return True
+        
+        return False
     
-    def _check_offscreen_elements(self, elements: List[Dict], vp_width: int, vp_height: int, viewport_type: str):
-        """Check for visible elements that are completely offscreen (horizontally or above viewport)"""
+    def _check_horizontal_overflow(self, elements: List[Dict], vp_width: int, viewport_type: str):
+        """
+        Check for elements overflowing viewport horizontally
+        ONLY flags actual layout bugs, not intentional off-canvas elements
+        """
         for elem in elements:
-            flags = elem.get('flags', {})
-            rect = elem.get('rect', {})
+            # Skip off-canvas elements (sidebars, drawers, etc.)
+            if self._is_off_canvas_element(elem):
+                continue
             
-            # Skip if element is marked as not visible
+            flags = elem.get('flags', {})
+            
+            # Only check visible elements
             if not flags.get('isVisible', False):
                 continue
             
+            rect = elem.get('rect', {})
             x = rect.get('x', 0)
-            y = rect.get('y', 0)
             width = rect.get('width', 0)
-            height = rect.get('height', 0)
+            computed = elem.get('computed', {})
             
-            # ONLY check for horizontal offscreen and above viewport
-            # Below-the-fold content is NORMAL and should NOT be flagged
-            is_offscreen_left = x + width < -self.offscreen_tolerance
-            is_offscreen_right = x > vp_width + self.offscreen_tolerance
-            is_offscreen_above = y + height < -self.offscreen_tolerance
-            
-            # Determine if actually offscreen (excluding below-fold)
-            if is_offscreen_left or is_offscreen_right or is_offscreen_above:
-                # Determine direction
-                if is_offscreen_left:
-                    direction = "left"
-                elif is_offscreen_right:
-                    direction = "right"
-                else:
-                    direction = "above"
+            # Check if element overflows right edge
+            right_edge = x + width
+            if right_edge > vp_width + self.overflow_tolerance:
+                overflow_amount = right_edge - vp_width
                 
-                # Only flag interactive elements as critical
+                # More serious if it's interactive
                 is_interactive = flags.get('isInteractive', False)
                 severity = Severity.CRITICAL if is_interactive else Severity.WARNING
                 
                 self.issues.append(LayoutIssue(
                     severity=severity,
-                    category="OFFSCREEN_ELEMENT",
-                    message=f"Visible element is completely {direction} the viewport",
+                    category="HORIZONTAL_OVERFLOW",
+                    message=f"Element overflows viewport by {overflow_amount:.0f}px on the right",
                     element=self._simplify_element(elem),
                     viewport_type=viewport_type,
                     details={
-                        'position': {'x': x, 'y': y},
-                        'size': {'width': width, 'height': height},
-                        'direction': direction
-                    }
+                        'element_right_edge': right_edge,
+                        'viewport_width': vp_width,
+                        'overflow_px': overflow_amount,
+                        'is_interactive': is_interactive
+                    },
+                    recommendation=f"Add responsive width or max-width: 100%. Element extends to {right_edge:.0f}px but viewport is only {vp_width}px wide."
                 ))
     
-    def _check_viewport_consistency(self, elements: List[Dict], vp_width: int, vp_height: int, viewport_type: str):
-        """Check for elements marked as in-viewport but positioned outside (layout bug)"""
+    def _check_broken_interactive_elements(self, elements: List[Dict], viewport_type: str):
+        """
+        Check for interactive elements that are completely inaccessible
+        These are ACTUAL bugs - buttons/links users can't reach
+        """
         for elem in elements:
             flags = elem.get('flags', {})
-            rect = elem.get('rect', {})
             
-            # Skip if not marked as in viewport
-            if not flags.get('isInViewport', False):
+            # Only check interactive elements
+            if not flags.get('isInteractive', False):
                 continue
             
-            x = rect.get('x', 0)
-            y = rect.get('y', 0)
+            # Skip off-canvas elements
+            if self._is_off_canvas_element(elem):
+                continue
+            
+            # Element is visible but not in viewport
+            is_visible = flags.get('isVisible', False)
+            is_in_viewport = flags.get('isInViewport', False)
+            
+            rect = elem.get('rect', {})
             width = rect.get('width', 0)
             height = rect.get('height', 0)
             
-            # Check if element is actually outside viewport bounds
-            # Allow small tolerance for rounding
-            tolerance = 5
-            is_outside = (
-                x + width < -tolerance or  # Completely left
-                x > vp_width + tolerance or  # Completely right
-                y + height < -tolerance or  # Completely above
-                y > vp_height + tolerance  # Completely below
-            )
-            
-            if is_outside:
+            # Check for zero-size interactive elements
+            if is_visible and (width <= 0 or height <= 0):
                 self.issues.append(LayoutIssue(
-                    severity=Severity.WARNING,
-                    category="VIEWPORT_INCONSISTENCY",
-                    message=f"Element marked as in-viewport but positioned outside viewport bounds",
+                    severity=Severity.CRITICAL,
+                    category="BROKEN_INTERACTIVE",
+                    message=f"Interactive element has zero dimensions ({width:.0f}x{height:.0f}px) - completely broken",
                     element=self._simplify_element(elem),
                     viewport_type=viewport_type,
-                    details={
-                        'position': {'x': x, 'y': y},
-                        'size': {'width': width, 'height': height},
-                        'viewport': {'width': vp_width, 'height': vp_height}
-                    }
+                    details={'width': width, 'height': height},
+                    recommendation="Element has collapsed. Check CSS for missing width/height or hidden content."
                 ))
     
-    def _check_zero_size_elements(self, elements: List[Dict], viewport_type: str):
-        """Check for elements with zero or negative dimensions"""
-        for elem in elements:
-            rect = elem.get('rect', {})
-            flags = elem.get('flags', {})
-            
-            width = rect.get('width', 0)
-            height = rect.get('height', 0)
-            
-            # Skip invisible elements
-            if not flags.get('isVisible', False):
-                continue
-            
-            if width <= 0 or height <= 0:
-                # Critical if it's an interactive element
-                is_interactive = flags.get('isInteractive', False)
-                severity = Severity.CRITICAL if is_interactive else Severity.INFO
-                
-                self.issues.append(LayoutIssue(
-                    severity=severity,
-                    category="ZERO_SIZE",
-                    message=f"Visible element has zero/negative dimensions (w:{width}, h:{height})",
-                    element=self._simplify_element(elem),
-                    viewport_type=viewport_type,
-                    details={'width': width, 'height': height}
-                ))
-    
-    def _check_text_overflow(self, elements: List[Dict], viewport_type: str):
-        """Check for text elements that might be clipped"""
-        text_tags = ['p', 'span', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'a', 'button', 'label', 'div']
+    def _check_text_rendering_issues(self, elements: List[Dict], viewport_type: str):
+        """
+        Check for text that may be clipped or not rendering properly
+        """
+        text_tags = ['p', 'span', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'a', 'button', 'label', 'li', 'td', 'th']
         
         for elem in elements:
             tag = elem.get('tag', '').lower()
             if tag not in text_tags:
                 continue
             
-            text = elem.get('text')
-            if not text or len(text.strip()) < 3:
+            text = (elem.get('text') or '').strip()
+            if not text or len(text) < 3:
+                continue
+            
+            flags = elem.get('flags', {})
+            if not flags.get('isVisible', False):
                 continue
             
             computed = elem.get('computed', {})
-            overflow_x = computed.get('overflow', 'visible')
-            overflow_y = computed.get('overflow', 'visible')
+            rect = elem.get('rect', {})
             
-            # Check if overflow is hidden or clip
-            if overflow_x in ['hidden', 'clip'] or overflow_y in ['hidden', 'clip']:
-                rect = elem.get('rect', {})
-                
-                # If element has text but small dimensions, might be clipped
-                if rect.get('width', 0) < 50 or rect.get('height', 0) < 20:
+            # Check for text with overflow:hidden and suspiciously small container
+            overflow = computed.get('overflow', 'visible')
+            width = rect.get('width', 0)
+            height = rect.get('height', 0)
+            
+            # Text longer than 20 chars in a tiny container with overflow:hidden
+            if overflow in ['hidden', 'clip'] and len(text) > 20:
+                if width < 30 or height < 15:
                     self.issues.append(LayoutIssue(
                         severity=Severity.WARNING,
-                        category="TEXT_OVERFLOW",
-                        message=f"Text element with overflow:{overflow_x} has small dimensions, text may be clipped",
+                        category="TEXT_CLIPPING",
+                        message=f"Text may be clipped: {len(text)} characters in {width:.0f}x{height:.0f}px container with overflow:{overflow}",
                         element=self._simplify_element(elem),
                         viewport_type=viewport_type,
                         details={
                             'text_length': len(text),
-                            'text_preview': text[:50] + '...' if len(text) > 50 else text,
-                            'dimensions': {'width': rect.get('width'), 'height': rect.get('height')}
-                        }
+                            'text_preview': text[:40] + '...' if len(text) > 40 else text,
+                            'container_size': {'width': width, 'height': height},
+                            'overflow': overflow
+                        },
+                        recommendation="Container too small for text content. Use text-overflow: ellipsis or increase container size."
                     ))
     
-    def _check_interactive_element_size(self, elements: List[Dict], viewport_type: str):
-        """Check if interactive elements are large enough (especially on mobile)"""
-        # Only strict on mobile
-        if viewport_type != 'mobile':
-            return
-        
+    def _check_fixed_position_issues(self, elements: List[Dict], vp_width: int, vp_height: int, viewport_type: str):
+        """
+        Check for fixed/sticky positioned elements that are broken
+        (Not including intentional off-canvas elements)
+        """
+        for elem in elements:
+            computed = elem.get('computed', {})
+            position = computed.get('position', 'static')
+            
+            if position not in ['fixed', 'sticky']:
+                continue
+            
+            # Skip off-canvas elements
+            if self._is_off_canvas_element(elem):
+                continue
+            
+            flags = elem.get('flags', {})
+            if not flags.get('isVisible', False):
+                continue
+            
+            rect = elem.get('rect', {})
+            x = rect.get('x', 0)
+            y = rect.get('y', 0)
+            width = rect.get('width', 0)
+            
+            # Fixed element overflowing viewport is usually a bug
+            right_edge = x + width
+            if right_edge > vp_width + self.overflow_tolerance:
+                overflow = right_edge - vp_width
+                self.issues.append(LayoutIssue(
+                    severity=Severity.CRITICAL,
+                    category="FIXED_OVERFLOW",
+                    message=f"Fixed/sticky element overflows viewport by {overflow:.0f}px",
+                    element=self._simplify_element(elem),
+                    viewport_type=viewport_type,
+                    details={
+                        'position': position,
+                        'overflow_px': overflow,
+                        'element_rect': rect
+                    },
+                    recommendation=f"Fixed position element should fit viewport. Add max-width or reduce width."
+                ))
+    
+    def _check_touch_targets(self, elements: List[Dict], viewport_type: str):
+        """
+        Check for touch targets that are too small (mobile only)
+        Uses more lenient rules for icon buttons vs. text buttons
+        """
         interactive_tags = ['button', 'a', 'input', 'select', 'textarea']
         
         for elem in elements:
@@ -282,128 +299,67 @@ class LayoutValidator:
             if tag not in interactive_tags and not flags.get('isClickable', False):
                 continue
             
-            rect = elem.get('rect', {})
-            width = rect.get('width', 0)
-            height = rect.get('height', 0)
-            
-            # Check minimum touch target size (44x44 is recommended)
-            if width < self.min_interactive_size and height < self.min_interactive_size:
-                self.issues.append(LayoutIssue(
-                    severity=Severity.WARNING,
-                    category="SMALL_INTERACTIVE",
-                    message=f"Interactive element too small for touch ({width:.0f}x{height:.0f}px, recommended: {self.min_interactive_size}x{self.min_interactive_size}px)",
-                    element=self._simplify_element(elem),
-                    viewport_type=viewport_type,
-                    details={'width': width, 'height': height}
-                ))
-    
-    def _check_element_overlaps(self, elements: List[Dict], viewport_type: str):
-        """Check for significant element overlaps (basic check)"""
-        # Only check visible, in-viewport elements
-        visible_elements = [
-            e for e in elements 
-            if e.get('flags', {}).get('isVisible', False) and 
-               e.get('flags', {}).get('isInViewport', False)
-        ]
-        
-        # Limit to prevent performance issues
-        if len(visible_elements) > 100:
-            visible_elements = visible_elements[:100]
-        
-        checked_pairs = set()
-        
-        for i, elem_a in enumerate(visible_elements):
-            for elem_b in visible_elements[i+1:]:
-                # Create unique pair identifier
-                pair_id = (id(elem_a), id(elem_b))
-                if pair_id in checked_pairs:
-                    continue
-                checked_pairs.add(pair_id)
-                
-                overlap_area = self._calculate_overlap(
-                    elem_a.get('rect', {}),
-                    elem_b.get('rect', {})
-                )
-                
-                if overlap_area > 0:
-                    # Calculate overlap ratio
-                    area_a = self._calculate_area(elem_a.get('rect', {}))
-                    area_b = self._calculate_area(elem_b.get('rect', {}))
-                    
-                    if area_a > 0 and area_b > 0:
-                        overlap_ratio = overlap_area / min(area_a, area_b)
-                        
-                        if overlap_ratio > self.overlap_threshold:
-                            self.issues.append(LayoutIssue(
-                                severity=Severity.WARNING,
-                                category="ELEMENT_OVERLAP",
-                                message=f"Elements overlap by {overlap_ratio*100:.1f}% of smaller element",
-                                element=self._simplify_element(elem_a),
-                                viewport_type=viewport_type,
-                                details={
-                                    'element_a': self._simplify_element(elem_a),
-                                    'element_b': self._simplify_element(elem_b),
-                                    'overlap_area': overlap_area,
-                                    'overlap_ratio': overlap_ratio
-                                }
-                            ))
-    
-    def _check_negative_positioning(self, elements: List[Dict], viewport_type: str):
-        """Check for elements with suspicious negative positioning"""
-        for elem in elements:
-            rect = elem.get('rect', {})
-            computed = elem.get('computed', {})
-            flags = elem.get('flags', {})
-            
-            x = rect.get('x', 0)
-            y = rect.get('y', 0)
-            
-            # Skip if not visible
+            # Skip if not visible or not in viewport
             if not flags.get('isVisible', False):
                 continue
             
-            # Check for large negative positions (likely unintentional)
-            if x < -100 or y < -100:
-                position = computed.get('position', 'static')
+            rect = elem.get('rect', {})
+            width = rect.get('width', 0)
+            height = rect.get('height', 0)
+            text = (elem.get('text') or '').strip()
+            
+            # Determine if this is likely an icon button (no text, small size)
+            is_icon_button = len(text) == 0 and width < 40 and height < 40
+            
+            # Different thresholds for icons vs. text buttons
+            min_size = self.min_icon_size if is_icon_button else self.min_interactive_size
+            
+            if width < min_size and height < min_size:
+                # Only report if it's way too small
+                if width < 20 or height < 20:
+                    severity = Severity.CRITICAL
+                    msg_type = "icon button" if is_icon_button else "interactive element"
+                else:
+                    severity = Severity.INFO
+                    msg_type = "icon button" if is_icon_button else "button"
                 
                 self.issues.append(LayoutIssue(
-                    severity=Severity.WARNING,
-                    category="NEGATIVE_POSITION",
-                    message=f"Element has large negative position (x:{x:.0f}, y:{y:.0f}) with position:{position}",
+                    severity=severity,
+                    category="SMALL_TOUCH_TARGET",
+                    message=f"Touch target too small: {msg_type} is {width:.0f}x{height:.0f}px (recommended: 44x44px minimum)",
                     element=self._simplify_element(elem),
                     viewport_type=viewport_type,
-                    details={'x': x, 'y': y, 'position': position}
+                    details={
+                        'width': width,
+                        'height': height,
+                        'is_icon': is_icon_button,
+                        'recommended_size': '44x44px'
+                    },
+                    recommendation="Add padding or increase button size to meet WCAG touch target guidelines (44x44px)."
                 ))
-    
-    def _calculate_overlap(self, rect_a: Dict, rect_b: Dict) -> float:
-        """Calculate overlap area between two rectangles"""
-        x1 = max(rect_a.get('x', 0), rect_b.get('x', 0))
-        y1 = max(rect_a.get('y', 0), rect_b.get('y', 0))
-        x2 = min(
-            rect_a.get('x', 0) + rect_a.get('width', 0),
-            rect_b.get('x', 0) + rect_b.get('width', 0)
-        )
-        y2 = min(
-            rect_a.get('y', 0) + rect_a.get('height', 0),
-            rect_b.get('y', 0) + rect_b.get('height', 0)
-        )
-        
-        if x2 > x1 and y2 > y1:
-            return (x2 - x1) * (y2 - y1)
-        return 0
-    
-    def _calculate_area(self, rect: Dict) -> float:
-        """Calculate area of a rectangle"""
-        return rect.get('width', 0) * rect.get('height', 0)
     
     def _simplify_element(self, elem: Dict) -> Dict:
         """Create a simplified element representation for reporting"""
+        tag = elem.get('tag', '')
+        elem_id = elem.get('id', '')
+        classes = elem.get('classes', [])[:3]  # Limit classes
+        text = (elem.get('text', '') or '')[:60]  # Truncate text
+        rect = elem.get('rect', {})
+        
+        # Create readable descriptor
+        descriptor = f"<{tag}>"
+        if elem_id:
+            descriptor += f"#{elem_id}"
+        if classes:
+            descriptor += f".{'.'.join(classes)}"
+        
         return {
-            'tag': elem.get('tag'),
-            'id': elem.get('id'),
-            'classes': elem.get('classes', [])[:3],  # Limit classes
-            'text': (elem.get('text', '') or '')[:50],  # Truncate text
-            'rect': elem.get('rect', {})
+            'descriptor': descriptor,
+            'tag': tag,
+            'id': elem_id,
+            'classes': classes,
+            'text': text,
+            'rect': rect
         }
     
     def generate_report(self) -> Dict[str, Any]:
@@ -436,7 +392,7 @@ class LayoutValidator:
         # Determine overall status
         if critical_count > 0:
             status = "FAIL"
-        elif warning_count > 5:
+        elif warning_count > 3:
             status = "WARNING"
         else:
             status = "PASS"
@@ -471,45 +427,93 @@ class LayoutValidator:
             'message': issue.message,
             'viewport': issue.viewport_type,
             'element': issue.element,
-            'details': issue.details
+            'details': issue.details,
+            'recommendation': issue.recommendation
         }
     
-    def print_summary(self):
-        """Print a human-readable summary of issues"""
+    def print_detailed_report(self):
+        """Print a detailed, actionable report of all issues"""
         report = self.generate_report()
         
         print("\n" + "="*80)
-        print("LAYOUT VALIDATION REPORT")
+        print("📋 LAYOUT VALIDATION REPORT")
         print("="*80)
         
-        print(f"\nOverall Status: {report['status']}")
-        print(f"\nTotal Issues Found: {report['summary']['total_issues']}")
-        print(f"  - Critical: {report['summary']['critical']}")
-        print(f"  - Warnings: {report['summary']['warnings']}")
-        print(f"  - Info: {report['summary']['info']}")
+        # Overall status
+        status_emoji = "✅" if report['status'] == "PASS" else "⚠️" if report['status'] == "WARNING" else "❌"
+        print(f"\n{status_emoji} Overall Status: {report['status']}")
         
-        print(f"\nIssues by Viewport:")
-        print(f"  - Desktop: {report['by_viewport']['desktop']}")
-        print(f"  - Mobile: {report['by_viewport']['mobile']}")
+        # Summary
+        print(f"\n📊 Summary:")
+        print(f"   Total Issues: {report['summary']['total_issues']}")
+        print(f"   🔴 Critical: {report['summary']['critical']}")
+        print(f"   ⚠️  Warnings: {report['summary']['warnings']}")
+        print(f"   ℹ️  Info: {report['summary']['info']}")
         
-        print(f"\nIssues by Category:")
-        for category, count in sorted(report['by_category'].items(), key=lambda x: -x[1]):
-            print(f"  - {category}: {count}")
+        # By viewport
+        print(f"\n🖥️  Issues by Viewport:")
+        print(f"   Desktop: {report['by_viewport']['desktop']}")
+        print(f"   Mobile: {report['by_viewport']['mobile']}")
         
-        # Print critical issues
+        # By category
+        if report['by_category']:
+            print(f"\n📑 Issues by Category:")
+            for category, count in sorted(report['by_category'].items(), key=lambda x: -x[1]):
+                print(f"   {category}: {count}")
+        
+        # Critical issues detail
         if report['summary']['critical'] > 0:
             print(f"\n{'='*80}")
-            print("CRITICAL ISSUES:")
+            print("🔴 CRITICAL ISSUES (Must Fix)")
             print("="*80)
-            for issue in report['by_severity']['CRITICAL'][:10]:  # Limit to first 10
-                print(f"\n[{issue['viewport'].upper()}] {issue['category']}")
-                print(f"  {issue['message']}")
-                elem = issue['element']
-                print(f"  Element: <{elem['tag']}> {elem.get('id', '')} {elem.get('classes', [])}")
-                if elem.get('text'):
-                    print(f"  Text: {elem['text']}")
+            for i, issue in enumerate(report['by_severity']['CRITICAL'], 1):
+                self._print_issue_detail(i, issue)
         
-        print("\n" + "="*80 + "\n")
+        # Warning issues detail
+        if report['summary']['warnings'] > 0 and report['summary']['warnings'] <= 10:
+            print(f"\n{'='*80}")
+            print("⚠️  WARNINGS")
+            print("="*80)
+            for i, issue in enumerate(report['by_severity']['WARNING'], 1):
+                self._print_issue_detail(i, issue)
+        elif report['summary']['warnings'] > 10:
+            print(f"\n⚠️  {report['summary']['warnings']} warnings found (showing first 5)")
+            for i, issue in enumerate(report['by_severity']['WARNING'][:5], 1):
+                self._print_issue_detail(i, issue)
+        
+        # Info issues summary
+        if report['summary']['info'] > 0:
+            print(f"\nℹ️  {report['summary']['info']} informational items (minor improvements)")
+        
+        print("\n" + "="*80)
+        
+        # Final verdict
+        if report['summary']['total_issues'] == 0:
+            print("✅ Layout looks good! No issues found.")
+        elif report['summary']['critical'] == 0:
+            print("💡 Layout is functional but has some minor issues to improve.")
+        else:
+            print(f"❌ Found {report['summary']['critical']} critical layout bugs that need fixing.")
+        
+        print("="*80 + "\n")
+    
+    def _print_issue_detail(self, index: int, issue: Dict):
+        """Print detailed information about a single issue"""
+        print(f"\n{index}. [{issue['viewport'].upper()}] {issue['category']}")
+        print(f"   {issue['message']}")
+        
+        elem = issue['element']
+        print(f"   Element: {elem['descriptor']}")
+        
+        if elem.get('text'):
+            print(f"   Text: \"{elem['text']}\"")
+        
+        rect = elem['rect']
+        print(f"   Position: x={rect['x']:.0f}, y={rect['y']:.0f}")
+        print(f"   Size: {rect['width']:.0f} x {rect['height']:.0f} px")
+        
+        if issue.get('recommendation'):
+            print(f"   💡 Fix: {issue['recommendation']}")
 
 
 def validate_layout_file(json_file_path: str, output_file: str = None) -> Dict:
@@ -524,6 +528,7 @@ def validate_layout_file(json_file_path: str, output_file: str = None) -> Dict:
         Validation report dictionary
     """
     # Load the JSON file
+    print(f"📂 Loading {json_file_path}...")
     with open(json_file_path, 'r', encoding='utf-8') as f:
         data = json.load(f)
     
@@ -541,18 +546,23 @@ def validate_layout_file(json_file_path: str, output_file: str = None) -> Dict:
     # Generate report
     report = validator.generate_report()
     
-    # Print summary
-    validator.print_summary()
+    # Print detailed summary
+    validator.print_detailed_report()
     
     # Save report if output file specified
     if output_file:
         with open(output_file, 'w', encoding='utf-8') as f:
             json.dump(report, f, indent=2)
-        print(f"Detailed report saved to: {output_file}")
+        print(f"💾 Detailed report saved to: {output_file}")
     
     return report
 
 
 if __name__ == "__main__":
-    validate_layout_file('result.json')
-
+    import sys
+    
+    # Get file path from command line or use default
+    json_file = sys.argv[1] if len(sys.argv) > 1 else 'result.json'
+    output_file = sys.argv[2] if len(sys.argv) > 2 else 'validation_report.json'
+    
+    validate_layout_file(json_file, output_file)

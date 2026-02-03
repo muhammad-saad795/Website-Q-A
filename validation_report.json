@@ -1,0 +1,134 @@
+{
+  "status": "FAIL",
+  "summary": {
+    "total_issues": 2,
+    "critical": 1,
+    "warnings": 1,
+    "info": 0
+  },
+  "by_severity": {
+    "CRITICAL": [
+      {
+        "severity": "CRITICAL",
+        "category": "SMALL_TOUCH_TARGET",
+        "message": "Touch target too small: interactive element is 34x12px (recommended: 44x44px minimum)",
+        "viewport": "mobile",
+        "element": {
+          "descriptor": "<a>",
+          "tag": "a",
+          "id": null,
+          "classes": [],
+          "text": "Pigeon",
+          "rect": {
+            "x": 149.390625,
+            "y": 3239.9375,
+            "width": 34.265625,
+            "height": 12
+          }
+        },
+        "details": {
+          "width": 34.265625,
+          "height": 12,
+          "is_icon": false,
+          "recommended_size": "44x44px"
+        },
+        "recommendation": "Add padding or increase button size to meet WCAG touch target guidelines (44x44px)."
+      }
+    ],
+    "WARNING": [
+      {
+        "severity": "WARNING",
+        "category": "HORIZONTAL_OVERFLOW",
+        "message": "Element overflows viewport by 158px on the right",
+        "viewport": "mobile",
+        "element": {
+          "descriptor": "<div>.pigeon-tiles",
+          "tag": "div",
+          "id": null,
+          "classes": [
+            "pigeon-tiles"
+          ],
+          "text": "",
+          "rect": {
+            "x": -235.3760528564453,
+            "y": 3048.425048828125,
+            "width": 768,
+            "height": 256
+          }
+        },
+        "details": {
+          "element_right_edge": 532.6239471435547,
+          "viewport_width": 375,
+          "overflow_px": 157.6239471435547,
+          "is_interactive": false
+        },
+        "recommendation": "Add responsive width or max-width: 100%. Element extends to 533px but viewport is only 375px wide."
+      }
+    ],
+    "INFO": []
+  },
+  "by_category": {
+    "HORIZONTAL_OVERFLOW": 1,
+    "SMALL_TOUCH_TARGET": 1
+  },
+  "by_viewport": {
+    "desktop": 0,
+    "mobile": 2
+  },
+  "issues": [
+    {
+      "severity": "WARNING",
+      "category": "HORIZONTAL_OVERFLOW",
+      "message": "Element overflows viewport by 158px on the right",
+      "viewport": "mobile",
+      "element": {
+        "descriptor": "<div>.pigeon-tiles",
+        "tag": "div",
+        "id": null,
+        "classes": [
+          "pigeon-tiles"
+        ],
+        "text": "",
+        "rect": {
+          "x": -235.3760528564453,
+          "y": 3048.425048828125,
+          "width": 768,
+          "height": 256
+        }
+      },
+      "details": {
+        "element_right_edge": 532.6239471435547,
+        "viewport_width": 375,
+        "overflow_px": 157.6239471435547,
+        "is_interactive": false
+      },
+      "recommendation": "Add responsive width or max-width: 100%. Element extends to 533px but viewport is only 375px wide."
+    },
+    {
+      "severity": "CRITICAL",
+      "category": "SMALL_TOUCH_TARGET",
+      "message": "Touch target too small: interactive element is 34x12px (recommended: 44x44px minimum)",
+      "viewport": "mobile",
+      "element": {
+        "descriptor": "<a>",
+        "tag": "a",
+        "id": null,
+        "classes": [],
+        "text": "Pigeon",
+        "rect": {
+          "x": 149.390625,
+          "y": 3239.9375,
+          "width": 34.265625,
+          "height": 12
+        }
+      },
+      "details": {
+        "width": 34.265625,
+        "height": 12,
+        "is_icon": false,
+        "recommended_size": "44x44px"
+      },
+      "recommendation": "Add padding or increase button size to meet WCAG touch target guidelines (44x44px)."
+    }
+  ]
+}

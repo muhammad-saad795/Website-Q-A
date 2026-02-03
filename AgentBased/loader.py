@@ -26,7 +26,7 @@ class PageLoader:
         self.context: Optional[BrowserContext] = None
 
         # Scripts directory
-        self.scripts_dir = Path("new/scripts")
+        self.scripts_dir = Path("AgentBased/scripts")
         self.scroll_script_path = self.scripts_dir / "scroll_page.js"
         self.text_script_path = self.scripts_dir / "extract_visible_text.js"
         self.layout_snapshot_script_path = self.scripts_dir / "layout_snapshot.js"
@@ -240,8 +240,8 @@ class PageLoader:
 async def main():
     loader = PageLoader(headless=False)
     await loader.start()
-    result = await loader.load("https://practice.qabrains.com/registration")
-    await loader.stop()
+    result = await loader.load("https://automationintesting.online/")
+    #await loader.stop()
 
     import json
     Path("result.json").write_text(json.dumps(result, indent=2))

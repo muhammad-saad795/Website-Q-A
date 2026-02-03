@@ -1,33 +1,37 @@
-/**
- * Extracts all visible text from the page.
- * Ignores script, style, meta, and hidden elements.
- * Returns a single string with readable formatting.
- */
 (() => {
-    const isVisible = (elem) => {
-        const style = window.getComputedStyle(elem);
+    const isVisible = (el) => {
+        if (!el || el.nodeType !== 1) return true;
+        const s = getComputedStyle(el);
         return (
-            style &&
-            style.display !== "none" &&
-            style.visibility !== "hidden" &&
-            style.opacity !== "0" &&
-            (elem.offsetParent !== null || style.position === "fixed" || style.position === "sticky")
+            s.display !== "none" &&
+            s.visibility !== "hidden" &&
+            s.opacity !== "0"
         );
     };
 
-    const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_ELEMENT, {
-        acceptNode: (node) => (isVisible(node) ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT),
-    });
+    const walker = document.createTreeWalker(
+        document.body,
+        NodeFilter.SHOW_TEXT,
+        {
+            acceptNode(node) {
+                const parent = node.parentElement;
+                if (!parent) return NodeFilter.FILTER_REJECT;
+                if (!isVisible(parent)) return NodeFilter.FILTER_REJECT;
 
+                const text = node.nodeValue.trim();
+                if (!text) return NodeFilter.FILTER_REJECT;
+
+                return NodeFilter.FILTER_ACCEPT;
+            }
+        }
+    );
+
+    const chunks = [];
     let node;
-    const lines = [];
 
     while ((node = walker.nextNode())) {
-        const text = node.innerText || "";
-        if (text.trim()) {
-            lines.push(text.trim());
-        }
+        chunks.push(node.nodeValue.trim());
     }
 
-    return lines.join("\n\n"); // separate blocks with double newline
+    return chunks.join("\n");
 })();

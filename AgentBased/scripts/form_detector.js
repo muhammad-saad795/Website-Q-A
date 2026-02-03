@@ -1,118 +1,114 @@
-(function () {
-    function qsAll(root, sel) {
-        try { return Array.from(root.querySelectorAll(sel)); }
-        catch { return []; }
-    }
+// form_detector.js
+(() => {
+    try {
+        const results = [];
+        const claimedElements = new Set();
 
-    function rect(el) {
-        if (!el || !el.getBoundingClientRect) return null;
-        const r = el.getBoundingClientRect();
-        return { top: r.top, left: r.left, width: r.width, height: r.height };
-    }
-
-    function isVisible(el) {
-        if (!el) return false;
-        const s = getComputedStyle(el);
-        if (s.display === "none" || s.visibility === "hidden" || s.opacity === "0") return false;
-        const r = el.getBoundingClientRect();
-        return r.width > 0 && r.height > 0;
-    }
-
-    function serialize(el) {
-        return {
-            tag: el.tagName.toLowerCase(),
-            id: el.id || null,
-            classes: [...el.classList],
-            text: (el.innerText || "").trim().slice(0, 200),
-            attrs: Object.fromEntries([...el.attributes].map(a => [a.name, a.value])),
-            rect: rect(el),
-            html: el.outerHTML
+        // ---- helpers ----
+        const getFieldSignature = (el) => {
+            return (
+                el.tagName +
+                "|" +
+                (el.type || "") +
+                "|" +
+                (el.name || "") +
+                "|" +
+                (el.id || "")
+            );
         };
-    }
 
-    function findFormRoots() {
-        const roots = new Set();
+        const extractFields = (root) => {
+            return Array.from(
+                root.querySelectorAll("input, textarea, select")
+            ).map(el => {
+                const tag = el.tagName.toLowerCase();
+                const type = el.type || tag;
 
-        qsAll(document, "form").forEach(f => roots.add(f));
+                let options = [];
+                if (tag === "select") {
+                    options = Array.from(el.options).map(o => ({
+                        value: o.value,
+                        text: o.text,
+                        selected: o.selected
+                    }));
+                }
 
-        // form-like containers (SPA, JS-only)
-        qsAll(document, "div,section").forEach(el => {
-            const inputs = qsAll(el, "input,select,textarea");
-            const clicks = qsAll(el, "button,a,[role=button],[onclick]");
-            if (inputs.length >= 1 && clicks.length >= 1) roots.add(el);
-        });
+                return {
+                    tag,
+                    type,
+                    name: el.name || null,
+                    id: el.id || null,
+                    placeholder: el.placeholder || null,
+                    required: el.required || false,
+                    disabled: el.disabled || false,
+                    value: el.value || null,
+                    options
+                };
+            });
+        };
 
-        return [...roots];
-    }
+        const markClaimed = (fields) => {
+            fields.forEach(f => {
+                claimedElements.add(
+                    `${f.tag}|${f.type}|${f.name}|${f.id}`
+                );
+            });
+        };
 
-    function expandContainer(el, depth = 3) {
-        const set = new Set([el]);
-        let cur = el;
+        const isUnclaimed = (el) => {
+            const sig = getFieldSignature(el);
+            return !claimedElements.has(sig);
+        };
 
-        // upward
-        for (let i = 0; i < depth && cur.parentElement; i++) {
-            cur = cur.parentElement;
-            set.add(cur);
-        }
+        // ---- 1️⃣ real <form> elements ----
+        document.querySelectorAll("form").forEach((form, index) => {
+            const fields = extractFields(form);
+            if (!fields.length) return;
 
-        // siblings
-        if (el.parentElement) {
-            [...el.parentElement.children].forEach(c => set.add(c));
-        }
+            markClaimed(fields);
 
-        return [...set];
-    }
-
-    function collectCandidates(container) {
-        const selectors = [
-            "button",
-            "input",
-            "a",
-            "[role=button]",
-            "[onclick]"
-        ];
-
-        const found = new Set();
-
-        selectors.forEach(sel => {
-            qsAll(container, sel).forEach(el => {
-                if (isVisible(el)) found.add(el);
+            results.push({
+                type: "form",
+                index,
+                id: form.id || null,
+                name: form.name || null,
+                action: form.action || null,
+                method: form.method || "GET",
+                fields
             });
         });
 
-        return [...found];
-    }
+        // ---- 2️⃣ form-like containers (unclaimed only) ----
+        const candidates = Array.from(
+            document.querySelectorAll("div, section, article")
+        );
 
-    function collectInputs(container) {
-        return qsAll(container, "input,select,textarea")
-            .filter(isVisible)
-            .map(serialize);
-    }
+        candidates.forEach(container => {
+            const fields = Array.from(
+                container.querySelectorAll("input, textarea, select")
+            )
+                .filter(isUnclaimed)
+                .map(el => extractFields(el.closest("*"))[0])
+                .filter(Boolean);
 
-    function analyzeRoot(root) {
-        const containers = expandContainer(root, 4);
+            if (fields.length < 2) return;
 
-        let inputs = [];
-        let actions = [];
+            markClaimed(fields);
 
-        containers.forEach(c => {
-            collectInputs(c).forEach(i => inputs.push(i));
-            collectCandidates(c).forEach(a => actions.push(serialize(a)));
+            results.push({
+                type: "form-like",
+                index: results.length,
+                id: container.id || null,
+                name: container.getAttribute("name") || null,
+                action: null,
+                method: null,
+                fields
+            });
         });
 
-        return {
-            root: serialize(root),
-            inputs,
-            action_candidates: actions
-        };
+        return results;
+    } catch (e) {
+        console.error("Form detector failed:", e);
+        return [];
     }
-
-    // MAIN
-    const result = {
-        url: location.href,
-        timestamp: Date.now(),
-        forms: findFormRoots().map(analyzeRoot)
-    };
-
-    window.__FORM_INTERACTION_DATA__ = result;
 })();
