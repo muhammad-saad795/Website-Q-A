@@ -1,39 +1,212 @@
 /**
  * scan_forms.js
- * A robust, industrial-strength form scanner for QA automation.
+ * Production-ready form scanner for QA automation.
  * Features:
- * - Shadow DOM traversal
+ * - Shadow DOM traversal (optimized)
+ * - Same-origin iframe recursion
  * - Label association (explicit, implicit, ARIA, and proximity)
  * - HTML5 'form' attribute support (fields outside <form> tags)
  * - Form-like container detection (for JS-driven forms without <form> tags)
  * - Computed visibility and positioning
- * - Detection of iframes and cross-origin boundaries
- * - Full HTML capture
+ * - Complete HTML capture with fallback serialization
+ * - Per-form error handling (continues on failures)
  */
 (() => {
-    try {
-        const results = [];
-        const seenFields = new Set();
-        const seenForms = new Set();
+    const results = [];
+    const errors = [];
+    const seenFields = new Set();
+    const seenForms = new Set();
+    const processedIframes = new Set(); // Track processed iframes to avoid infinite loops
 
-        /**
-         * Recursively finds all elements matching a selector, even inside Shadow DOM.
-         */
-        const findDeep = (root, selector) => {
-            let elements = Array.from(root.querySelectorAll(selector));
-            const all = root.querySelectorAll('*');
-            for (const el of all) {
-                if (el.shadowRoot) {
-                    elements = elements.concat(findDeep(el.shadowRoot, selector));
+    /**
+     * Safely serialize element to HTML string with fallback
+     */
+    const serializeElement = (el) => {
+        try {
+            // Try native outerHTML first (fastest and most accurate)
+            if (el.outerHTML) {
+                return el.outerHTML;
+            }
+        } catch (e) {
+            // Fallback to manual serialization if outerHTML fails
+        }
+
+        // Manual serialization fallback
+        try {
+            const tagName = el.tagName.toLowerCase();
+            let html = `<${tagName}`;
+
+            // Add all attributes
+            if (el.attributes && el.attributes.length > 0) {
+                for (let i = 0; i < el.attributes.length; i++) {
+                    const attr = el.attributes[i];
+                    const value = attr.value ? `="${attr.value.replace(/"/g, '&quot;')}"` : '';
+                    html += ` ${attr.name}${value}`;
                 }
             }
-            return elements;
-        };
 
-        /**
-         * Determines the label for an element using various heuristics.
-         */
-        const extractLabel = (el) => {
+            html += '>';
+
+            // Add innerHTML for elements that can have content
+            if (['form', 'div', 'section', 'fieldset'].includes(tagName)) {
+                html += el.innerHTML || '';
+            }
+
+            html += `</${tagName}>`;
+            return html;
+        } catch (e) {
+            return `<${el.tagName.toLowerCase()} [serialization failed]>`;
+        }
+    };
+
+    /**
+     * Optimized Shadow DOM traversal with caching
+     */
+    const shadowRootCache = new WeakMap();
+    
+    const findDeep = (root, selector) => {
+        let elements = [];
+        
+        try {
+            // Query in current root
+            const directElements = root.querySelectorAll(selector);
+            elements = Array.from(directElements);
+            
+            // Find all elements with shadow roots (optimized - single query)
+            const allElements = root.querySelectorAll('*');
+            const shadowRoots = [];
+            
+            for (const el of allElements) {
+                if (el.shadowRoot) {
+                    // Check cache to avoid processing same shadow root twice
+                    if (!shadowRootCache.has(el.shadowRoot)) {
+                        shadowRootCache.set(el.shadowRoot, true);
+                        shadowRoots.push(el.shadowRoot);
+                    }
+                }
+            }
+            
+            // Recursively process shadow roots
+            for (const shadowRoot of shadowRoots) {
+                try {
+                    elements = elements.concat(findDeep(shadowRoot, selector));
+                } catch (e) {
+                    // Continue if shadow root access fails
+                }
+            }
+        } catch (e) {
+            // Continue if query fails
+        }
+        
+        return elements;
+    };
+
+    /**
+     * Recursively scan iframes for forms
+     */
+    const scanIframeForms = (iframe, iframeContext = '') => {
+        const iframeId = iframe.id || iframe.name || iframe.src || 'unknown';
+        const iframeKey = `${iframeContext}:${iframeId}`;
+        
+        // Avoid infinite loops and duplicate processing
+        if (processedIframes.has(iframeKey)) {
+            return [];
+        }
+        processedIframes.add(iframeKey);
+        
+        const iframeForms = [];
+        
+        try {
+            let iframeDoc = null;
+            
+            // Try to access iframe content
+            try {
+                iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
+            } catch (e) {
+                // Cross-origin or security error
+                return [];
+            }
+            
+            if (!iframeDoc) {
+                return [];
+            }
+            
+            // Scan forms in iframe
+            const iframeFormElements = findDeep(iframeDoc, 'form');
+            
+            iframeFormElements.forEach((formEl, index) => {
+                try {
+                    // Avoid processing same form twice
+                    if (seenForms.has(formEl)) {
+                        return;
+                    }
+                    seenForms.add(formEl);
+                    
+                    const fields = [];
+                    const iframeFields = findDeep(iframeDoc, 'input, select, textarea, button');
+                    
+                    iframeFields.forEach(f => {
+                        try {
+                            if (f.form === formEl) {
+                                const fieldData = formatField(f);
+                                fields.push(fieldData);
+                                seenFields.add(f);
+                            }
+                        } catch (e) {
+                            // Continue if field processing fails
+                        }
+                    });
+                    
+                    iframeForms.push({
+                        type: 'form',
+                        index: results.length + iframeForms.length,
+                        id: formEl.id || null,
+                        name: formEl.name || null,
+                        action: formEl.getAttribute('action') || null,
+                        method: (formEl.getAttribute('method') || 'GET').toUpperCase(),
+                        outerHTML: serializeElement(formEl),
+                        fields,
+                        fieldCount: fields.length,
+                        iframeContext: iframeContext ? `${iframeContext} > ${iframeId}` : iframeId
+                    });
+                } catch (e) {
+                    errors.push({
+                        type: 'form_processing_error',
+                        context: `iframe: ${iframeId}`,
+                        message: e.message,
+                        stack: e.stack
+                    });
+                }
+            });
+            
+            // Recursively scan nested iframes
+            const nestedIframes = findDeep(iframeDoc, 'iframe');
+            nestedIframes.forEach(nestedIframe => {
+                try {
+                    const nestedForms = scanIframeForms(nestedIframe, iframeContext ? `${iframeContext} > ${iframeId}` : iframeId);
+                    iframeForms.push(...nestedForms);
+                } catch (e) {
+                    // Continue if nested iframe scan fails
+                }
+            });
+            
+        } catch (e) {
+            errors.push({
+                type: 'iframe_scan_error',
+                context: iframeId,
+                message: e.message,
+                stack: e.stack
+            });
+        }
+        
+        return iframeForms;
+    };
+
+    /**
+     * Determines the label for an element using various heuristics.
+     */
+    const extractLabel = (el) => {
+        try {
             // 1. Explicit <label for="...">
             if (el.id) {
                 const labelFor = document.querySelector(`label[for="${el.id}"]`);
@@ -77,20 +250,30 @@
             }
 
             return null;
-        };
+        } catch (e) {
+            return null;
+        }
+    };
 
-        const getAriaAttributes = (el) => {
-            const aria = {};
-            for (const attr of el.attributes) {
-                if (attr.name.startsWith('aria-')) {
-                    aria[attr.name] = attr.value;
+    const getAriaAttributes = (el) => {
+        const aria = {};
+        try {
+            if (el.attributes) {
+                for (const attr of el.attributes) {
+                    if (attr.name.startsWith('aria-')) {
+                        aria[attr.name] = attr.value;
+                    }
                 }
             }
-            return aria;
-        };
+        } catch (e) {
+            // Continue if attribute access fails
+        }
+        return aria;
+    };
 
-        const isVisible = (el) => {
-            if (!el) return false;
+    const isVisible = (el) => {
+        if (!el) return false;
+        try {
             const style = window.getComputedStyle(el);
             return (
                 style.display !== 'none' &&
@@ -99,9 +282,14 @@
                 el.offsetWidth > 0 &&
                 el.offsetHeight > 0
             );
-        };
+        } catch (e) {
+            // If computed style fails, assume visible
+            return true;
+        }
+    };
 
-        const formatField = (el) => {
+    const formatField = (el) => {
+        try {
             const tag = el.tagName.toLowerCase();
             const rect = el.getBoundingClientRect();
             const fieldData = {
@@ -123,15 +311,19 @@
                     height: rect.height
                 },
                 aria: getAriaAttributes(el),
-                outerHTML: el.outerHTML
+                outerHTML: serializeElement(el)
             };
 
             if (tag === 'select') {
-                fieldData.options = Array.from(el.options).map(o => ({
-                    text: o.text,
-                    value: o.value,
-                    selected: o.selected
-                }));
+                try {
+                    fieldData.options = Array.from(el.options).map(o => ({
+                        text: o.text,
+                        value: o.value,
+                        selected: o.selected
+                    }));
+                } catch (e) {
+                    fieldData.options = [];
+                }
             }
 
             if (tag === 'input' && (el.type === 'checkbox' || el.type === 'radio')) {
@@ -139,38 +331,111 @@
             }
 
             return fieldData;
-        };
+        } catch (e) {
+            // Return minimal field data if formatting fails
+            return {
+                tag: el.tagName?.toLowerCase() || 'unknown',
+                type: el.type || 'unknown',
+                name: el.name || null,
+                id: el.id || null,
+                outerHTML: serializeElement(el),
+                error: e.message
+            };
+        }
+    };
 
-        // --- STEP 1: Process Explicit <form> Tags ---
+    try {
+        // --- STEP 1: Process Explicit <form> Tags in Main Document ---
         const forms = findDeep(document, 'form');
         forms.forEach((formEl, index) => {
-            seenForms.add(formEl);
-            const fields = [];
-
-            // Collect fields associated with this form (physically or via 'form' attribute)
-            const allPotentiallyAssociated = findDeep(document, 'input, select, textarea, button');
-            allPotentiallyAssociated.forEach(f => {
-                // The .form property is natively supported in browsers to find the owner form
-                if (f.form === formEl) {
-                    fields.push(formatField(f));
-                    seenFields.add(f);
+            try {
+                // Avoid processing same form twice
+                if (seenForms.has(formEl)) {
+                    return;
                 }
-            });
+                seenForms.add(formEl);
+                
+                const fields = [];
 
-            results.push({
-                type: 'form',
-                index,
-                id: formEl.id || null,
-                name: formEl.name || null,
-                action: formEl.getAttribute('action') || null,
-                method: (formEl.getAttribute('method') || 'GET').toUpperCase(),
-                outerHTML: formEl.outerHTML,
-                fields,
-                fieldCount: fields.length
-            });
+                // Collect fields associated with this form (physically or via 'form' attribute)
+                const allPotentiallyAssociated = findDeep(document, 'input, select, textarea, button');
+                allPotentiallyAssociated.forEach(f => {
+                    try {
+                        // The .form property is natively supported in browsers to find the owner form
+                        if (f.form === formEl) {
+                            const fieldData = formatField(f);
+                            fields.push(fieldData);
+                            seenFields.add(f);
+                        }
+                    } catch (e) {
+                        // Continue if field processing fails
+                    }
+                });
+
+                results.push({
+                    type: 'form',
+                    index: results.length,
+                    id: formEl.id || null,
+                    name: formEl.name || null,
+                    action: formEl.getAttribute('action') || null,
+                    method: (formEl.getAttribute('method') || 'GET').toUpperCase(),
+                    outerHTML: serializeElement(formEl),
+                    fields,
+                    fieldCount: fields.length,
+                    iframeContext: null
+                });
+            } catch (e) {
+                errors.push({
+                    type: 'form_processing_error',
+                    context: 'main_document',
+                    message: e.message,
+                    stack: e.stack
+                });
+            }
         });
 
-        // --- STEP 2: Process "Form-Like" Containers (Orphaned Fields) ---
+        // --- STEP 2: Process Forms in Same-Origin Iframes (Recursive) ---
+        const iframes = findDeep(document, 'iframe');
+        const iframeInfo = [];
+        
+        iframes.forEach(frame => {
+            try {
+                const frameDetails = {
+                    tag: 'iframe',
+                    id: frame.id || null,
+                    name: frame.name || null,
+                    src: frame.src || null,
+                    isVisible: isVisible(frame),
+                };
+
+                try {
+                    // Check if iframe is accessible
+                    const testDoc = frame.contentDocument || frame.contentWindow?.document;
+                    if (testDoc) {
+                        frameDetails.isAccessible = true;
+                        // Scan forms in this iframe
+                        const iframeForms = scanIframeForms(frame);
+                        results.push(...iframeForms);
+                    } else {
+                        frameDetails.isAccessible = false;
+                        frameDetails.reason = 'Cross-origin block';
+                    }
+                } catch (e) {
+                    frameDetails.isAccessible = false;
+                    frameDetails.reason = 'Security Error';
+                }
+                
+                iframeInfo.push(frameDetails);
+            } catch (e) {
+                errors.push({
+                    type: 'iframe_info_error',
+                    message: e.message,
+                    stack: e.stack
+                });
+            }
+        });
+
+        // --- STEP 3: Process "Form-Like" Containers (Orphaned Fields) ---
         const allFields = findDeep(document, 'input, select, textarea, button');
         const orphanedFields = allFields.filter(f => !seenFields.has(f));
 
@@ -178,75 +443,69 @@
             // Group orphaned fields by their closest meaningful container
             const containerMap = new Map();
             orphanedFields.forEach(f => {
-                // Find a logical container (div, section, etc.) or a role-based container
-                let container = f.closest('div, section, article, [role="form"], [role="dialog"], [role="group"]');
+                try {
+                    // Find a logical container (div, section, etc.) or a role-based container
+                    let container = f.closest('div, section, article, [role="form"], [role="dialog"], [role="group"]');
 
-                // If no container found or container is too generic, use parent
-                if (!container || container === document.body) {
-                    container = f.parentElement || document.body;
-                }
+                    // If no container found or container is too generic, use parent
+                    if (!container || container === document.body) {
+                        container = f.parentElement || document.body;
+                    }
 
-                if (!containerMap.has(container)) {
-                    containerMap.set(container, []);
+                    if (!containerMap.has(container)) {
+                        containerMap.set(container, []);
+                    }
+                    containerMap.get(container).push(f);
+                } catch (e) {
+                    // Continue if container finding fails
                 }
-                containerMap.get(container).push(f);
             });
 
             // For each container, if it has 2+ fields OR a submit-like button, treat as a form
             containerMap.forEach((fieldsInContainer, container) => {
-                const hasInput = fieldsInContainer.some(f => ['INPUT', 'TEXTAREA', 'SELECT'].includes(f.tagName));
-                const hasSubmit = fieldsInContainer.some(f =>
-                    (f.tagName === 'BUTTON' && (f.type === 'submit' || !f.type)) ||
-                    (f.tagName === 'INPUT' && f.type === 'submit')
-                );
+                try {
+                    const hasInput = fieldsInContainer.some(f => ['INPUT', 'TEXTAREA', 'SELECT'].includes(f.tagName));
+                    const hasSubmit = fieldsInContainer.some(f =>
+                        (f.tagName === 'BUTTON' && (f.type === 'submit' || !f.type)) ||
+                        (f.tagName === 'INPUT' && f.type === 'submit')
+                    );
 
-                if (hasInput && (fieldsInContainer.length >= 2 || hasSubmit)) {
-                    const fields = fieldsInContainer.map(formatField);
-                    results.push({
-                        type: 'form-like',
-                        index: results.length,
-                        id: container.id || null,
-                        tag: container.tagName.toLowerCase(),
-                        role: container.getAttribute('role') || null,
-                        outerHTML: container.outerHTML,
-                        fields,
-                        fieldCount: fields.length
+                    if (hasInput && (fieldsInContainer.length >= 2 || hasSubmit)) {
+                        const fields = fieldsInContainer.map(f => {
+                            try {
+                                return formatField(f);
+                            } catch (e) {
+                                return null;
+                            }
+                        }).filter(Boolean);
+                        
+                        results.push({
+                            type: 'form-like',
+                            index: results.length,
+                            id: container.id || null,
+                            tag: container.tagName.toLowerCase(),
+                            role: container.getAttribute('role') || null,
+                            outerHTML: serializeElement(container),
+                            fields,
+                            fieldCount: fields.length,
+                            iframeContext: null
+                        });
+                    }
+                } catch (e) {
+                    errors.push({
+                        type: 'form_like_processing_error',
+                        message: e.message,
+                        stack: e.stack
                     });
                 }
             });
         }
 
-        // --- STEP 3: Check for iframes (Cross-context forms) ---
-        const iframes = findDeep(document, 'iframe');
-        const iframeInfo = iframes.map(frame => {
-            let details = {
-                tag: 'iframe',
-                id: frame.id || null,
-                name: frame.name || null,
-                src: frame.src || null,
-                isVisible: isVisible(frame),
-            };
-
-            try {
-                // If we can access contentDocument, it's same-origin
-                if (frame.contentDocument) {
-                    details.isAccessible = true;
-                    // We don't recurse here because the script is usually executed per-frame by the driver
-                } else {
-                    details.isAccessible = false;
-                    details.reason = 'Cross-origin block';
-                }
-            } catch (e) {
-                details.isAccessible = false;
-                details.reason = 'Security Error';
-            }
-            return details;
-        });
-
         return {
             formCount: results.length,
             forms: results,
             iframes: iframeInfo,
+            errors: errors.length > 0 ? errors : undefined,
             metadata: {
                 url: window.location.href,
                 timestamp: new Date().toISOString(),
@@ -262,7 +521,8 @@
             error: true,
             message: e.message,
             stack: e.stack,
-            partialResults: results
+            partialResults: results,
+            errors: errors.length > 0 ? errors : undefined
         };
     }
 })();

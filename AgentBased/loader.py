@@ -197,6 +197,8 @@ class PageLoader:
         # ── Form Detection (Before Interactive Discovery) ──
         logger.info("Scanning forms...")
         result["forms_html"] = await self._scan_forms(page)
+        input("Press Enter to continue...")
+        
         logger.info("Detecting forms...")
         result["forms"] = await self._detect_forms(page)
 

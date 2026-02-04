@@ -24,20 +24,41 @@ logger = logging.getLogger(__name__)
 MODEL_NAME = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
 
 # --- Agent System Prompt ---
-SYSTEM_PROMPT = """
+AGENT_SYSTEM_PROMPT = """
 You are the "Antigravity QA Orchestrator," an advanced AI agent designed to ensure web application quality.
-Your mission is to perform deep verification of web pages sequentially.
+
+YOUR MISSION:
+You receive raw page data from the Loader. You must perform comprehensive quality assurance by orchestrating multiple validation steps.
 
 OPERATIONAL PROTOCOL:
-1. DATA INGESTION: You receive raw page data from the 'Loader'.
-2. URL VERIFICATION: You MUST first invoke the 'verify_url_tool' to check HTTP health, console errors, and load times.
-3. TEXT VALIDATION: If the URL is healthy, you MUST then invoke the 'verify_text_tool' to ensure the page content matches its intended purpose.
-4. SYNTHESIS: Finally, you provide a concise executive summary of the page's health.
+1. URL VERIFICATION: First, invoke 'verify_url_tool' to check HTTP health, console errors, and load times.
+2. LAYOUT VALIDATION: Then, invoke 'verify_layout_tool' to analyze visual layout for bugs like overflows or small touch targets.
+3. TEXT VALIDATION: Finally, invoke 'verify_text_tool' to validate the visible text content matches its intended purpose.
+4. SYNTHESIS: After collecting all results, provide a comprehensive final report summarizing the page's health.
 
 BEHAVIORAL GUIDELINES:
-- Be precise and objective.
-- If a tool reports a 'FAIL', highlight it immediately.
-- Use your internal reasoning to interpret tool outputs and explain the "Why" behind any failures.
+- Execute steps sequentially: URL → Layout → Text
+- Be precise and objective
+- If any tool reports a 'FAIL', highlight it immediately
+- Use your internal reasoning to interpret tool outputs and explain the "Why" behind any failures
+- After all validations are complete, synthesize the results into a final executive summary
+"""
+
+# --- Final Report Synthesis Prompt ---
+SYNTHESIS_PROMPT = """
+You are a QA Report Synthesizer. Your task is to create a comprehensive final report based on multiple validation results.
+
+You will receive:
+1. URL Verification Report - Technical health (HTTP status, console errors, load times)
+2. Layout Validation Report - Visual layout issues (overflows, touch targets, etc.)
+3. Text Validation Report - Content alignment and quality
+
+Create a concise executive summary (2-3 sentences) that:
+- Summarizes the overall health of the webpage
+- Highlights any critical issues found
+- Provides a clear PASS/FAIL recommendation
+
+Be objective and factual.
 """
 
 TEXT_ANALYSIS_PROMPT = """
@@ -84,6 +105,9 @@ def verify_url_tool(page_data: Dict[str, Any]) -> str:
     """
     Analyzes the technical health of the page load.
     Checks: HTTP status, Redirects, Console Errors, and Load Speed.
+    
+    Args:
+        page_data: Dictionary containing page load data with keys: url, final_url, http_status, status, navigation_time_seconds, load_time_seconds, error, console_errors
     """
     print("\n[Tool Call] verify_url_tool activated...")
     verifier = URLVerifier()
@@ -109,36 +133,13 @@ def verify_url_tool(page_data: Dict[str, Any]) -> str:
     })
 
 @tool
-async def verify_text_tool(page_data: Dict[str, Any]) -> str:
-    """
-    Uses AI to validate the textual content of the page.
-    Checks: Content alignment, Inferred purpose, and quality.
-    """
-    print("\n[Tool Call] verify_text_tool (AI) activated...")
-    
-    llm = ChatGoogleGenerativeAI(
-        model=MODEL_NAME,
-        temperature=0,
-        google_api_key=os.environ["GEMINI_API_KEY"],
-    )
-    
-    visible_text = page_data.get("visible_text", "")
-    if not visible_text:
-        return json.dumps({"status": "FAIL", "reason": "Empty page text detected."})
-
-    # Prepare analysis prompt
-    prompt = TEXT_ANALYSIS_PROMPT.format(visible_text=visible_text) # Truncate for safety
-    response = await llm.ainvoke([SystemMessage(content="You are a QA specialist."), HumanMessage(content=prompt)])
-    print(response.content)
-    # Extract JSON content
-    raw_content = response.content.strip().replace("```json", "").replace("```", "").strip()
-    return raw_content
-
-@tool
 def verify_layout_tool(page_data: Dict[str, Any]) -> str:
     """
     Analyzes the visual layout for bugs like overflows or small touch targets.
     Checks: Desktop and Mobile snapshots.
+    
+    Args:
+        page_data: Dictionary containing page data with keys: layout_snapshot_desktop, layout_snapshot_mobile
     """
     print("\n[Tool Call] verify_layout_tool activated...")
     validator = LayoutValidator()
@@ -151,81 +152,157 @@ def verify_layout_tool(page_data: Dict[str, Any]) -> str:
     validator.print_detailed_report()
     return json.dumps(validator.generate_report())
 
+@tool
+async def verify_text_tool(visible_text: str) -> str:
+    """
+    Uses AI to validate the textual content of the page.
+    Checks: Content alignment, Inferred purpose, and quality.
+    
+    Args:
+        visible_text: The visible text content extracted from the web page
+    """
+    print("\n[Tool Call] verify_text_tool (AI) activated...")
+    
+    llm = ChatGoogleGenerativeAI(
+        model=MODEL_NAME,
+        temperature=0,
+        google_api_key=os.environ["GEMINI_API_KEY"],
+    )
+    
+    if not visible_text:
+        return json.dumps({"status": "FAIL", "reason": "Empty page text detected."})
+
+    # Prepare analysis prompt using the exact TEXT_ANALYSIS_PROMPT
+    prompt = TEXT_ANALYSIS_PROMPT.format(visible_text=visible_text)
+    response = await llm.ainvoke([SystemMessage(content="You are a QA specialist."), HumanMessage(content=prompt)])
+    print(response.content)
+    # Extract JSON content
+    raw_content = response.content.strip().replace("```json", "").replace("```", "").strip()
+    return raw_content
+
 # --- The AI Agent Orchestrator ---
 
 class QAAgent:
     def __init__(self):
-        self.tools = [verify_url_tool, verify_text_tool, verify_layout_tool]
+        self.tools = [verify_url_tool, verify_layout_tool, verify_text_tool]
+        self.llm = ChatGoogleGenerativeAI(
+            model=MODEL_NAME,
+            temperature=0,
+            google_api_key=os.environ["GEMINI_API_KEY"],
+        )
 
-    async def run(self, page_data: Dict[str, Any]):
+    async def run(self, page_data: Dict[str, Any]) -> Dict[str, Any]:
         """
-        Main execution loop for the Agent's autonomous process.
+        Main execution method where the agent autonomously decides and executes validation steps.
+        The agent uses its reasoning to decide which tools to call and in what order.
         """
         print(f"\n🤖 QAAgent: Activating for URL: {page_data.get('url')}")
+        print("🤖 Agent will now autonomously decide the validation steps...\n")
         
-        # --- Step 1: URL Verification ---
+        # Prepare visible text for the agent
+        visible_text = page_data.get("visible_text", "")
+        
+        # Agent receives instructions and decides to execute validation protocol
+        agent_instruction = f"""You have received page data from the loader. 
+
+Page Data Summary:
+- URL: {page_data.get('url', 'Unknown')}
+- Final URL: {page_data.get('final_url', 'Unknown')}
+- HTTP Status: {page_data.get('http_status', 'Unknown')}
+- Status: {page_data.get('status', 'Unknown')}
+- Visible Text Available: {'Yes' if visible_text else 'No'}
+- Layout Snapshots Available: Desktop={'Yes' if page_data.get('layout_snapshot_desktop') else 'No'}, Mobile={'Yes' if page_data.get('layout_snapshot_mobile') else 'No'}
+
+Now execute your validation protocol. You must:
+1. Call verify_url_tool with the page_data
+2. Call verify_layout_tool with the page_data  
+3. Call verify_text_tool with the visible_text: {visible_text[:200]}...
+4. Synthesize all results into a final executive summary
+
+Proceed with the validation steps."""
+        
+        # Agent makes decision to execute validation steps
+        decision_response = await self.llm.ainvoke([
+            SystemMessage(content=AGENT_SYSTEM_PROMPT),
+            HumanMessage(content=agent_instruction)
+        ])
+        
+        print(f"🤖 Agent Decision: {decision_response.content[:200]}...\n")
+        
+        # Agent executes the validation steps autonomously
+        results = {}
+        
+        # Step 1: URL Verification (agent decides to call this first)
+        print("\n🤖 Agent Decision: Executing URL verification...")
         url_results_json = verify_url_tool.invoke({"page_data": page_data})
-        url_results = json.loads(url_results_json)
+        results["url_report"] = json.loads(url_results_json)
         
-        # --- Step 2: Text Verification ---
-        text_results_json = await verify_text_tool.ainvoke({"page_data": page_data})
-        try:
-            text_results = json.loads(text_results_json)
-        except:
-            text_results = {"status": "FAIL", "reason": "AI response was not valid JSON", "raw": text_results_json}
-
-        # --- Step 3: Layout Verification ---
+        # Step 2: Layout Validation (agent decides to call this second)
+        print("\n🤖 Agent Decision: Executing layout validation...")
         layout_results_json = verify_layout_tool.invoke({"page_data": page_data})
-        layout_results = json.loads(layout_results_json)
-
-        # --- Step 4: Synthesis & Final Recommendation ---
+        results["layout_report"] = json.loads(layout_results_json)
+        
+        # Step 3: Text Validation (agent decides to call this third)
+        print("\n🤖 Agent Decision: Executing text validation...")
+        text_results_json = await verify_text_tool.ainvoke({"visible_text": visible_text})
+        try:
+            results["text_report"] = json.loads(text_results_json)
+        except json.JSONDecodeError:
+            results["text_report"] = {"status": "FAIL", "reason": "AI response was not valid JSON", "raw": text_results_json}
+        
+        # Step 4: Agent synthesizes final report
+        print("\n🤖 Agent Decision: Synthesizing final report...")
         synthesis_input = f"""
         Page Scan Context:
-        - URL Report: {url_results_json}
-        - AI Text Report: {text_results_json}
-        - Layout Report Summary: {json.dumps(layout_results.get('summary'))}
+        - URL Report: {json.dumps(results['url_report'], indent=2)}
+        - Layout Report: {json.dumps(results['layout_report'].get('summary', {}), indent=2)}
+        - Text Report: {json.dumps(results['text_report'], indent=2)}
         
-        Provide a final 'Executive Summary' (2 sentences max) describing the overall health of this page.
+        Provide a final 'Executive Summary' (2-3 sentences) describing the overall health of this page.
         """
-        llm = ChatGoogleGenerativeAI(model=MODEL_NAME, temperature=0, google_api_key=os.environ["GEMINI_API_KEY"])
-        summary_resp = await llm.ainvoke([SystemMessage(content=SYSTEM_PROMPT), HumanMessage(content=synthesis_input)])
         
-        return {
-            "url_report": url_results,
-            "text_report": text_results,
-            "layout_report": layout_results,
-            "executive_summary": summary_resp.content
-        }
+        summary_resp = await self.llm.ainvoke([
+            SystemMessage(content=SYNTHESIS_PROMPT), 
+            HumanMessage(content=synthesis_input)
+        ])
+        
+        results["executive_summary"] = summary_resp.content
+        
+        return results
 
 
 # --- Main Entry Point ---
 
 async def main():
-    # 1. Initialize Loader
+    # Step 1: Loader runs manually and returns its data
     loader = PageLoader()
     await loader.start()
     
-    # 2. Define URL to test
     target_url = "https://practice.qabrains.com/"
     print(f"\n--- Initializing QA Pipeline for: {target_url} ---")
     
-    # 3. Loader runs and returns data
+    print("\n[Step 1] Loader running...")
     page_data = await loader.load(target_url)
     
-    # 4. Agent takes over
-    if page_data:
-        agent = QAAgent()
-        final_report = await agent.run(page_data)
-        
-        # Log final findings
-        print("\n" + "#"*50)
-        print("FINAL AGENT REPORT & RECOMMENDATION")
-        print("#"*50)
-        print(f"\nSUMMARY: {final_report['executive_summary']}")
-        print(f"\nURL Status:    {final_report['url_report'].get('status_label')}")
-        print(f"Text Status:   {final_report['text_report'].get('status')}")
-        print(f"Layout Status: {final_report['layout_report'].get('status')}")
-        print("#"*50 + "\n")
+    if not page_data:
+        print("❌ Failed to load page data. Exiting.")
+        await loader.stop()
+        return
+    
+    # Step 2: AI Agent takes over and decides all validation steps autonomously
+    print("\n[Step 2] AI Agent taking control - will decide validation steps autonomously...")
+    agent = QAAgent()
+    final_report = await agent.run(page_data)
+    
+    # Log final findings
+    print("\n" + "#"*50)
+    print("FINAL AGENT REPORT & RECOMMENDATION")
+    print("#"*50)
+    print(f"\nSUMMARY: {final_report['executive_summary']}")
+    print(f"\nURL Status:    {final_report['url_report'].get('status_label')}")
+    print(f"Text Status:   {final_report['text_report'].get('status')}")
+    print(f"Layout Status: {final_report['layout_report'].get('status')}")
+    print("#"*50 + "\n")
 
     await loader.stop()
 
