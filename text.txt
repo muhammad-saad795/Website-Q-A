@@ -1,0 +1,48 @@
+TEST and Demonstration site for
+Acunetix Web Vulnerability Scanner
+home
+|
+categories
+|
+artists
+|
+disclaimer
+|
+your cart
+|
+guestbook
+|
+AJAX Demo
+If you are already registered please enter your login information below:
+Username :
+Password :
+You can also
+signup here
+.
+Signup disabled. Please use the username
+test
+and the password
+test
+.
+search art
+Browse categories
+Browse artists
+Your cart
+Signup
+Your profile
+Our guestbook
+AJAX Demo
+Links
+Security art
+PHP scanner
+PHP vuln help
+Fractal Explorer
+About Us
+|
+Privacy Policy
+|
+Contact Us
+| ©2019
+  Acunetix Ltd
+Warning
+: This is not a real shop. This is an example PHP application, which is intentionally vulnerable to web attacks. It is intended to help you test Acunetix. It also helps you understand how developer errors and bad configuration may let someone break into your website. You can use it to test other tools and your manual hacking skills as well. Tip: Look for potential SQL Injections, Cross-site Scripting (XSS), and Cross-site Request Forgery (CSRF), and more.

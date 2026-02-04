@@ -1,7 +1,7 @@
 import re
-import logging
 import json
-from typing import List, Dict, Any, Set, Tuple
+import logging
+from typing import List, Set, Optional, Union
 from bs4 import BeautifulSoup, Tag, Comment
 
 # Configure logging
@@ -9,61 +9,96 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-class Extractor:
+class RawURLExtractor:
     """
-    Universal, QA-grade URL extractor.
-    Features:
-    1. Exhaustive URL Extraction from tags, attributes, CSS, and scripts.
-    """
-
-    # 1. URL Patterns
-    URL_PATTERN = re.compile(
-        r'\b(?:https?|ftp|file|blob|mailto|tel):(?:\/\/)?[^\s<>"\'{}|\\^`\[\]]+', 
-        re.IGNORECASE
-    )
-    PROTOCOL_RELATIVE = re.compile(r'\/\/[^\s<>"\'{}|\\^`\[\]]+')
-
-    # 2. Content-Specific Patterns
-    CSS_URL_PATTERN = re.compile(r'url\(["\']?(.*?)["\']?\)')
-    LIST_SEPARATOR = re.compile(r'[\s,]+')
-
-    # 3. Attribute Hints
-    HIGH_CONFIDENCE_ATTRS = {
-        'href', 'src', 'srcset', 'action', 'data', 'content', 'poster', 
-        'cite', 'background', 'codebase', 'classid', 'usemap', 'longdesc',
-        'profile', 'formaction', 'icon', 'manifest', 'ping'
-    }
+    Production-grade raw URL extractor.
     
-    DATA_ATTR_PREFIXES = ('data-', 'ng-', 'v-', 'xlink:', 'on')
+    Capabilities:
+    1. Extracts raw URLs from HTML attributes (href, src, srcset, etc.).
+    2. Extracts raw URLs from inline CSS and style tags.
+    3. Extracts raw URLs from JavaScript strings.
+    4. Extracts URLs from JSON-LD structured data.
+    
+    Constraint: DOES NOT normalize, resolve, or clean URLs.
+    Returns the exact string found in the HTML.
+    """
 
+    # 1. Attributes that typically contain link entities
+    # Includes standard HTML5 attributes and common metadata properties
+    LINK_ATTRS = {
+        'href', 'src', 'srcset', 'action', 'data', 'cite', 'poster', 
+        'background', 'codebase', 'formaction', 'icon', 'manifest', 'ping',
+        'longdesc', 'profile', 'usemap', 'archive', 'dynsrc', 'lowsrc',
+        'classid', 'code' # For applets/objects
+    }
 
-    def extract(self, html: str) -> Dict[str, List[str]]:
+    # 2. Meta tag properties that contain URLs
+    META_LINK_PROPERTIES = {
+        'og:image', 'og:image:url', 'og:image:secure_url', 'og:video', 
+        'og:video:url', 'og:video:secure_url', 'og:url', 'twitter:image',
+        'twitter:player', 'twitter:player:stream', 'canonical', 'alternate',
+        'shortlink', 'amphtml', 'msapplication-TileImage', 'msapplication-config'
+    }
+
+    # 3. Patterns for Text/Script Extraction
+    # Pattern for protocol-relative (//example.com) or absolute paths
+    GENERIC_URL_PATTERN = re.compile(
+        r'(?:https?|ftp|file)://[^\s<>"\'{}|\\^`\[\]]+|//(?:[^\s<>"\'{}|\\^`\[\]]+)'
+    )
+    
+    # Pattern for CSS url()
+    CSS_URL_PATTERN = re.compile(r'url\((["\']?)(.+?)\1\)')
+
+    def extract(self, html: str) -> List[str]:
         """
-        Extracts all unique URLs found in the provided HTML.
-        Returns a dictionary with 'urls' key.
+        Extracts all raw link entities from the HTML.
+        
+        Args:
+            html: Raw HTML string.
+            
+        Returns:
+            A list of unique URL strings found in the document.
         """
         if not html:
-            return {"urls": []}
+            return []
 
-        soup = BeautifulSoup(html, "lxml")
+        # Use 'lxml' for robust parsing, fallback to 'html.parser' if needed
+        try:
+            soup = BeautifulSoup(html, "lxml")
+        except Exception:
+            soup = BeautifulSoup(html, "html.parser")
+
+        found_links = set()
+
+        # 1. Scan DOM Attributes
+        self._scan_attributes(soup, found_links)
         
-        found_urls = set()
-        self._scan_all_tags(soup, found_urls)
-        self._scan_embedded_css(soup, found_urls)
-        self._scan_scripts_and_jsonld(soup, found_urls)
+        # 2. Scan CSS (Style tags and inline styles)
+        self._scan_css(soup, found_links)
+        
+        # 3. Scan Scripts and JSON-LD
+        self._scan_scripts(soup, found_links)
+        
+        # 4. Scan Comments
+        self._scan_comments(soup, found_links)
 
-        return {
-            "urls": list(found_urls)
-        }
+        return sorted(list(found_links))
 
     # ========================================================================
-    # 1. DOM EXHAUSTION
+    # SCANNERS
     # ========================================================================
 
-    def _scan_all_tags(self, soup: BeautifulSoup, url_set: Set[str]):
+    def _scan_attributes(self, soup: BeautifulSoup, url_set: Set[str]):
+        """Iterate over all tags and extract raw values from specific attributes."""
         for tag in soup.find_all(True):
             if isinstance(tag, Comment):
                 continue
+
+            # Special handling for <meta> tags
+            if tag.name == 'meta':
+                self._extract_meta_urls(tag, url_set)
+                continue
+
             attrs = tag.attrs
             if not attrs:
                 continue
@@ -72,99 +107,162 @@ class Extractor:
                 if not attr_value or not isinstance(attr_value, str):
                     continue
 
-                if attr_name == 'srcset':
-                    self._extract_srcset(attr_value, url_set)
-                    continue
-
-                if attr_name == 'ping':
-                    for part in self.LIST_SEPARATOR.split(attr_value):
-                        url_set.add(self._clean_url(part.strip()))
-                    continue
-
-                if attr_name in self.HIGH_CONFIDENCE_ATTRS:
-                    url_set.add(self._clean_url(attr_value.strip()))
-                    continue
-
-                is_data_attr = attr_name.startswith(self.DATA_ATTR_PREFIXES)
-                contains_protocol = '://' in attr_value or attr_value.startswith('//')
+                # High Confidence Attributes
+                if attr_name in self.LINK_ATTRS:
+                    if attr_name == 'srcset':
+                        self._extract_srcset(attr_value, url_set)
+                    elif attr_name == 'ping':
+                        # Ping attribute can contain space-separated URLs
+                        for url in attr_value.split():
+                            url_set.add(url)
+                    else:
+                        url_set.add(attr_value)
                 
-                if is_data_attr or contains_protocol:
-                    self._scan_string_for_urls(attr_value, url_set)
+                # Fallback: Check if attribute name contains 'src' or 'href' (custom data attrs)
+                elif 'src' in attr_name or 'href' in attr_name or 'url' in attr_name:
+                    url_set.add(attr_value)
 
-    def _clean_url(self, url: str) -> str:
-        """Normalizes URL strings."""
-        if not url:
-            return url
-        clean = url.strip()
-        clean = clean.rstrip('\\').rstrip('/')
-        return clean
+    def _extract_meta_urls(self, tag: Tag, url_set: Set[str]):
+        """Extract content from meta tags if the property/name indicates a link."""
+        property_val = tag.get('property') or tag.get('name') or tag.get('http-equiv')
+        content_val = tag.get('content')
 
-    def _extract_srcset(self, content: str, url_set: Set[str]):
-        candidates = content.split(',')
-        for cand in candidates:
-            url_part = cand.strip().split()[0]
-            if url_part:
-                url_set.add(self._clean_url(url_part))
+        if not content_val:
+            return
 
-    def _scan_string_for_urls(self, text: str, url_set: Set[str]):
-        matches = self.URL_PATTERN.findall(text)
-        for m in matches:
-            url_set.add(self._clean_url(m))
-        if not matches:
-            matches = self.PROTOCOL_RELATIVE.findall(text)
-            for m in matches:
-                url_set.add(self._clean_url(m))
+        if property_val and property_val in self.META_LINK_PROPERTIES:
+            url_set.add(content_val)
+        else:
+            # Generic check for link patterns in meta content
+            if self.GENERIC_URL_PATTERN.search(content_val):
+                url_set.add(content_val)
 
-    # ========================================================================
-    # 2. EMBEDDED CSS
-    # ========================================================================
-
-    def _scan_embedded_css(self, soup: BeautifulSoup, url_set: Set[str]):
+    def _scan_css(self, soup: BeautifulSoup, url_set: Set[str]):
+        """Extract URLs from <style> blocks and style attributes."""
+        # 1. Style Tags
         for style_tag in soup.find_all("style"):
             if style_tag.string:
-                self._extract_from_css_text(style_tag.string, url_set)
+                for match in self.CSS_URL_PATTERN.finditer(style_tag.string):
+                    # match.group(2) is the content inside url()
+                    url_set.add(match.group(2).strip())
 
+        # 2. Inline Style Attributes
         for tag in soup.find_all(style=True):
-            css_content = tag.get("style")
-            if css_content:
-                self._extract_from_css_text(css_content, url_set)
+            style_content = tag.get("style")
+            if style_content:
+                for match in self.CSS_URL_PATTERN.finditer(style_content):
+                    url_set.add(match.group(2).strip())
 
-    def _extract_from_css_text(self, css_text: str, url_set: Set[str]):
-        matches = self.CSS_URL_PATTERN.findall(css_text)
-        for m in matches:
-            clean = self._clean_url(m.strip('\'"'))
-            if clean:
-                url_set.add(clean)
-
-    # ========================================================================
-    # 3. SCRIPTS & JSON-LD
-    # ========================================================================
-
-    def _scan_scripts_and_jsonld(self, soup: BeautifulSoup, url_set: Set[str]):
+    def _scan_scripts(self, soup: BeautifulSoup, url_set: Set[str]):
+        """Extract URLs from JavaScript text and JSON-LD."""
         for script in soup.find_all("script"):
             script_type = script.get("type", "").lower()
             script_content = script.string
             if not script_content:
                 continue
 
+            # 1. JSON-LD
             if script_type == 'application/ld+json':
                 try:
-                    data = json.loads(script_content)
-                    self._extract_urls_from_dict(data, url_set)
+                    # Parse to find keys that look like URLs
+                    self._extract_from_json(script_content, url_set)
                 except json.JSONDecodeError:
                     pass
+                continue
 
-            js_matches = re.findall(r'["\']((https?:|/)[^"\']+)["\']', script_content)
-            for m in js_matches:
-                url_set.add(self._clean_url(m[0]))
+            # 2. Generic JS Strings
+            # Look for quoted strings matching URL patterns
+            # This matches "http://..." or 'http://...'
+            for match in self.GENERIC_URL_PATTERN.finditer(script_content):
+                url_set.add(match.group(0))
 
-    def _extract_urls_from_dict(self, data: Any, url_set: Set[str]):
-        if isinstance(data, str):
-            if self.URL_PATTERN.match(data) or self.PROTOCOL_RELATIVE.match(data):
-                url_set.add(self._clean_url(data))
-        elif isinstance(data, dict):
-            for v in data.values():
-                self._extract_urls_from_dict(v, url_set)
+    def _scan_comments(self, soup: BeautifulSoup, url_set: Set[str]):
+        """Extract URLs found inside HTML comments."""
+        for comment in soup.find_all(string=lambda text: isinstance(text, Comment)):
+            for match in self.GENERIC_URL_PATTERN.finditer(str(comment)):
+                url_set.add(match.group(0))
+
+    # ========================================================================
+    # HELPERS
+    # ========================================================================
+
+    def _extract_srcset(self, content: str, url_set: Set[str]):
+        """
+        Parse srcset attribute.
+        Format: 'image.jpg 1x, image2.jpg 2x'
+        We only want the image part, not the descriptor.
+        """
+        parts = content.split(',')
+        for part in parts:
+            # Split by whitespace to separate URL from descriptor
+            url_part = part.strip().split()[0]
+            if url_part:
+                url_set.add(url_part)
+
+    def _extract_from_json(self, json_str: str, url_set: Set[str]):
+        """
+        Traverse JSON dictionary and collect values that look like URLs.
+        """
+        try:
+            data = json.loads(json_str)
+        except json.JSONDecodeError:
+            return
+
+        if isinstance(data, dict):
+            for value in data.values():
+                self._process_json_value(value, url_set)
         elif isinstance(data, list):
             for item in data:
-                self._extract_urls_from_dict(item, url_set)
+                self._process_json_value(item, url_set)
+
+    def _process_json_value(self, value: any, url_set: Set[str]):
+        if isinstance(value, str):
+            # Simple heuristic: if it looks like a link, take it
+            if self.GENERIC_URL_PATTERN.match(value):
+                url_set.add(value)
+        elif isinstance(value, dict):
+            for v in value.values():
+                self._process_json_value(v, url_set)
+        elif isinstance(value, list):
+            for item in value:
+                self._process_json_value(item, url_set)
+
+# ========================================================================
+# USAGE EXAMPLE
+# ========================================================================
+
+if __name__ == "__main__":
+    html_doc = """
+    <html>
+    <head>
+        <link rel="canonical" href="https://example.com/canonical">
+        <style>
+            body { background: url("/bg.png"); }
+            .box { background: url(http://site.com/img.jpg); }
+        </style>
+        <script>
+            var link1 = "http://dynamic.com/script.js";
+            var link2 = '//cdn.com/lib.js';
+        </script>
+        <script type="application/ld+json">
+        {
+            "@context": "http://schema.org",
+            "url": "http://example.com/structured"
+        }
+        </script>
+    </head>
+    <body>
+        <a href="/relative/path">Link</a>
+        <img src="/images/img.png" srcset="img-1x.png 1x, img-2x.png 2x">
+        <div data-custom-src="lazy.html"></div>
+        <!-- Raw link: http://commented.com -->
+    </body>
+    </html>
+    """
+
+    extractor = RawURLExtractor()
+    urls = extractor.extract(html_doc)
+
+    print(f"Found {len(urls)} raw entities:")
+    for u in urls:
+        print(u)

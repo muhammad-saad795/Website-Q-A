@@ -1,0 +1,335 @@
+{
+  "status": "FAIL",
+  "summary": {
+    "total_issues": 12,
+    "critical": 4,
+    "warnings": 8,
+    "info": 0,
+    "by_viewport": {
+      "desktop": 0,
+      "mobile": 12
+    },
+    "by_category": {
+      "HORIZONTAL_OVERFLOW": 11,
+      "SMALL_TOUCH_TARGET": 1
+    }
+  },
+  "issues": [
+    {
+      "severity": "CRITICAL",
+      "category": "HORIZONTAL_OVERFLOW",
+      "message": "Element overflows viewport by 30px on the right",
+      "viewport": "mobile",
+      "element": {
+        "descriptor": "<a>",
+        "tag": "a",
+        "id": null,
+        "classes": [],
+        "text": "Acunetix Web Vulnerability Scanner",
+        "rect": {
+          "x": 200.578125,
+          "y": 68,
+          "width": 204.734375,
+          "height": 14
+        }
+      },
+      "details": {
+        "element_right_edge": 405.3125,
+        "viewport_width": 375,
+        "overflow_px": 30.3125,
+        "is_interactive": true
+      },
+      "recommendation": "Add responsive width or max-width: 100%. Element extends to 405px but viewport is only 375px wide."
+    },
+    {
+      "severity": "CRITICAL",
+      "category": "HORIZONTAL_OVERFLOW",
+      "message": "Element overflows viewport by 52px on the right",
+      "viewport": "mobile",
+      "element": {
+        "descriptor": "<a>",
+        "tag": "a",
+        "id": null,
+        "classes": [],
+        "text": "guestbook",
+        "rect": {
+          "x": 356.359375,
+          "y": 93.984375,
+          "width": 70.421875,
+          "height": 16
+        }
+      },
+      "details": {
+        "element_right_edge": 426.78125,
+        "viewport_width": 375,
+        "overflow_px": 51.78125,
+        "is_interactive": true
+      },
+      "recommendation": "Add responsive width or max-width: 100%. Element extends to 427px but viewport is only 375px wide."
+    },
+    {
+      "severity": "CRITICAL",
+      "category": "HORIZONTAL_OVERFLOW",
+      "message": "Element overflows viewport by 147px on the right",
+      "viewport": "mobile",
+      "element": {
+        "descriptor": "<a>",
+        "tag": "a",
+        "id": null,
+        "classes": [],
+        "text": "AJAX Demo",
+        "rect": {
+          "x": 439.828125,
+          "y": 93.984375,
+          "width": 82.390625,
+          "height": 16
+        }
+      },
+      "details": {
+        "element_right_edge": 522.21875,
+        "viewport_width": 375,
+        "overflow_px": 147.21875,
+        "is_interactive": true
+      },
+      "recommendation": "Add responsive width or max-width: 100%. Element extends to 522px but viewport is only 375px wide."
+    },
+    {
+      "severity": "WARNING",
+      "category": "HORIZONTAL_OVERFLOW",
+      "message": "Element overflows viewport by 325px on the right",
+      "viewport": "mobile",
+      "element": {
+        "descriptor": "<div>#mainLayer",
+        "tag": "div",
+        "id": "mainLayer",
+        "classes": [],
+        "text": "TEST and Demonstration site for Acunetix Web Vulnerability S",
+        "rect": {
+          "x": 0,
+          "y": 0,
+          "width": 700,
+          "height": 666.34375
+        }
+      },
+      "details": {
+        "element_right_edge": 700,
+        "viewport_width": 375,
+        "overflow_px": 325,
+        "is_interactive": false
+      },
+      "recommendation": "Add responsive width or max-width: 100%. Element extends to 700px but viewport is only 375px wide."
+    },
+    {
+      "severity": "WARNING",
+      "category": "HORIZONTAL_OVERFLOW",
+      "message": "Element overflows viewport by 325px on the right",
+      "viewport": "mobile",
+      "element": {
+        "descriptor": "<div>#masthead",
+        "tag": "div",
+        "id": "masthead",
+        "classes": [],
+        "text": "TEST and Demonstration site for Acunetix Web Vulnerability S",
+        "rect": {
+          "x": 0,
+          "y": 0,
+          "width": 700,
+          "height": 122.625
+        }
+      },
+      "details": {
+        "element_right_edge": 700,
+        "viewport_width": 375,
+        "overflow_px": 325,
+        "is_interactive": false
+      },
+      "recommendation": "Add responsive width or max-width: 100%. Element extends to 700px but viewport is only 375px wide."
+    },
+    {
+      "severity": "WARNING",
+      "category": "HORIZONTAL_OVERFLOW",
+      "message": "Element overflows viewport by 325px on the right",
+      "viewport": "mobile",
+      "element": {
+        "descriptor": "<div>#globalNav",
+        "tag": "div",
+        "id": "globalNav",
+        "classes": [],
+        "text": "home | categories | artists | disclaimer | your cart | guest",
+        "rect": {
+          "x": 0,
+          "y": 92.984375,
+          "width": 700,
+          "height": 18.640625
+        }
+      },
+      "details": {
+        "element_right_edge": 700,
+        "viewport_width": 375,
+        "overflow_px": 325,
+        "is_interactive": false
+      },
+      "recommendation": "Add responsive width or max-width: 100%. Element extends to 700px but viewport is only 375px wide."
+    },
+    {
+      "severity": "WARNING",
+      "category": "HORIZONTAL_OVERFLOW",
+      "message": "Element overflows viewport by 325px on the right",
+      "viewport": "mobile",
+      "element": {
+        "descriptor": "<div>#content",
+        "tag": "div",
+        "id": "content",
+        "classes": [],
+        "text": "If you are already registered please enter your login inform",
+        "rect": {
+          "x": 154,
+          "y": 122.625,
+          "width": 546,
+          "height": 158.625
+        }
+      },
+      "details": {
+        "element_right_edge": 700,
+        "viewport_width": 375,
+        "overflow_px": 325,
+        "is_interactive": false
+      },
+      "recommendation": "Add responsive width or max-width: 100%. Element extends to 700px but viewport is only 375px wide."
+    },
+    {
+      "severity": "WARNING",
+      "category": "HORIZONTAL_OVERFLOW",
+      "message": "Element overflows viewport by 304px on the right",
+      "viewport": "mobile",
+      "element": {
+        "descriptor": "<div>.story",
+        "tag": "div",
+        "id": null,
+        "classes": [
+          "story"
+        ],
+        "text": "If you are already registered please enter your login inform",
+        "rect": {
+          "x": 154,
+          "y": 122.625,
+          "width": 525,
+          "height": 118.8125
+        }
+      },
+      "details": {
+        "element_right_edge": 679,
+        "viewport_width": 375,
+        "overflow_px": 304,
+        "is_interactive": false
+      },
+      "recommendation": "Add responsive width or max-width: 100%. Element extends to 679px but viewport is only 375px wide."
+    },
+    {
+      "severity": "WARNING",
+      "category": "HORIZONTAL_OVERFLOW",
+      "message": "Element overflows viewport by 304px on the right",
+      "viewport": "mobile",
+      "element": {
+        "descriptor": "<div>.story",
+        "tag": "div",
+        "id": null,
+        "classes": [
+          "story"
+        ],
+        "text": "You can also signup here.\nSignup disabled. Please use the us",
+        "rect": {
+          "x": 154,
+          "y": 241.4375,
+          "width": 525,
+          "height": 39.8125
+        }
+      },
+      "details": {
+        "element_right_edge": 679,
+        "viewport_width": 375,
+        "overflow_px": 304,
+        "is_interactive": false
+      },
+      "recommendation": "Add responsive width or max-width: 100%. Element extends to 679px but viewport is only 375px wide."
+    },
+    {
+      "severity": "WARNING",
+      "category": "HORIZONTAL_OVERFLOW",
+      "message": "Element overflows viewport by 325px on the right",
+      "viewport": "mobile",
+      "element": {
+        "descriptor": "<div>#siteInfo",
+        "tag": "div",
+        "id": "siteInfo",
+        "classes": [],
+        "text": "About Us | Privacy Policy | Contact Us | \u00a92019 Acunetix Ltd",
+        "rect": {
+          "x": 0,
+          "y": 529.78125,
+          "width": 700,
+          "height": 35.984375
+        }
+      },
+      "details": {
+        "element_right_edge": 700,
+        "viewport_width": 375,
+        "overflow_px": 325,
+        "is_interactive": false
+      },
+      "recommendation": "Add responsive width or max-width: 100%. Element extends to 700px but viewport is only 375px wide."
+    },
+    {
+      "severity": "WARNING",
+      "category": "HORIZONTAL_OVERFLOW",
+      "message": "Element overflows viewport by 327px on the right",
+      "viewport": "mobile",
+      "element": {
+        "descriptor": "<div>",
+        "tag": "div",
+        "id": null,
+        "classes": [],
+        "text": "Warning: This is not a real shop. This is an example PHP app",
+        "rect": {
+          "x": 0,
+          "y": 584.40625,
+          "width": 702,
+          "height": 81.9375
+        }
+      },
+      "details": {
+        "element_right_edge": 702,
+        "viewport_width": 375,
+        "overflow_px": 327,
+        "is_interactive": false
+      },
+      "recommendation": "Add responsive width or max-width: 100%. Element extends to 702px but viewport is only 375px wide."
+    },
+    {
+      "severity": "CRITICAL",
+      "category": "SMALL_TOUCH_TARGET",
+      "message": "Touch target too small: interactive element is 40x16px (recommended: 44x44px minimum)",
+      "viewport": "mobile",
+      "element": {
+        "descriptor": "<a>",
+        "tag": "a",
+        "id": null,
+        "classes": [],
+        "text": "home",
+        "rect": {
+          "x": 10,
+          "y": 93.984375,
+          "width": 40,
+          "height": 16
+        }
+      },
+      "details": {
+        "width": 40,
+        "height": 16,
+        "is_icon": false,
+        "recommended_size": "44x44px"
+      },
+      "recommendation": "Add padding or increase button size to meet WCAG touch target guidelines (44x44px)."
+    }
+  ]
+}
