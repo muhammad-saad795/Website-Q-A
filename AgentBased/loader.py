@@ -24,9 +24,11 @@ class PageLoader:
         self.playwright = None
         self.browser: Optional[Browser] = None
         self.context: Optional[BrowserContext] = None
+        self._stop_event: Optional[asyncio.Event] = None  # Event to signal when stop() is called
+        self._keep_alive_page: Optional[Page] = None  # Page to keep browser window open
 
         # Scripts directory
-        self.scripts_dir = Path("AgentBased/scripts")
+        self.scripts_dir = Path("scripts")
         self.scroll_script_path = self.scripts_dir / "scroll_page.js"
         self.text_script_path = self.scripts_dir / "extract_visible_text.js"
         self.layout_snapshot_script_path = self.scripts_dir / "layout_snapshot.js"
@@ -39,21 +41,30 @@ class PageLoader:
     async def start(self):
         self.playwright = await async_playwright().start()
         self.browser = await self.playwright.chromium.launch(headless=self.headless)
-        self.context = await self.browser.new_context(ignore_https_errors=True) 
+        self.context = await self.browser.new_context(ignore_https_errors=True)
+        # Create stop event within async context to ensure it's bound to the current event loop
+        self._stop_event = asyncio.Event() 
         
     async def stop(self):
+        # Close keep-alive page first
+        if self._keep_alive_page:
+            await self._keep_alive_page.close()
+            self._keep_alive_page = None
         if self.context:
             await self.context.close()
         if self.browser:
             await self.browser.close()
         if self.playwright:
             await self.playwright.stop()
+        # Signal that stop() has been called
+        if self._stop_event:
+            self._stop_event.set()
 
     async def _scroll_page(self, page: Page):
         if not self.scroll_script_path.exists():
             logger.warning("Scroll script not found, skipping scroll.")
             return
-        script = self.scroll_script_path.read_text()
+        script = self.scroll_script_path.read_text(encoding='utf-8')
         try:
             await page.evaluate(script)
         except PlaywrightError as e:
@@ -63,7 +74,7 @@ class PageLoader:
         if not self.text_script_path.exists():
             logger.warning("Text extraction script not found.")
             return ""
-        script = self.text_script_path.read_text()
+        script = self.text_script_path.read_text(encoding='utf-8')
         try:
             return await page.evaluate(script)
         except PlaywrightError as e:
@@ -74,7 +85,7 @@ class PageLoader:
         if not self.layout_snapshot_script_path.exists():
             logger.warning("Layout snapshot script not found.")
             return {}
-        script = self.layout_snapshot_script_path.read_text()
+        script = self.layout_snapshot_script_path.read_text(encoding='utf-8')
         try:
             return await page.evaluate(script)
         except PlaywrightError as e:
@@ -83,23 +94,23 @@ class PageLoader:
     
     async def _capture_dynamic_links(self, page: Page) -> List[str]:
         if self.dynamic_links_script_path.exists():
-            return await page.evaluate(self.dynamic_links_script_path.read_text())
+            return await page.evaluate(self.dynamic_links_script_path.read_text(encoding='utf-8'))
         return []
 
     async def _discover_interactive_routes(self, page: Page):
         if self.interactive_route_discovery_path.exists():
-            return await page.evaluate(self.interactive_route_discovery_path.read_text())
+            return await page.evaluate(self.interactive_route_discovery_path.read_text(encoding='utf-8'))
             page.wait_for_timeout(SETTLE_TIME_MS)
         return []
     async def _scan_forms(self, page: Page):
         if self.form_html_extractor_script_path.exists():
-            return await page.evaluate(self.form_html_extractor_script_path.read_text())
+            return await page.evaluate(self.form_html_extractor_script_path.read_text(encoding='utf-8'))
         return []
     async def _detect_forms(self, page: Page) -> List[Dict[str, Any]]:
         if not self.form_detector_script_path.exists():
             logger.warning("Form detector script not found.")
             return []
-        script = self.form_detector_script_path.read_text()
+        script = self.form_detector_script_path.read_text(encoding='utf-8')
         try:
             return await page.evaluate(script)
         except PlaywrightError as e:
@@ -199,7 +210,7 @@ class PageLoader:
             await page.wait_for_timeout(SETTLE_TIME_MS)
 
 
-    async def load(self, url: str) -> Dict[str, Any]:
+    async def load(self, url: str, keep_page_open: bool = False) -> Dict[str, Any]:
         if not self.context:
             raise RuntimeError("Loader not started")
 
@@ -210,6 +221,10 @@ class PageLoader:
             try:
                 page = await self.context.new_page()
                 await asyncio.wait_for(self._load_page(page, url, result), timeout=MAX_LOAD_SECONDS)
+                # If keep_page_open is True, store the page instead of closing it
+                if keep_page_open:
+                    self._keep_alive_page = page
+                    page = None  # Don't close it in finally block
                 return result
             except (PlaywrightError, RuntimeError) as e:
                 logger.warning(f"Attempt {attempt}/{RETRIES} failed: {e}")
@@ -243,7 +258,7 @@ class PageLoader:
             # 2. Execute automation script with form_data
             if self.form_automation_script_path.exists():
                 logger.info(f"Executing form automation with data: {form_data}")
-                script = self.form_automation_script_path.read_text()
+                script = self.form_automation_script_path.read_text(encoding='utf-8')
                 automation_result = await page.evaluate(script, form_data)
                 result["form_automation_result"] = automation_result
                 
@@ -295,8 +310,8 @@ class PageLoader:
 async def main():
     loader = PageLoader(headless=False)
     await loader.start()
-    result = await loader.load("https://practice.qabrains.com/")
-    #await loader.stop()
+    # Load with keep_page_open=True to prevent browser from closing
+    result = await loader.load("https://practice.qabrains.com/", keep_page_open=True)
 
     import json
     Path("result.json").write_text(json.dumps(result, indent=2))
@@ -305,6 +320,18 @@ async def main():
     verifier = URLVerifier()
     report = verifier.verify(url=result["url"], final_url=result["final_url"], http_status=result["http_status"], status=result["status"], navigation_time=result["navigation_time_seconds"], load_time=result["load_time_seconds"], error=result["error"], console_errors=result["console_errors"])
     verifier.print_report(report)
+    
+    # Keep loader alive until stop() is explicitly called
+    logger.info("Loader is ready. Browser window will stay open until stop() is called.")
+    
+    # Wait for user input asynchronously (to avoid blocking the event loop)
+    # Using run_in_executor to run the blocking input() call without blocking the async event loop
+    loop = asyncio.get_event_loop()
+    await loop.run_in_executor(None, input, "Press Enter to stop the loader...")
+    
+    # User pressed Enter, stop the loader
+    logger.info("Stopping loader...")
+    await loader.stop()
 
 
 if __name__ == "__main__":
