@@ -1,96 +1,48 @@
-(Practice Site)
-Home
-QA Topics
-Discussion
-Tags
-Jobs
-Practice Site
-About Us
-Sign In
-Demo Module
-User Authentication
-Login
-Registration
-Forgot Password
-Form Submission
-Drag and Drop List
-Demo Site
-E-Commerce Site
-Booking Site
-QA Practice Site
-Learn and practice QA to master software testing, find bugs, and ensure quality. Build skills for reliable,
-high-performing applications.
-User Authentication
-Login Page
-Email :
-qa_testers@qabrains.com
+TEST and Demonstration site for
+Acunetix Web Vulnerability Scanner
+home
+|
+categories
+|
+artists
+|
+disclaimer
+|
+your cart
+|
+guestbook
+|
+AJAX Demo
+If you are already registered please enter your login information below:
+Username :
 Password :
-Password123
-Email
-*
-Password
-*
-Login
-Leave Feedback
-Submit
-Feedback (
-54
-)
-Samuel Arian
-•
-3d ago
-sssss
-Pooja
-•
-4d ago
-kkk
-Pooja
-•
-4d ago
-eee
-shubham sawale
-•
-7d ago
-asdfghjklkjhgfdsasdfg
-dsfdsfdfd
-shubham sawale
-•
-7d ago
-sdd
-Abzal
-•
-9d ago
-хай
-Aysha
-•
-11d ago
-Login not working
-Ansar
-•
-14d ago
+You can also
+signup here
+.
+Signup disabled. Please use the username
 test
-Enamul
-•
-1mo ago
-hi
-John lee
-•
-04 Dec 2025
-is se accha me kheti kaar leta 🥲🥲
-QA Brains is the ultimate QA Community to exchange knowledge, seek advice, and engage in discussions that enhance Quality Assurance testers' skills and expertise.
-QA Topics
-Web Testing
-Interview Questions
-Testing Framework
-See more
-Quick Links
-Discussion
+and the password
+test
+.
+search art
+Browse categories
+Browse artists
+Your cart
+Signup
+Your profile
+Our guestbook
+AJAX Demo
+Links
+Security art
+PHP scanner
+PHP vuln help
+Fractal Explorer
 About Us
-Terms & Conditions
+|
 Privacy Policy
-Follow Us
-For Support
-support@qabrains.com
-©
-2026
-QA Brains | All Rights Reserved
+|
+Contact Us
+| ©2019
+  Acunetix Ltd
+Warning
+: This is not a real shop. This is an example PHP application, which is intentionally vulnerable to web attacks. It is intended to help you test Acunetix. It also helps you understand how developer errors and bad configuration may let someone break into your website. You can use it to test other tools and your manual hacking skills as well. Tip: Look for potential SQL Injections, Cross-site Scripting (XSS), and Cross-site Request Forgery (CSRF), and more.

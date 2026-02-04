@@ -36,11 +36,9 @@ class PageLoader:
 
     async def start(self):
         self.playwright = await async_playwright().start()
-        self.browser = await self.playwright.chromium.launch(
-            headless=self.headless,
-        )
-        self.context = await self.browser.new_context(ignore_https_errors=True)
-
+        self.browser = await self.playwright.chromium.launch(headless=self.headless)
+        self.context = await self.browser.new_context(ignore_https_errors=True) 
+        
     async def stop(self):
         if self.context:
             await self.context.close()
@@ -158,15 +156,19 @@ class PageLoader:
         result["visible_text"] = await self._extract_visible_text(page)
         #Discover urls
         result["discovered_urls"] = await self._capture_dynamic_links(page)
+
+        # Desktop
+        #----Page already in desktop mode----
+        result["layout_snapshot_desktop"] = await self._capture_layout_snapshot(page)
         
         # Mobile
         await page.set_viewport_size({"width": 375, "height": 812})
         await page.wait_for_timeout(SETTLE_TIME_MS)
         result["layout_snapshot_mobile"] = await self._capture_layout_snapshot(page)
-        # Desktop
+        #-----Set back to desktop mode (Maximized)-----
         await page.set_viewport_size({"width": 1280, "height": 720})
         await page.wait_for_timeout(SETTLE_TIME_MS)
-        result["layout_snapshot_desktop"] = await self._capture_layout_snapshot(page)
+
         # ── Add network & console logs ──
         result["network_requests"] = network_requests
         result["console_errors"] = console_errors
@@ -240,7 +242,7 @@ class PageLoader:
 async def main():
     loader = PageLoader(headless=False)
     await loader.start()
-    result = await loader.load("https://automationintesting.online/")
+    result = await loader.load("https://practice.qabrains.com/")
     #await loader.stop()
 
     import json

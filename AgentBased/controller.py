@@ -15,10 +15,10 @@ async def main():
     loader = PageLoader()
     await loader.start()
     
-    start_url = "https://practice.qabrains.com/"
+    start_url = "http://testphp.vulnweb.com/login.php"
     seen_urls.add(start_url) # Mark start URL as seen
     result = await loader.load(start_url)
-    await loader.stop()
+    #await loader.stop()
 
     # Verify URL Results
     verifier = URLVerifier()
@@ -36,9 +36,9 @@ async def main():
 
     # Verify Page Text
     try:
-        #text_result = await verify_page_text(url=result["url"], visible_text=result["visible_text"])
-        #print("\nPage Text Verification:")
-        #print(json.dumps(text_result, indent=2))
+        text_result = await verify_page_text(url=result["url"], visible_text=result["visible_text"])
+        print("\nPage Text Verification:")
+        print(json.dumps(text_result, indent=2))
         with open("text.txt", "w") as f:
             f.write(result["visible_text"])
     except Exception as e:
