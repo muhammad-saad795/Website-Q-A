@@ -1,50 +1,84 @@
 /**
  * scan_forms.js
- * A robust form scanner for QA automation.
- * Extracts detailed metadata from forms and form-like containers.
+ * A robust, industrial-strength form scanner for QA automation.
+ * Features:
+ * - Shadow DOM traversal
+ * - Label association (explicit, implicit, ARIA, and proximity)
+ * - HTML5 'form' attribute support (fields outside <form> tags)
+ * - Form-like container detection (for JS-driven forms without <form> tags)
+ * - Computed visibility and positioning
+ * - Detection of iframes and cross-origin boundaries
+ * - Full HTML capture
  */
 (() => {
     try {
         const results = [];
-        const claimedFields = new Set();
+        const seenFields = new Set();
+        const seenForms = new Set();
 
         /**
-         * Finds the label associated with an input element.
+         * Recursively finds all elements matching a selector, even inside Shadow DOM.
+         */
+        const findDeep = (root, selector) => {
+            let elements = Array.from(root.querySelectorAll(selector));
+            const all = root.querySelectorAll('*');
+            for (const el of all) {
+                if (el.shadowRoot) {
+                    elements = elements.concat(findDeep(el.shadowRoot, selector));
+                }
+            }
+            return elements;
+        };
+
+        /**
+         * Determines the label for an element using various heuristics.
          */
         const extractLabel = (el) => {
-            // 1. Label with 'for' attribute
+            // 1. Explicit <label for="...">
             if (el.id) {
                 const labelFor = document.querySelector(`label[for="${el.id}"]`);
                 if (labelFor) return labelFor.innerText.trim();
             }
 
-            // 2. Parent label element
+            // 2. Parent <label>
             const parentLabel = el.closest('label');
             if (parentLabel) return parentLabel.innerText.trim();
 
-            // 3. aria-label
+            // 3. ARIA attributes
             const ariaLabel = el.getAttribute('aria-label');
             if (ariaLabel) return ariaLabel.trim();
 
-            // 4. aria-labelledby
             const ariaLabelledBy = el.getAttribute('aria-labelledby');
             if (ariaLabelledBy) {
                 const labelEl = document.getElementById(ariaLabelledBy);
                 if (labelEl) return labelEl.innerText.trim();
             }
 
-            // 5. Placeholder as fallback
+            // 4. Proximity - Check preceding siblings (commonly used in modern frameworks)
+            let prev = el.previousElementSibling;
+            while (prev) {
+                if (['LABEL', 'SPAN', 'DIV', 'H3', 'H4', 'P'].includes(prev.tagName)) {
+                    const text = prev.innerText.trim();
+                    if (text && text.length < 100) return text;
+                    if (text) break; // Found a large block of text, stop
+                }
+                prev = prev.previousElementSibling;
+            }
+
+            // 5. Placeholder
             if (el.placeholder) return `(Placeholder) ${el.placeholder}`;
 
-            // 6. Title attribute
+            // 6. Title
             if (el.title) return `(Title) ${el.title}`;
+
+            // 7. Value (for buttons)
+            if (el.tagName === 'INPUT' && (el.type === 'button' || el.type === 'submit')) {
+                return el.value;
+            }
 
             return null;
         };
 
-        /**
-         * Captures all ARIA attributes on an element.
-         */
         const getAriaAttributes = (el) => {
             const aria = {};
             for (const attr of el.attributes) {
@@ -55,133 +89,180 @@
             return aria;
         };
 
-        /**
-         * Identifies the primary submit button in a container.
-         */
-        const identifySubmitButton = (container) => {
-            const submitSelectors = [
-                'input[type="submit"]',
-                'button[type="submit"]',
-                'button:not([type])', // Defaults to submit in many browsers
-                'input[type="button"][value*="Submit" i]',
-                'button:contains("Submit"), button:contains("Login"), button:contains("Register")', // Needs specialized check
-            ];
-
-            // Real submit buttons first
-            let btn = container.querySelector('input[type="submit"], button[type="submit"]');
-            if (btn) return formatButton(btn);
-
-            // Form-like containers or fallback
-            const allButtons = container.querySelectorAll('button, input[type="button"]');
-            for (const b of allButtons) {
-                const text = (b.innerText || b.value || "").toLowerCase();
-                if (text.includes('submit') || text.includes('log') || text.includes('sign') || text.includes('save') || text.includes('create')) {
-                    return formatButton(b);
-                }
-            }
-
-            // Take the last button if multiple exist and none matched
-            if (allButtons.length > 0) {
-                return formatButton(allButtons[allButtons.length - 1]);
-            }
-
-            return null;
+        const isVisible = (el) => {
+            if (!el) return false;
+            const style = window.getComputedStyle(el);
+            return (
+                style.display !== 'none' &&
+                style.visibility !== 'hidden' &&
+                style.opacity !== '0' &&
+                el.offsetWidth > 0 &&
+                el.offsetHeight > 0
+            );
         };
 
-        const formatButton = (el) => {
-            return {
-                tag: el.tagName.toLowerCase(),
-                type: el.type || (el.tagName === 'BUTTON' ? 'submit' : null),
-                id: el.id || null,
+        const formatField = (el) => {
+            const tag = el.tagName.toLowerCase();
+            const rect = el.getBoundingClientRect();
+            const fieldData = {
+                tag,
+                type: el.type || (tag === 'button' ? 'button' : tag),
                 name: el.name || null,
-                text: (el.innerText || el.value || "").trim(),
+                id: el.id || null,
+                label: extractLabel(el),
+                value: el.value || '',
+                placeholder: el.placeholder || null,
+                required: el.required || false,
+                disabled: el.disabled || false,
+                readOnly: el.readOnly || false,
+                isVisible: isVisible(el),
+                rect: {
+                    x: rect.x + window.scrollX,
+                    y: rect.y + window.scrollY,
+                    width: rect.width,
+                    height: rect.height
+                },
+                aria: getAriaAttributes(el),
                 outerHTML: el.outerHTML
             };
+
+            if (tag === 'select') {
+                fieldData.options = Array.from(el.options).map(o => ({
+                    text: o.text,
+                    value: o.value,
+                    selected: o.selected
+                }));
+            }
+
+            if (tag === 'input' && (el.type === 'checkbox' || el.type === 'radio')) {
+                fieldData.checked = el.checked;
+            }
+
+            return fieldData;
         };
 
-        /**
-         * Main field extraction logic.
-         */
-        const extractFields = (root) => {
-            return Array.from(
-                root.querySelectorAll("input:not([type='submit']), textarea, select")
-            ).map(el => {
-                const tag = el.tagName.toLowerCase();
-                const type = el.type || tag;
-                const id = el.id || null;
-                const name = el.name || null;
+        // --- STEP 1: Process Explicit <form> Tags ---
+        const forms = findDeep(document, 'form');
+        forms.forEach((formEl, index) => {
+            seenForms.add(formEl);
+            const fields = [];
 
-                // Track claimed fields to avoid duplicates in 'form-like' detection
-                claimedFields.add(el);
-
-                let options = [];
-                if (tag === "select") {
-                    options = Array.from(el.options).map(o => ({
-                        value: o.value,
-                        text: o.text,
-                        selected: o.selected
-                    }));
+            // Collect fields associated with this form (physically or via 'form' attribute)
+            const allPotentiallyAssociated = findDeep(document, 'input, select, textarea, button');
+            allPotentiallyAssociated.forEach(f => {
+                // The .form property is natively supported in browsers to find the owner form
+                if (f.form === formEl) {
+                    fields.push(formatField(f));
+                    seenFields.add(f);
                 }
-
-                return {
-                    tag,
-                    type,
-                    name,
-                    id,
-                    label: extractLabel(el),
-                    placeholder: el.placeholder || null,
-                    ariaAttributes: getAriaAttributes(el),
-                    required: el.required || false,
-                    disabled: el.disabled || false,
-                    value: el.value || null,
-                    isVisible: el.offsetWidth > 0 && el.offsetHeight > 0,
-                    options
-                };
             });
-        };
-
-        // 1. Genuine <form> elements
-        document.querySelectorAll("form").forEach((form, index) => {
-            const fields = extractFields(form);
-            if (!fields.length && !identifySubmitButton(form)) return;
 
             results.push({
-                type: "form",
+                type: 'form',
                 index,
-                id: form.id || null,
-                name: form.name || null,
-                action: form.action || null,
-                method: (form.method || "GET").toUpperCase(),
+                id: formEl.id || null,
+                name: formEl.name || null,
+                action: formEl.getAttribute('action') || null,
+                method: (formEl.getAttribute('method') || 'GET').toUpperCase(),
+                outerHTML: formEl.outerHTML,
                 fields,
-                submitButton: identifySubmitButton(form),
-                outerHTML: form.outerHTML
+                fieldCount: fields.length
             });
         });
 
-        // 2. Form-like containers (e.g., login divs not using <form>)
-        // Look for common container patterns
-        const containers = document.querySelectorAll('div, section, article, [role="form"]');
-        containers.forEach(container => {
-            // Only process if it contains fields not already claimed by a real <form>
-            const innerFields = Array.from(container.querySelectorAll('input, select, textarea'))
-                .filter(f => !claimedFields.has(f));
+        // --- STEP 2: Process "Form-Like" Containers (Orphaned Fields) ---
+        const allFields = findDeep(document, 'input, select, textarea, button');
+        const orphanedFields = allFields.filter(f => !seenFields.has(f));
 
-            if (innerFields.length >= 2) {
-                const fields = extractFields(container);
-                results.push({
-                    type: "form-like",
-                    index: results.length,
-                    id: container.id || null,
-                    role: container.getAttribute('role') || null,
-                    fields,
-                    submitButton: identifySubmitButton(container),
-                    outerHTML: container.outerHTML
-                });
+        if (orphanedFields.length > 0) {
+            // Group orphaned fields by their closest meaningful container
+            const containerMap = new Map();
+            orphanedFields.forEach(f => {
+                // Find a logical container (div, section, etc.) or a role-based container
+                let container = f.closest('div, section, article, [role="form"], [role="dialog"], [role="group"]');
+
+                // If no container found or container is too generic, use parent
+                if (!container || container === document.body) {
+                    container = f.parentElement || document.body;
+                }
+
+                if (!containerMap.has(container)) {
+                    containerMap.set(container, []);
+                }
+                containerMap.get(container).push(f);
+            });
+
+            // For each container, if it has 2+ fields OR a submit-like button, treat as a form
+            containerMap.forEach((fieldsInContainer, container) => {
+                const hasInput = fieldsInContainer.some(f => ['INPUT', 'TEXTAREA', 'SELECT'].includes(f.tagName));
+                const hasSubmit = fieldsInContainer.some(f =>
+                    (f.tagName === 'BUTTON' && (f.type === 'submit' || !f.type)) ||
+                    (f.tagName === 'INPUT' && f.type === 'submit')
+                );
+
+                if (hasInput && (fieldsInContainer.length >= 2 || hasSubmit)) {
+                    const fields = fieldsInContainer.map(formatField);
+                    results.push({
+                        type: 'form-like',
+                        index: results.length,
+                        id: container.id || null,
+                        tag: container.tagName.toLowerCase(),
+                        role: container.getAttribute('role') || null,
+                        outerHTML: container.outerHTML,
+                        fields,
+                        fieldCount: fields.length
+                    });
+                }
+            });
+        }
+
+        // --- STEP 3: Check for iframes (Cross-context forms) ---
+        const iframes = findDeep(document, 'iframe');
+        const iframeInfo = iframes.map(frame => {
+            let details = {
+                tag: 'iframe',
+                id: frame.id || null,
+                name: frame.name || null,
+                src: frame.src || null,
+                isVisible: isVisible(frame),
+            };
+
+            try {
+                // If we can access contentDocument, it's same-origin
+                if (frame.contentDocument) {
+                    details.isAccessible = true;
+                    // We don't recurse here because the script is usually executed per-frame by the driver
+                } else {
+                    details.isAccessible = false;
+                    details.reason = 'Cross-origin block';
+                }
+            } catch (e) {
+                details.isAccessible = false;
+                details.reason = 'Security Error';
             }
+            return details;
         });
 
-        return results;
+        return {
+            formCount: results.length,
+            forms: results,
+            iframes: iframeInfo,
+            metadata: {
+                url: window.location.href,
+                timestamp: new Date().toISOString(),
+                viewport: {
+                    width: window.innerWidth,
+                    height: window.innerHeight
+                }
+            }
+        };
+
     } catch (e) {
-        return { error: e.message, stack: e.stack };
+        return {
+            error: true,
+            message: e.message,
+            stack: e.stack,
+            partialResults: results
+        };
     }
 })();

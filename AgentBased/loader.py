@@ -32,7 +32,9 @@ class PageLoader:
         self.layout_snapshot_script_path = self.scripts_dir / "layout_snapshot.js"
         self.dynamic_links_script_path = self.scripts_dir / "dynamic_links_capture.js"
         self.interactive_route_discovery_path = self.scripts_dir / "interactive_route_discovery.js"
+        self.form_html_extractor_script_path = self.scripts_dir / "scan_forms.js"
         self.form_detector_script_path = self.scripts_dir / "form_detector.js"
+        self.form_automation_script_path = self.scripts_dir / "automate_form.js"
 
     async def start(self):
         self.playwright = await async_playwright().start()
@@ -89,7 +91,10 @@ class PageLoader:
             return await page.evaluate(self.interactive_route_discovery_path.read_text())
             page.wait_for_timeout(SETTLE_TIME_MS)
         return []
-
+    async def _scan_forms(self, page: Page):
+        if self.form_html_extractor_script_path.exists():
+            return await page.evaluate(self.form_html_extractor_script_path.read_text())
+        return []
     async def _detect_forms(self, page: Page) -> List[Dict[str, Any]]:
         if not self.form_detector_script_path.exists():
             logger.warning("Form detector script not found.")
@@ -179,6 +184,8 @@ class PageLoader:
         logger.info("Stopped network and console listeners.")
         
         # ── Form Detection (Before Interactive Discovery) ──
+        logger.info("Scanning forms...")
+        result["forms_html"] = await self._scan_forms(page)
         logger.info("Detecting forms...")
         result["forms"] = await self._detect_forms(page)
 
@@ -196,24 +203,7 @@ class PageLoader:
         if not self.context:
             raise RuntimeError("Loader not started")
 
-        result: Dict[str, Any] = {
-            "url": url,
-            "final_url": None,
-            "http_status": None,
-            "status": "pending",
-            "navigation_time_seconds": None,
-            "load_time_seconds": None,
-            "error": None,
-            "html": None,
-            "visible_text": None,
-            "network_requests": [],
-            "console_errors": [],
-            "layout_snapshot_desktop": None,
-            "layout_snapshot_mobile": None,
-            "discovered_urls": [],
-            "interactive_routes":[],
-            "forms": [],
-        }
+        result: Dict[str, Any] = self._initial_result_dict(url)
 
         for attempt in range(1, RETRIES + 1):
             page: Optional[Page] = None
@@ -234,6 +224,69 @@ class PageLoader:
                     await page.close()
 
         return result
+
+    async def submit_form(self, url: str, form_data: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Loads the page, fills form data, and submits it.
+        """
+        if not self.context:
+            raise RuntimeError("Loader not started")
+
+        result: Dict[str, Any] = self._initial_result_dict(url)
+        
+        page: Optional[Page] = None
+        try:
+            page = await self.context.new_page()
+            # 1. Load the page initially
+            await page.goto(url, wait_until="networkidle", timeout=NAV_TIMEOUT_MS)
+            
+            # 2. Execute automation script with form_data
+            if self.form_automation_script_path.exists():
+                logger.info(f"Executing form automation with data: {form_data}")
+                script = self.form_automation_script_path.read_text()
+                automation_result = await page.evaluate(script, form_data)
+                result["form_automation_result"] = automation_result
+                
+                # 3. Wait for navigation or a bit of time to see what happens
+                try:
+                    await page.wait_for_load_state("networkidle", timeout=5000)
+                except:
+                    pass
+                
+                # 4. Capture state after submission
+                result["url_after_submit"] = page.url
+                result["html_after_submit"] = await page.content()
+                result["visible_text_after_submit"] = await self._extract_visible_text(page)
+                
+            return result
+        except Exception as e:
+            logger.error(f"Form submission failed: {e}")
+            result["error"] = str(e)
+            return result
+        finally:
+            if page:
+                await page.close()
+
+    def _initial_result_dict(self, url: str) -> Dict[str, Any]:
+        return {
+            "url": url,
+            "final_url": None,
+            "http_status": None,
+            "status": "pending",
+            "navigation_time_seconds": None,
+            "load_time_seconds": None,
+            "error": None,
+            "html": None,
+            "visible_text": None,
+            "network_requests": [],
+            "console_errors": [],
+            "layout_snapshot_desktop": None,
+            "layout_snapshot_mobile": None,
+            "discovered_urls": [],
+            "interactive_routes":[],
+            "forms_html": [],
+            "forms": [],
+        }
 
 
 # ──────────────────────────────────────────────
