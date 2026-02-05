@@ -37,6 +37,7 @@ class PageLoader:
         self.form_html_extractor_script_path = self.scripts_dir / "scan_forms.js"
         self.form_detector_script_path = self.scripts_dir / "form_detector.js"
         self.form_automation_script_path = self.scripts_dir / "automate_form.js"
+        self.fill_form_script_path = self.scripts_dir / "fill_form.js"
 
     async def start(self):
         self.playwright = await async_playwright().start()
@@ -116,6 +117,32 @@ class PageLoader:
         except PlaywrightError as e:
             logger.warning(f"Form detection failed: {e}")
             return []
+
+    async def _fill_form(self, page: Page, form_data: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Fills form fields using fill_form.js script.
+        
+        Args:
+            page: Playwright page object
+            form_data: Form data structure from scan_forms.js with filled values
+            
+        Returns:
+            Dictionary with fill results (status, filled fields, errors, etc.)
+        """
+        if not self.fill_form_script_path.exists():
+            logger.warning("Fill form script not found.")
+            return {"error": "Fill form script not found"}
+        
+        script = self.fill_form_script_path.read_text(encoding='utf-8')
+        try:
+            result = await page.evaluate(script, form_data)
+            return result if result else {"status": "completed"}
+        except PlaywrightError as e:
+            logger.error(f"Form filling failed: {e}")
+            return {"error": str(e)}
+        except Exception as e:
+            logger.error(f"Form filling error: {e}")
+            return {"error": str(e)}
 
     async def _load_page(self, page: Page, url: str, result: Dict[str, Any]):
         # ── Setup listeners before navigation ──
@@ -197,7 +224,6 @@ class PageLoader:
         # ── Form Detection (Before Interactive Discovery) ──
         logger.info("Scanning forms...")
         result["forms_html"] = await self._scan_forms(page)
-        input("Press Enter to continue...")
         
         logger.info("Detecting forms...")
         result["forms"] = await self._detect_forms(page)
