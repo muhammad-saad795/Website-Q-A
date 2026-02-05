@@ -4,6 +4,7 @@ import time
 from pathlib import Path
 from typing import Optional, Dict, Any, List
 from playwright.async_api import async_playwright, Browser, BrowserContext, Page, Error as PlaywrightError
+import json
 
 
 # ──────────────────────────────────────────────
@@ -33,8 +34,8 @@ class PageLoader:
         self.dynamic_links_script_path = self.scripts_dir / "dynamic_links_capture.js"
         self.interactive_route_discovery_path = self.scripts_dir / "interactive_route_discovery.js"
         self.form_html_extractor_script_path = self.scripts_dir / "scan_forms.js"
-        self.form_detector_script_path = self.scripts_dir / "form_detector.js"
-        self.form_automation_script_path = self.scripts_dir / "automate_form.js"
+        self.fill_forms_script_path = self.scripts_dir / "fill_forms.js"
+        self.active_page: Optional[Page] = None
 
     async def start(self):
         self.playwright = await async_playwright().start()
@@ -95,18 +96,25 @@ class PageLoader:
         if self.form_html_extractor_script_path.exists():
             return await page.evaluate(self.form_html_extractor_script_path.read_text())
         return []
-    async def _detect_forms(self, page: Page) -> List[Dict[str, Any]]:
-        if not self.form_detector_script_path.exists():
-            logger.warning("Form detector script not found.")
-            return []
-        script = self.form_detector_script_path.read_text()
-        try:
-            return await page.evaluate(script)
-        except PlaywrightError as e:
-            logger.warning(f"Form detection failed: {e}")
-            return []
 
-    async def _load_page(self, page: Page, url: str, result: Dict[str, Any]):
+    async def _fill_forms(self, page: Page, form_payload: Dict[str, Any]) -> Dict[str, Any]:
+        if not self.fill_forms_script_path.exists():
+            logger.warning("Fill forms script not found.")
+            return {"error": "Fill forms script not found."}
+        
+        # Ensure scan ran
+        state_exists = await page.evaluate("() => !!window.__FORMS_STATE__")
+        if not state_exists:
+            return {"error": "Form state missing. scan_forms.js must run first."}
+
+        script = self.fill_forms_script_path.read_text()
+        try:
+            return await page.evaluate(script, form_payload)
+        except PlaywrightError as e:
+            logger.warning(f"Form filling failed: {e}")
+            return {"error": str(e)}
+
+    async def _load_page(self, page: Page, url: str, result: Dict[str, Any], form_data: Optional[Any] = None):
         # ── Setup listeners before navigation ──
         network_requests: List[Dict[str, Any]] = []
         console_errors: List[Dict[str, Any]] = []
@@ -156,8 +164,7 @@ class PageLoader:
         await self._scroll_page(page)
         await page.wait_for_timeout(SETTLE_TIME_MS)
 
-        # ── Capture HTML, visible text, and layout snapshot ──
-        result["html"] = await page.content()
+        # ── Capture visible text, and layout snapshot ──
         result["visible_text"] = await self._extract_visible_text(page)
         #Discover urls
         result["discovered_urls"] = await self._capture_dynamic_links(page)
@@ -184,10 +191,15 @@ class PageLoader:
         logger.info("Stopped network and console listeners.")
         
         # ── Form Detection (Before Interactive Discovery) ──
-        logger.info("Scanning forms...")
-        result["forms_html"] = await self._scan_forms(page)
-        logger.info("Detecting forms...")
-        result["forms"] = await self._detect_forms(page)
+        logger.info("Scanning forms (canonical)...")
+        scanned_forms = await self._scan_forms(page)
+        result["forms_html"] = scanned_forms
+
+        # 🔑 CRITICAL: make scan available to sibling scripts
+        await page.evaluate(
+            "forms => window.__FORMS_STATE__ = forms",
+            scanned_forms
+        )
 
         # ── Interactive Route Discovery ──
         logger.info("Starting interactive route discovery...")
@@ -198,8 +210,61 @@ class PageLoader:
             await page.goto(url, wait_until="domcontentloaded")
             await page.wait_for_timeout(SETTLE_TIME_MS)
 
+        # ── Form Filling ──
+        if form_data:
+            logger.info(f"Form data provided, filling forms in the same session...")
+            
+            # ── Setup listeners for submission tracking ──
+            submit_network_requests: List[Dict[str, Any]] = []
+            submit_console_errors: List[Dict[str, Any]] = []
 
-    async def load(self, url: str) -> Dict[str, Any]:
+            def on_submit_response(r):
+                submit_network_requests.append({
+                    "url": r.url,
+                    "status": r.status,
+                    "method": r.request.method,
+                    "resource_type": r.request.resource_type
+                })
+
+            def on_submit_console(m):
+                if m.type in ("error", "warning"):
+                    submit_console_errors.append({
+                        "type": m.type,
+                        "text": m.text,
+                        "location": m.location
+                    })
+
+            page.on("response", on_submit_response)
+            page.on("console", on_submit_console)
+            
+            try:
+                # Resolve form_data if it's a path
+                if isinstance(form_data, (str, Path)):
+                    import json
+                    form_payload = json.loads(Path(form_data).read_text())
+                else:
+                    form_payload = form_data
+
+                fill_result = await self._fill_forms(page, form_payload)
+                result["form_fill_result"] = fill_result
+                
+                # Wait for potential navigation after submission
+                try:
+                    await page.wait_for_load_state("networkidle", timeout=5000)
+                except:
+                    pass
+                
+                logger.info(f"Form submitted. New URL: {page.url}")
+            finally:
+                # ── Stop listeners and save logs ──
+                page.remove_listener("response", on_submit_response)
+                page.remove_listener("console", on_submit_console)
+                result["form_submit_network_requests"] = submit_network_requests
+                result["form_submit_console_errors"] = submit_console_errors
+                logger.info("Stopped submission listeners.")
+
+
+    async def load(self, url: str, form_data: Optional[Any] = None, keep_open: bool = False) -> Dict[str, Any]:
         if not self.context:
             raise RuntimeError("Loader not started")
 
@@ -209,7 +274,7 @@ class PageLoader:
             page: Optional[Page] = None
             try:
                 page = await self.context.new_page()
-                await asyncio.wait_for(self._load_page(page, url, result), timeout=MAX_LOAD_SECONDS)
+                await asyncio.wait_for(self._load_page(page, url, result, form_data=form_data), timeout=MAX_LOAD_SECONDS)
                 return result
             except (PlaywrightError, RuntimeError) as e:
                 logger.warning(f"Attempt {attempt}/{RETRIES} failed: {e}")
@@ -221,51 +286,77 @@ class PageLoader:
                 result["error"] = "Global timeout exceeded"
             finally:
                 if page:
-                    await page.close()
+                    if not keep_open:
+                        await page.close()
+                    else:
+                        self.active_page = page
 
         return result
 
-    async def submit_form(self, url: str, form_data: Dict[str, Any]) -> Dict[str, Any]:
+    async def fill_active_page(self, form_data: Dict[str, Any]) -> Dict[str, Any]:
         """
-        Loads the page, fills form data, and submits it.
+        Fills forms on the currently active page (self.active_page) using the provided data dictionary.
+        Does NOT trigger a new navigation.
         """
-        if not self.context:
-            raise RuntimeError("Loader not started")
+        if not self.active_page:
+            return {"error": "No active page found. Call load(..., keep_open=True) first."}
 
-        result: Dict[str, Any] = self._initial_result_dict(url)
+        form_result = {"url_before_fill": self.active_page.url}
         
-        page: Optional[Page] = None
+        # ── Setup listeners for submission tracking ──
+        submit_network_requests: List[Dict[str, Any]] = []
+        submit_console_errors: List[Dict[str, Any]] = []
+
+        def on_submit_response(r):
+            submit_network_requests.append({
+                "url": r.url,
+                "status": r.status,
+                "method": r.request.method,
+                "resource_type": r.request.resource_type
+            })
+
+        def on_submit_console(m):
+            if m.type in ("error", "warning"):
+                submit_console_errors.append({
+                    "type": m.type,
+                    "text": m.text,
+                    "location": m.location
+                })
+
+        self.active_page.on("response", on_submit_response)
+        self.active_page.on("console", on_submit_console)
+
         try:
-            page = await self.context.new_page()
-            # 1. Load the page initially
-            await page.goto(url, wait_until="networkidle", timeout=NAV_TIMEOUT_MS)
+            logger.info(f"Filling forms on page: {self.active_page.url}")
+            await self._fill_forms(self.active_page, form_data)
             
-            # 2. Execute automation script with form_data
-            if self.form_automation_script_path.exists():
-                logger.info(f"Executing form automation with data: {form_data}")
-                script = self.form_automation_script_path.read_text()
-                automation_result = await page.evaluate(script, form_data)
-                result["form_automation_result"] = automation_result
-                
-                # 3. Wait for navigation or a bit of time to see what happens
-                try:
-                    await page.wait_for_load_state("networkidle", timeout=5000)
-                except:
-                    pass
-                
-                # 4. Capture state after submission
-                result["url_after_submit"] = page.url
-                result["html_after_submit"] = await page.content()
-                result["visible_text_after_submit"] = await self._extract_visible_text(page)
-                
-            return result
+            # Wait a bit for potential submission side effects
+            try:
+                await self.active_page.wait_for_load_state("networkidle", timeout=5000)
+            except:
+                pass
+            
+            form_result["url_after"] = self.active_page.url
+            form_result["status"] = "success"
         except Exception as e:
-            logger.error(f"Form submission failed: {e}")
-            result["error"] = str(e)
-            return result
+            logger.error(f"fill_active_page failed: {e}")
+            form_result["status"] = "failed"
+            form_result["error"] = str(e)
         finally:
-            if page:
-                await page.close()
+            # ── Stop listeners and save logs ──
+            # Wait briefly to catch trailing logs
+            await asyncio.sleep(0.5)
+            
+            self.active_page.remove_listener("response", on_submit_response)
+            self.active_page.remove_listener("console", on_submit_console)
+            
+            form_result["network_requests"] = submit_network_requests
+            form_result["console_errors"] = submit_console_errors
+            
+            logger.info(f"Captured {len(submit_network_requests)} network requests and {len(submit_console_errors)} console errors during form submission.")
+
+        return form_result
+
 
     def _initial_result_dict(self, url: str) -> Dict[str, Any]:
         return {
@@ -276,7 +367,6 @@ class PageLoader:
             "navigation_time_seconds": None,
             "load_time_seconds": None,
             "error": None,
-            "html": None,
             "visible_text": None,
             "network_requests": [],
             "console_errors": [],
@@ -285,7 +375,6 @@ class PageLoader:
             "discovered_urls": [],
             "interactive_routes":[],
             "forms_html": [],
-            "forms": [],
         }
 
 
@@ -295,16 +384,41 @@ class PageLoader:
 async def main():
     loader = PageLoader(headless=False)
     await loader.start()
-    result = await loader.load("https://practice.qabrains.com/")
-    #await loader.stop()
+    
+    url = "https://practice.qabrains.com/registration"
+    
+    form_data = {
+      "formIndex": 0,
+      "#name": "ali",
+      "#country": "Pakistan",
+      "#account": "Student",
+      "#email": "ali@example.com",
+      "#password": "Password123",
+      "#confirm_password": "Password123",
+      "submitSelector": "button.whitespace-nowrap.rounded-md.font-medium.transition-all.disabled\\:pointer-events-none.disabled\\:opacity-50.\\[\\&_svg\\]\\:pointer-events-none.\\[\\&_svg\\:not\\(\\[class\\*\\=\\'size-\\'\\]\\)\\]\\:size-4.shrink-0.\\[\\&_svg\\]\\:shrink-0.outline-none.focus-visible\\:border-ring.focus-visible\\:ring-ring\\/50.focus-visible\\:ring-\\[3px\\].aria-invalid\\:ring-destructive\\/20.dark\\:aria-invalid\\:ring-destructive\\/40.aria-invalid\\:border-destructive.bg-primary.text-primary-foreground.shadow-xs.hover\\:bg-primary\\/90.h-9.px-4.py-2.has-\\[\\>svg\\]\\:px-3.btn-submit.font-oswald.text-md.uppercase.flex.items-center.gap-2.justify-center.\\!py-6.mt-4",
+      "submit": True
+    }
+    
+    logger.info(f"Step 1: Loading and scanning page: {url}")
+    # Load with keep_open=True so we can fill later
+    scan_result = await loader.load(url, keep_open=True)
 
-    import json
-    Path("result.json").write_text(json.dumps(result, indent=2))
+    # Save scan result
+    Path("result.json").write_text(json.dumps(scan_result, indent=2))
+    logger.info("Scan finished and saved to result.json")
 
-    from url_verifier import URLVerifier
-    verifier = URLVerifier()
-    report = verifier.verify(url=result["url"], final_url=result["final_url"], http_status=result["http_status"], status=result["status"], navigation_time=result["navigation_time_seconds"], load_time=result["load_time_seconds"], error=result["error"], console_errors=result["console_errors"])
-    verifier.print_report(report)
+    # Step 2: Fill the form independently
+    input("Press Enter to continue...")
+    
+    logger.info(f"Step 2: Filling forms independently with provided dictionary...")
+    fill_result = await loader.fill_active_page(form_data)
+    
+    # Save fill result
+    Path("fill_result.json").write_text(json.dumps(fill_result, indent=2))
+
+    logger.info("Tasks finished. Keeping browser open... (Press Enter to stop)")
+    await asyncio.get_event_loop().run_in_executor(None, input, "")
+    await loader.stop()
 
 
 if __name__ == "__main__":
