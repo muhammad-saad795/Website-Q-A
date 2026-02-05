@@ -141,4 +141,4 @@ if __name__ == "__main__":
         load_time=6.1,
         console_errors=[{"type": "error", "text": "Failed to load resource"}]
     )
-    verifier.print_report(test_report)
+    print(test_report)

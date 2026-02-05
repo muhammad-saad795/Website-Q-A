@@ -540,46 +540,39 @@ class LayoutValidator:
             print(f"   💡 Fix: {issue['recommendation']}")
 
 
-def validate_layout_file(json_file_path: str, output_file: str = None) -> Dict:
+def validate_layout(data: Dict[str, Any]) -> Dict:
     """
-    Validate layout from a JSON file containing snapshots
-    
+    Validate layout from provided snapshot data (no file I/O).
+
     Args:
-        json_file_path: Path to result.json file
-        output_file: Optional path to save validation report
-        
+        data: Dict containing layout snapshots (desktop/mobile).
+
     Returns:
-        Validation report dictionary
+        Validation report dictionary.
     """
-    # Load the JSON file
-    print(f"📂 Loading {json_file_path}...")
-    with open(json_file_path, 'r', encoding='utf-8') as f:
-        data = json.load(f)
-    
-    # Create validator
     validator = LayoutValidator()
-    
+
     # Validate desktop snapshot
     if 'layout_snapshot_desktop' in data:
         validator.validate_snapshot(data['layout_snapshot_desktop'], 'desktop')
-    
+
     # Validate mobile snapshot
     if 'layout_snapshot_mobile' in data:
         validator.validate_snapshot(data['layout_snapshot_mobile'], 'mobile')
-    
-    # Generate report
+
     report = validator.generate_report()
-    
-    # Print detailed summary
     validator.print_detailed_report()
-    
-    # Save report if output file specified
-    if output_file:
-        with open(output_file, 'w', encoding='utf-8') as f:
-            json.dump(report, f, indent=2)
-        print(f"💾 Detailed report saved to: {output_file}")
-    
     return report
+
+
+def validate_layout_file(json_file_path: str) -> Dict:
+    """
+    Backward-compatible wrapper that reads a JSON file and returns the report.
+    """
+    print(f"📂 Loading {json_file_path}...")
+    with open(json_file_path, 'r', encoding='utf-8') as f:
+        data = json.load(f)
+    return validate_layout(data)
 
 
 if __name__ == "__main__":
@@ -587,6 +580,4 @@ if __name__ == "__main__":
     
     # Get file path from command line or use default
     json_file = sys.argv[1] if len(sys.argv) > 1 else 'result.json'
-    output_file = sys.argv[2] if len(sys.argv) > 2 else 'validation_report.json'
-    
-    validate_layout_file(json_file, output_file)
+    validate_layout_file(json_file)

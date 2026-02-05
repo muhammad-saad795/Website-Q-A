@@ -1,0 +1,18 @@
+{
+  "url": "https://practice.qabrains.com/",
+  "is_ok": true,
+  "redirected": false,
+  "final_url": "https://practice.qabrains.com/",
+  "http_status": 200,
+  "status_label": "Healthy",
+  "issues": [],
+  "performance": {
+    "navigation_seconds": 1.27,
+    "total_load_seconds": 3.62
+  },
+  "console_summary": {
+    "errors": 0,
+    "warnings": 0
+  },
+  "console_logs": []
+}
