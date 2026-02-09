@@ -52,51 +52,11 @@ async (payload) => {
 
     const formIndex = payload.formIndex !== undefined ? payload.formIndex : null;
     const customSubmitSelector = payload.submitSelector || null;
-    const entries = Object.entries(payload).filter(([k]) => k !== "formIndex" && k !== "submitSelector");
+    const entries = Object.entries(payload).filter(([k]) => !["formIndex", "submitSelector", "submit"].includes(k));
     const results = [];
 
+    // Step 1: Fill all fields
     for (const [key, value] of entries) {
-        if (key === "submit") {
-            if (value) {
-                let submitBtn = null;
-
-                // Priority 1: Custom selector from payload
-                if (customSubmitSelector) {
-                    const btn = document.querySelector(customSubmitSelector);
-                    if (btn) {
-                        submitBtn = btn;
-                    }
-                }
-
-                // Priority 2: Fallback to scanned forms state
-                if (!submitBtn) {
-                    const formsToSearch = formIndex !== null
-                        ? window.__FORMS_STATE__.forms.filter(f => f.index === formIndex)
-                        : window.__FORMS_STATE__.forms;
-
-                    for (const form of formsToSearch) {
-                        if (form.submitSelector) {
-                            const btn = document.querySelector(form.submitSelector);
-                            if (btn) {
-                                submitBtn = btn;
-                                break;
-                            }
-                        }
-                    }
-                }
-
-                if (submitBtn) {
-                    console.log("Submitting form...");
-                    click(submitBtn);
-                    await sleep(500);
-                    results.push({ key: "submit", status: "clicked" });
-                } else {
-                    results.push({ key: "submit", status: "button_not_found" });
-                }
-            }
-            continue;
-        }
-
         let fieldFound = null;
         const formsToSearch = formIndex !== null
             ? window.__FORMS_STATE__.forms.filter(f => f.index === formIndex)
@@ -145,6 +105,45 @@ async (payload) => {
             }
         }
         results.push({ key, status: "filled" });
+    }
+
+    // Step 2: Handle submission
+    if (payload.submit) {
+        let submitBtn = null;
+
+        // Priority 1: Custom selector from payload
+        if (customSubmitSelector) {
+            const btn = document.querySelector(customSubmitSelector);
+            if (btn) {
+                submitBtn = btn;
+            }
+        }
+
+        // Priority 2: Fallback to scanned forms state
+        if (!submitBtn) {
+            const formsToSearch = formIndex !== null
+                ? window.__FORMS_STATE__.forms.filter(f => f.index === formIndex)
+                : window.__FORMS_STATE__.forms;
+
+            for (const form of formsToSearch) {
+                if (form.submitSelector) {
+                    const btn = document.querySelector(form.submitSelector);
+                    if (btn) {
+                        submitBtn = btn;
+                        break;
+                    }
+                }
+            }
+        }
+
+        if (submitBtn) {
+            console.log("Submitting form...");
+            click(submitBtn);
+            await sleep(500);
+            results.push({ key: "submit", status: "clicked" });
+        } else {
+            results.push({ key: "submit", status: "button_not_found" });
+        }
     }
 
     return {

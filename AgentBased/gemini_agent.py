@@ -10,36 +10,60 @@ from __future__ import annotations
 import argparse
 import json
 import os
-from typing import Any, Dict, List, Tuple
+from dotenv import load_dotenv
+from logging import getLogger
+from typing import Any, Dict, List, Tuple, Optional
 
 from google import genai
 from google.genai import types
+
+logger = getLogger(__name__)
+
+# Load environment variables from the AgentBased/.env file
+load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), ".env"), override=True)
 
 from tools import (
     TEXT_VERIFIER_SPEC,
     TEXT_VERIFIER_TOOL_NAME,
     run_text_verifier_tool,
+    FORM_FILLER_SPEC,
+    FORM_FILLER_TOOL_NAME,
+    run_form_filler_tool,
 )
+from AgentBased.loader import PageLoader
 
 
 DEFAULT_MODEL = os.environ.get("GEMINI_MODEL", "gemini-2.5-flash")
-DEFAULT_MAX_STEPS = 5
+DEFAULT_MAX_STEPS = 15
 
 
 SYSTEM_INSTRUCTION = (
-    "You are a practical, tool-using web QA agent. "
-    "Decide when a tool is needed, call it, and then provide a concise final answer. "
-    "Do not reveal hidden reasoning. If a tool call fails, explain it briefly and proceed."
+    "You are a Senior QA Automation Engineer. Your goal is to perform thorough, high-quality verification. "
+    "STRICT SEQUENCING RULE: When interacting with forms, you MUST generate and process field keys in the "
+    "EXACT CHRONOLOGICAL order they appear in the HTML structure (top-to-bottom, left-to-right). "
+    "NEVER skip fields or change the sequence. Your JSON payload must mirror the page's visual flow. "
+    "PAYLOAD STRUCTURE: Your tool payload MUST contain: 'formIndex' (integer), all field keys (selectors) in sequence, "
+    "the 'submitSelector' (css selector for the button), and 'submit': true. "
+    "When testing forms, do not stop at one success. Test multiple scenarios: 'Happy Path' (valid data), "
+    "'Edge Cases' (invalid formats), and 'Error Handling' (missing required fields). "
+    "If multiple forms exist, verify each one sequentially from top to bottom. "
+    "Always observe the page state after a tool call before deciding your next move. "
+    "Provide a detailed final report summarizing all test cases performed."
 )
 
 
 def _build_tools() -> List[types.Tool]:
-    declaration = types.FunctionDeclaration(
+    text_decl = types.FunctionDeclaration(
         name=TEXT_VERIFIER_SPEC["name"],
         description=TEXT_VERIFIER_SPEC["description"],
         parametersJsonSchema=TEXT_VERIFIER_SPEC["parameters"],
     )
-    return [types.Tool(functionDeclarations=[declaration])]
+    form_decl = types.FunctionDeclaration(
+        name=FORM_FILLER_SPEC["name"],
+        description=FORM_FILLER_SPEC["description"],
+        parametersJsonSchema=FORM_FILLER_SPEC["parameters"],
+    )
+    return [types.Tool(functionDeclarations=[text_decl, form_decl])]
 
 
 def _extract_text_and_calls(
@@ -64,10 +88,7 @@ def _extract_text_and_calls(
     return "".join(text_chunks).strip(), calls, content
 
 
-def _run_tool_call(call: types.FunctionCall) -> Dict[str, Any]:
-    if call.name != TEXT_VERIFIER_TOOL_NAME:
-        return {"error": f"Unknown tool: {call.name}"}
-
+def _run_tool_call(call: types.FunctionCall, loader: Optional[PageLoader] = None) -> Dict[str, Any]:
     args = call.args or {}
     if isinstance(args, str):
         try:
@@ -75,13 +96,19 @@ def _run_tool_call(call: types.FunctionCall) -> Dict[str, Any]:
         except json.JSONDecodeError:
             return {"error": "Invalid tool arguments (not JSON)."}
 
-    return run_text_verifier_tool(args)
+    if call.name == TEXT_VERIFIER_TOOL_NAME:
+        return run_text_verifier_tool(args)
+    elif call.name == FORM_FILLER_TOOL_NAME:
+        return run_form_filler_tool(args, loader=loader)
+    
+    return {"error": f"Unknown tool: {call.name}"}
 
 
 class GeminiAgent:
-    def __init__(self, api_key: str, model: str = DEFAULT_MODEL):
+    def __init__(self, api_key: str, model: str = DEFAULT_MODEL, loader: Optional[PageLoader] = None):
         self.client = genai.Client(api_key=api_key)
         self.model = model
+        self.loader = loader
         self.tools = _build_tools()
 
     def run(self, task: str, max_steps: int = DEFAULT_MAX_STEPS) -> str:
@@ -94,34 +121,38 @@ class GeminiAgent:
             tools=self.tools,
         )
 
-        for _ in range(max_steps):
-            response = self.client.models.generate_content(
-                model=self.model,
-                contents=history,
-                config=config,
-            )
-
-            text, calls, model_content = _extract_text_and_calls(response)
-            history.append(model_content)
-
-            if not calls:
-                return text or "No response generated."
-
-            for call in calls:
-                result = _run_tool_call(call)
-                history.append(
-                    types.Content(
-                        role="tool",
-                        parts=[
-                            types.Part(
-                                functionResponse=types.FunctionResponse(
-                                    name=call.name,
-                                    response=result,
-                                )
-                            )
-                        ],
-                    )
+        try:
+            for _ in range(max_steps):
+                response = self.client.models.generate_content(
+                    model=self.model,
+                    contents=history,
+                    config=config,
                 )
+
+                text, calls, model_content = _extract_text_and_calls(response)
+                history.append(model_content)
+
+                if not calls:
+                    return text or "No response generated."
+
+                for call in calls:
+                    result = _run_tool_call(call, loader=self.loader)
+                    history.append(
+                        types.Content(
+                            role="tool",
+                            parts=[
+                                types.Part(
+                                    functionResponse=types.FunctionResponse(
+                                        name=call.name,
+                                        response=result,
+                                    )
+                                )
+                            ],
+                        )
+                    )
+        except Exception as exc:
+            logger.error(f"Gemini agent execution failed: {exc}")
+            return f"Agent Error: {str(exc)}"
 
         return "Stopped: reached max tool steps without a final answer."
 
@@ -179,11 +210,7 @@ def run_from_agent_payload(
 
 
 def _get_api_key() -> str:
-    return (
-        os.environ.get("GEMINI_API_KEY")
-        or os.environ.get("GOOGLE_API_KEY")
-        or ""
-    )
+    return os.getenv("GEMINI_API_KEY")
 
 
 def main() -> None:
