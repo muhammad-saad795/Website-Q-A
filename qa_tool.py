@@ -1,5 +1,5 @@
 """
-Pipeline runner with BFS Crawler:
+qa_tool with BFS Crawler:
 1) Starts with an initial URL.
 2) Uses a FIFO queue for BFS traversal.
 3) Deduplicates using a hash set.
@@ -32,16 +32,16 @@ logging.basicConfig(
     format="%(asctime)s - [%(levelname)s] - %(name)s - %(message)s",
     datefmt="%H:%M:%S"
 )
-logger = logging.getLogger("PipelineRunner")
+logger = logging.getLogger("qa_tool")
 
 
 @dataclass
-class PipelineConfig:
-    """Configuration for the crawler pipeline."""
+class qa_toolConfig:
+    """Configuration for the crawler qa_tool."""
     initial_url: str
     headless: bool = True
-    max_pages: int = 100
-    max_depth: int = 3
+    max_pages: Optional[int] = None
+    max_depth: Optional[int] = None
     output_file: Optional[str] = None
 
 
@@ -149,7 +149,7 @@ class PageAnalyzer:
         try:
             # The agent.run is synchronous but might be heavy, consider running in executor if needed.
             # strict requirement: agent.run is blocking. 
-            # In a real async pipeline we might want to offload this.
+            # In a real async qa_tool we might want to offload this.
             # For now, we keep it as is since GeminiAgent isn't async compatible yet?
             # looking at source, GeminiAgent.run is sync.
             agent_response = await asyncio.to_thread(agent.run, task=task, max_steps=10)
@@ -162,10 +162,10 @@ class PageAnalyzer:
 class BFSCrawler:
     """Manages the Breadth-First Search crawl process."""
 
-    def __init__(self, config: PipelineConfig):
+    def __init__(self, config: qa_toolConfig):
         self.config = config
         self.base_domain = self._get_base_domain(config.initial_url)
-        self.queue = deque([config.initial_url])
+        self.queue = deque([(config.initial_url, 0)])
         self.results = CrawlResult(initial_url=config.initial_url, base_domain=self.base_domain)
         self.loader = PageLoader(headless=config.headless)
         self.analyzer = PageAnalyzer(self.loader)
@@ -186,8 +186,12 @@ class BFSCrawler:
         await self.loader.start()
         
         try:
-            while self.queue and len(self.results.visited_pages) < self.config.max_pages:
-                current_url = self.queue.popleft()
+            while self.queue:
+                if self.config.max_pages is not None and len(self.results.visited_pages) >= self.config.max_pages:
+                    logger.info("Reached max pages limit.")
+                    break
+
+                current_url, current_depth = self.queue.popleft()
                 normalized_url = self._normalize_url(current_url)
                 
                 if normalized_url in self.results.visited_pages:
@@ -200,7 +204,9 @@ class BFSCrawler:
                 self.results.internal_reports.append(report)
                 
                 self._log_report(current_url, report)
-                self._discover_urls(current_url, report)
+                
+                if self.config.max_depth is None or current_depth < self.config.max_depth:
+                    self._discover_urls(current_url, report, current_depth)
 
             await self._generate_master_report()
             
@@ -219,7 +225,7 @@ class BFSCrawler:
             print(f"❌ ERROR: {report['error']}")
         print(f"{'='*80}\n")
 
-    def _discover_urls(self, current_url: str, report: Dict[str, Any]):
+    def _discover_urls(self, current_url: str, report: Dict[str, Any], current_depth: int):
         discovered_urls = report.get("discovered_urls", [])
         interactive_routes = report.get("interactive_routes", [])
         
@@ -246,7 +252,7 @@ class BFSCrawler:
             if self._is_internal(full_url):
                 norm_discovered = self._normalize_url(full_url)
                 if norm_discovered not in self.results.visited_pages:
-                    self.queue.append(full_url)
+                    self.queue.append((full_url, current_depth + 1))
             else:
                 self.results.external_links.add(full_url)
 
@@ -304,30 +310,32 @@ class BFSCrawler:
         print(f"{'#'*80}\n")
 
 
-async def run_pipeline(config: PipelineConfig) -> Dict[str, Any]:
+async def run_qa_tool(config: qa_toolConfig) -> Dict[str, Any]:
     crawler = BFSCrawler(config)
     result = await crawler.run()
     return result.to_dict()
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="BFS Crawler Pipeline: Analyze an entire site.")
+    parser = argparse.ArgumentParser(description="BFS Crawler qa_tool: Analyze an entire site.")
     parser.add_argument("--url", required=True, help="Starting URL.")
     parser.add_argument("--headless", action="store_true", help="Run browser headless.")
     parser.add_argument("--output", help="Optional output file path for the JSON result.")
-    parser.add_argument("--max-pages", type=int, default=100, help="Max pages to crawl.")
+    parser.add_argument("--max-pages", type=int, default=None, help="Max pages to crawl. Default: Unlimited.")
+    parser.add_argument("--max-depth", type=int, default=None, help="Max depth to crawl. Default: Unlimited.")
 
     args = parser.parse_args()
     
-    config = PipelineConfig(
+    config = qa_toolConfig(
         initial_url=args.url,
         headless=args.headless,
         max_pages=args.max_pages,
+        max_depth=args.max_depth,
         output_file=args.output
     )
     
     try:
-        payload = asyncio.run(run_pipeline(config))
+        payload = asyncio.run(run_qa_tool(config))
         
         # Always print JSON to stdout for data piping
         print(json.dumps(payload, indent=2, ensure_ascii=False))
@@ -339,9 +347,9 @@ def main() -> None:
             logger.info(f"Results saved to {config.output_file}")
             
     except KeyboardInterrupt:
-        logger.warning("Pipeline interrupted by user.")
+        logger.warning("qa_tool interrupted by user.")
     except Exception as e:
-        logger.critical(f"Pipeline failed: {e}", exc_info=True)
+        logger.critical(f"qa_tool failed: {e}", exc_info=True)
 
 if __name__ == "__main__":
     main()
