@@ -1,4 +1,2 @@
-discovery/.env
 .venv/
-screenshots/
-discovery/
+AgentBased/.env
