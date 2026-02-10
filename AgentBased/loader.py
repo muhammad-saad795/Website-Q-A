@@ -188,10 +188,10 @@ class PageLoader:
         # Explicitly remove listeners to stop tracking
         page.remove_listener("response", on_response)
         page.remove_listener("console", on_console)
-        logger.info("Stopped network and console listeners.")
+        #logger.info("Stopped network and console listeners.")
         
         # ── Form Detection (Before Interactive Discovery) ──
-        logger.info("Scanning forms (canonical)...")
+        #logger.info("Scanning forms (canonical)...")
         scanned_forms = await self._scan_forms(page)
         result["forms_html"] = scanned_forms
 
@@ -202,66 +202,13 @@ class PageLoader:
         )
 
         # ── Interactive Route Discovery ──
-        logger.info("Starting interactive route discovery...")
+        #logger.info("Starting interactive route discovery...")
         result["interactive_routes"] = await self._discover_interactive_routes(page)
         
         if page.url != url:
-            logger.info(f"Returning to original URL: {url}")
+            #logger.info(f"Returning to original URL: {url}")
             await page.goto(url, wait_until="domcontentloaded")
             await page.wait_for_timeout(SETTLE_TIME_MS)
-
-        # ── Form Filling ──
-        if form_data:
-            logger.info(f"Form data provided, filling forms in the same session...")
-            
-            # ── Setup listeners for submission tracking ──
-            submit_network_requests: List[Dict[str, Any]] = []
-            submit_console_errors: List[Dict[str, Any]] = []
-
-            def on_submit_response(r):
-                submit_network_requests.append({
-                    "url": r.url,
-                    "status": r.status,
-                    "method": r.request.method,
-                    "resource_type": r.request.resource_type
-                })
-
-            def on_submit_console(m):
-                if m.type in ("error", "warning"):
-                    submit_console_errors.append({
-                        "type": m.type,
-                        "text": m.text,
-                        "location": m.location
-                    })
-
-            page.on("response", on_submit_response)
-            page.on("console", on_submit_console)
-            
-            try:
-                # Resolve form_data if it's a path
-                if isinstance(form_data, (str, Path)):
-                    import json
-                    form_payload = json.loads(Path(form_data).read_text())
-                else:
-                    form_payload = form_data
-
-                fill_result = await self._fill_forms(page, form_payload)
-                result["form_fill_result"] = fill_result
-                
-                # Wait for potential navigation after submission
-                try:
-                    await page.wait_for_load_state("networkidle", timeout=5000)
-                except:
-                    pass
-                
-                logger.info(f"Form submitted. New URL: {page.url}")
-            finally:
-                # ── Stop listeners and save logs ──
-                page.remove_listener("response", on_submit_response)
-                page.remove_listener("console", on_submit_console)
-                result["form_submit_network_requests"] = submit_network_requests
-                result["form_submit_console_errors"] = submit_console_errors
-                logger.info("Stopped submission listeners.")
 
 
     async def load(self, url: str, form_data: Optional[Any] = None, keep_open: bool = False) -> Dict[str, Any]:
@@ -293,70 +240,6 @@ class PageLoader:
 
         return result
 
-    async def fill_active_page(self, form_data: Dict[str, Any]) -> Dict[str, Any]:
-        """
-        Fills forms on the currently active page (self.active_page) using the provided data dictionary.
-        Does NOT trigger a new navigation.
-        """
-        if not self.active_page:
-            return {"error": "No active page found. Call load(..., keep_open=True) first."}
-
-        form_result = {"url_before_fill": self.active_page.url}
-        
-        # ── Setup listeners for submission tracking ──
-        submit_network_requests: List[Dict[str, Any]] = []
-        submit_console_errors: List[Dict[str, Any]] = []
-
-        def on_submit_response(r):
-            submit_network_requests.append({
-                "url": r.url,
-                "status": r.status,
-                "method": r.request.method,
-                "resource_type": r.request.resource_type
-            })
-
-        def on_submit_console(m):
-            if m.type in ("error", "warning"):
-                submit_console_errors.append({
-                    "type": m.type,
-                    "text": m.text,
-                    "location": m.location
-                })
-
-        self.active_page.on("response", on_submit_response)
-        self.active_page.on("console", on_submit_console)
-
-        try:
-            logger.info(f"Filling forms on page: {self.active_page.url}")
-            await self._fill_forms(self.active_page, form_data)
-            
-            # Wait a bit for potential submission side effects
-            try:
-                await self.active_page.wait_for_load_state("networkidle", timeout=5000)
-            except:
-                pass
-            
-            form_result["url_after"] = self.active_page.url
-            form_result["status"] = "success"
-        except Exception as e:
-            logger.error(f"fill_active_page failed: {e}")
-            form_result["status"] = "failed"
-            form_result["error"] = str(e)
-        finally:
-            # ── Stop listeners and save logs ──
-            # Wait briefly to catch trailing logs
-            await asyncio.sleep(0.5)
-            
-            self.active_page.remove_listener("response", on_submit_response)
-            self.active_page.remove_listener("console", on_submit_console)
-            
-            form_result["network_requests"] = submit_network_requests
-            form_result["console_errors"] = submit_console_errors
-            
-            logger.info(f"Captured {len(submit_network_requests)} network requests and {len(submit_console_errors)} console errors during form submission.")
-
-        return form_result
-
 
     def _initial_result_dict(self, url: str) -> Dict[str, Any]:
         return {
@@ -387,18 +270,6 @@ async def main():
     
     url = "https://practice.qabrains.com/registration"
     
-    form_data = {
-      "formIndex": 0,
-      "#name": "ali",
-      "#country": "Pakistan",
-      "#account": "Student",
-      "#email": "ali@example.com",
-      "#password": "Password123",
-      "#confirm_password": "Password123",
-      "submitSelector": "button.whitespace-nowrap.rounded-md.font-medium.transition-all.disabled\\:pointer-events-none.disabled\\:opacity-50.\\[\\&_svg\\]\\:pointer-events-none.\\[\\&_svg\\:not\\(\\[class\\*\\=\\'size-\\'\\]\\)\\]\\:size-4.shrink-0.\\[\\&_svg\\]\\:shrink-0.outline-none.focus-visible\\:border-ring.focus-visible\\:ring-ring\\/50.focus-visible\\:ring-\\[3px\\].aria-invalid\\:ring-destructive\\/20.dark\\:aria-invalid\\:ring-destructive\\/40.aria-invalid\\:border-destructive.bg-primary.text-primary-foreground.shadow-xs.hover\\:bg-primary\\/90.h-9.px-4.py-2.has-\\[\\>svg\\]\\:px-3.btn-submit.font-oswald.text-md.uppercase.flex.items-center.gap-2.justify-center.\\!py-6.mt-4",
-      "submit": True
-    }
-    
     logger.info(f"Step 1: Loading and scanning page: {url}")
     # Load with keep_open=True so we can fill later
     scan_result = await loader.load(url, keep_open=True)
@@ -406,16 +277,6 @@ async def main():
     # Save scan result
     Path("result.json").write_text(json.dumps(scan_result, indent=2))
     logger.info("Scan finished and saved to result.json")
-
-    # Step 2: Fill the form independently
-    input("Press Enter to continue...")
-    
-    logger.info(f"Step 2: Filling forms independently with provided dictionary...")
-    fill_result = await loader.fill_active_page(form_data)
-    
-    # Save fill result
-    Path("fill_result.json").write_text(json.dumps(fill_result, indent=2))
-
     logger.info("Tasks finished. Keeping browser open... (Press Enter to stop)")
     await asyncio.get_event_loop().run_in_executor(None, input, "")
     await loader.stop()

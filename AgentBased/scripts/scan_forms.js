@@ -24,11 +24,27 @@
     };
 
     const buildSelector = el => {
-        if (el.id) return `#${CSS.escape(el.id)}`;
-        if (el.name) return `${el.tagName.toLowerCase()}[name="${CSS.escape(el.name)}"]`;
+        const id = el.getAttribute("id");
+        if (id) return `#${CSS.escape(id)}`;
+
+        const name = el.getAttribute("name");
+        if (name) return `${el.tagName.toLowerCase()}[name="${CSS.escape(name)}"]`;
+
+        // Prioritize common semantic classes for buttons
+        if (el.tagName === "BUTTON") {
+            if (el.classList.contains("btn-submit")) return "button.btn-submit";
+            if (el.classList.contains("submit")) return "button.submit";
+        }
 
         const classes = [...el.classList].filter(c => !c.startsWith("sh-")).map(c => `.${CSS.escape(c)}`).join("");
-        if (classes) return `${el.tagName.toLowerCase()}${classes}`;
+        if (classes) {
+            // If too many classes, just take the first few or relevant ones to avoid massive selectors
+            const classArray = [...el.classList].filter(c => !c.startsWith("sh-"));
+            if (classArray.length > 3) {
+                return `${el.tagName.toLowerCase()}.${CSS.escape(classArray[0])}.${CSS.escape(classArray[1])}`;
+            }
+            return `${el.tagName.toLowerCase()}${classes}`;
+        }
 
         if (el.type) return `${el.tagName.toLowerCase()}[type="${CSS.escape(el.type)}"]`;
 
@@ -42,8 +58,8 @@
                 const field = {
                     tag: el.tagName.toLowerCase(),
                     type: el.type || null,
-                    id: el.id || null,
-                    name: el.name || null,
+                    id: el.getAttribute("id") || null,
+                    name: el.getAttribute("name") || null,
                     label: getLabel(el),
                     placeholder: el.placeholder || null,
                     value: "",
@@ -69,10 +85,10 @@
     document.querySelectorAll("form").forEach((form, i) => {
         formsState.forms.push({
             index: currentFormIndex++,
-            id: form.id || null,
-            name: form.name || null,
-            action: form.action || null,
-            method: (form.method || "GET").toUpperCase(),
+            id: form.getAttribute("id") || null,
+            name: form.getAttribute("name") || null,
+            action: form.getAttribute("action") || null,
+            method: (form.getAttribute("method") || "GET").toUpperCase(),
             isNativeForm: true,
             submitSelector:
                 form.querySelector('[type="submit"]')
@@ -91,8 +107,8 @@
 
         formsState.forms.push({
             index: currentFormIndex++,
-            id: c.id || null,
-            name: null,
+            id: c.getAttribute("id") || null,
+            name: c.getAttribute("name") || null,
             action: null,
             method: null,
             isNativeForm: false,
