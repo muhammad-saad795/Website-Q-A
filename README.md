@@ -41,10 +41,6 @@ Website-Q-A is a comprehensive qualitative analysis platform designed to extract
 ```bash
 git clone https://github.com/AliHaSSan-13/Website-Q-A.git
 cd Website-Q-A 
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-
-pip install -r requirements.txt
 ```
 ## Prerequisites
 
