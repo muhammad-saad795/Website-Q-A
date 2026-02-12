@@ -1,0 +1,1653 @@
+{
+  "initial_url": "https://practice.qabrains.com/registration",
+  "base_domain": "practice.qabrains.com",
+  "master_qa_audit": "Agent Error: 429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/rate-limit. \\n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 20, model: gemini-2.5-flash\\nPlease retry in 25.747562673s.', 'status': 'RESOURCE_EXHAUSTED', 'details': [{'@type': 'type.googleapis.com/google.rpc.Help', 'links': [{'description': 'Learn more about Gemini API quotas', 'url': 'https://ai.google.dev/gemini-api/docs/rate-limits'}]}, {'@type': 'type.googleapis.com/google.rpc.QuotaFailure', 'violations': [{'quotaMetric': 'generativelanguage.googleapis.com/generate_content_free_tier_requests', 'quotaId': 'GenerateRequestsPerDayPerProjectPerModel-FreeTier', 'quotaDimensions': {'model': 'gemini-2.5-flash', 'location': 'global'}, 'quotaValue': '20'}]}, {'@type': 'type.googleapis.com/google.rpc.RetryInfo', 'retryDelay': '25s'}]}}",
+  "internal_reports": [
+    {
+      "url": "https://practice.qabrains.com/registration",
+      "url_report": {
+        "url": "https://practice.qabrains.com/registration",
+        "is_ok": true,
+        "redirected": false,
+        "final_url": "https://practice.qabrains.com/registration",
+        "http_status": 200,
+        "status_label": "Healthy",
+        "issues": [
+          "Slow navigation: 13.51s",
+          "Slow full load: 16.21s"
+        ],
+        "performance": {
+          "navigation_seconds": 13.51,
+          "total_load_seconds": 16.21
+        },
+        "console_summary": {
+          "errors": 0,
+          "warnings": 0
+        },
+        "console_logs": []
+      },
+      "layout_report": {
+        "status": "FAIL",
+        "summary": {
+          "total_issues": 2,
+          "critical": 2,
+          "warnings": 0,
+          "info": 0,
+          "by_viewport": {
+            "desktop": 0,
+            "mobile": 2
+          },
+          "by_category": {
+            "SMALL_TOUCH_TARGET": 2
+          }
+        },
+        "issues": [
+          {
+            "severity": "CRITICAL",
+            "category": "SMALL_TOUCH_TARGET",
+            "message": "Touch target too small: icon button is 16x16px (recommended: 44x44px minimum)",
+            "viewport": "mobile",
+            "element": {
+              "descriptor": "<button>.absolute.right-3.top-1/2",
+              "tag": "button",
+              "id": null,
+              "classes": [
+                "absolute",
+                "right-3",
+                "top-1/2"
+              ],
+              "text": "",
+              "rect": {
+                "x": 280,
+                "y": 745,
+                "width": 16,
+                "height": 16
+              }
+            },
+            "details": {
+              "width": 16,
+              "height": 16,
+              "is_icon": true,
+              "recommended_size": "44x44px"
+            },
+            "recommendation": "Add padding or increase button size to meet WCAG touch target guidelines (44x44px)."
+          },
+          {
+            "severity": "CRITICAL",
+            "category": "SMALL_TOUCH_TARGET",
+            "message": "Touch target too small: icon button is 16x16px (recommended: 44x44px minimum)",
+            "viewport": "mobile",
+            "element": {
+              "descriptor": "<button>.absolute.right-3.top-1/2",
+              "tag": "button",
+              "id": null,
+              "classes": [
+                "absolute",
+                "right-3",
+                "top-1/2"
+              ],
+              "text": "",
+              "rect": {
+                "x": 280,
+                "y": 835,
+                "width": 16,
+                "height": 16
+              }
+            },
+            "details": {
+              "width": 16,
+              "height": 16,
+              "is_icon": true,
+              "recommended_size": "44x44px"
+            },
+            "recommendation": "Add padding or increase button size to meet WCAG touch target guidelines (44x44px)."
+          }
+        ]
+      },
+      "visible_text": "(Practice Site)\nHome\nQA Topics\nDiscussion\nTags\nJobs\nPractice Site\nAbout Us\nSign In\nDemo Module\nUser Authentication\nLogin\nRegistration\nForgot Password\nForm Submission\nDrag and Drop List\nDemo Site\nE-Commerce Site\nBooking Site\nQA Practice Site\nLearn and practice QA to master software testing, find bugs, and ensure quality. Build skills for reliable,\nhigh-performing applications.\nUser Authentication\nName\n*\nSelect Country\n*\nSelect Country\nAndorra\nUnited Arab Emirates\nAfghanistan\nAntigua and Barbuda\nAnguilla\nAlbania\nArmenia\nAngola\nAntarctica\nArgentina\nAmerican Samoa\nAustria\nAustralia\nAruba\nAland\nAzerbaijan\nBosnia and Herzegovina\nBarbados\nBangladesh\nBelgium\nBurkina Faso\nBulgaria\nBahrain\nBurundi\nBenin\nSaint Barthelemy\nBermuda\nBrunei\nBolivia\nBonaire\nBrazil\nBahamas\nBhutan\nBouvet Island\nBotswana\nBelarus\nBelize\nCanada\nCocos (Keeling) Islands\nDemocratic Republic of the Congo\nCentral African Republic\nRepublic of the Congo\nSwitzerland\nIvory Coast\nCook Islands\nChile\nCameroon\nChina\nColombia\nCosta Rica\nCuba\nCape Verde\nCuracao\nChristmas Island\nCyprus\nCzech Republic\nGermany\nDjibouti\nDenmark\nDominica\nDominican Republic\nAlgeria\nEcuador\nEstonia\nEgypt\nWestern Sahara\nEritrea\nSpain\nEthiopia\nFinland\nFiji\nFalkland Islands\nMicronesia\nFaroe Islands\nFrance\nGabon\nUnited Kingdom\nGrenada\nGeorgia\nFrench Guiana\nGuernsey\nGhana\nGibraltar\nGreenland\nGambia\nGuinea\nGuadeloupe\nEquatorial Guinea\nGreece\nSouth Georgia and the South Sandwich Islands\nGuatemala\nGuam\nGuinea-Bissau\nGuyana\nHong Kong\nHeard Island and McDonald Islands\nHonduras\nCroatia\nHaiti\nHungary\nIndonesia\nIreland\nIsrael\nIsle of Man\nIndia\nBritish Indian Ocean Territory\nIraq\nIran\nIceland\nItaly\nJersey\nJamaica\nJordan\nJapan\nKenya\nKyrgyzstan\nCambodia\nKiribati\nComoros\nSaint Kitts and Nevis\nNorth Korea\nSouth Korea\nKuwait\nCayman Islands\nKazakhstan\nLaos\nLebanon\nSaint Lucia\nLiechtenstein\nSri Lanka\nLiberia\nLesotho\nLithuania\nLuxembourg\nLatvia\nLibya\nMorocco\nMonaco\nMoldova\nMontenegro\nSaint Martin\nMadagascar\nMarshall Islands\nNorth Macedonia\nMali\nMyanmar (Burma)\nMongolia\nMacao\nNorthern Mariana Islands\nMartinique\nMauritania\nMontserrat\nMalta\nMauritius\nMaldives\nMalawi\nMexico\nMalaysia\nMozambique\nNamibia\nNew Caledonia\nNiger\nNorfolk Island\nNigeria\nNicaragua\nNetherlands\nNorway\nNepal\nNauru\nNiue\nNew Zealand\nOman\nPanama\nPeru\nFrench Polynesia\nPapua New Guinea\nPhilippines\nPakistan\nPoland\nSaint Pierre and Miquelon\nPitcairn Islands\nPuerto Rico\nPalestine\nPortugal\nPalau\nParaguay\nQatar\nReunion\nRomania\nSerbia\nRussia\nRwanda\nSaudi Arabia\nSolomon Islands\nSeychelles\nSudan\nSweden\nSingapore\nSaint Helena\nSlovenia\nSvalbard and Jan Mayen\nSlovakia\nSierra Leone\nSan Marino\nSenegal\nSomalia\nSuriname\nSouth Sudan\nSao Tome and Principe\nEl Salvador\nSint Maarten\nSyria\nEswatini\nTurks and Caicos Islands\nChad\nFrench Southern Territories\nTogo\nThailand\nTajikistan\nTokelau\nEast Timor\nTurkmenistan\nTunisia\nTonga\nTurkey\nTrinidad and Tobago\nTuvalu\nTaiwan\nTanzania\nUkraine\nUganda\nU.S. Minor Outlying Islands\nUnited States\nUruguay\nUzbekistan\nVatican City\nSaint Vincent and the Grenadines\nVenezuela\nBritish Virgin Islands\nU.S. Virgin Islands\nVietnam\nVanuatu\nWallis and Futuna\nSamoa\nKosovo\nYemen\nMayotte\nSouth Africa\nZambia\nZimbabwe\nAccount Type\n*\nSelect Account Type\nEngineer\nPrivate Job\nStudent\nGovernment Job\nEmail\n*\nPassword\n*\nConfirm Password\n*\nSignup\nLeave Feedback\nSubmit\nFeedback (\n1\n)\nธนว.นศท.เกียรติสกุล\n•\n21d ago\nwwdwd\nQA Brains is the ultimate QA Community to exchange knowledge, seek advice, and engage in discussions that enhance Quality Assurance testers' skills and expertise.\nQA Topics\nWeb Testing\nInterview Questions\nTesting Framework\nSee more\nQuick Links\nDiscussion\nAbout Us\nTerms & Conditions\nPrivacy Policy\nFollow Us\nFor Support\nsupport@qabrains.com\n©\n2026\nQA Brains | All Rights Reserved",
+      "forms_html": {
+        "url": "https://practice.qabrains.com/registration",
+        "forms": [
+          {
+            "index": 0,
+            "id": null,
+            "name": null,
+            "action": null,
+            "method": "GET",
+            "isNativeForm": true,
+            "submitSelector": "button.btn-submit",
+            "fields": [
+              {
+                "tag": "input",
+                "type": "text",
+                "id": "name",
+                "name": "name",
+                "label": "Name*",
+                "placeholder": "eg. Jhon Doe",
+                "value": "",
+                "checked": false,
+                "disabled": false,
+                "readOnly": false,
+                "isVisible": true,
+                "selector": "#name"
+              },
+              {
+                "tag": "select",
+                "type": "select-one",
+                "id": "country",
+                "name": "country",
+                "label": "Select Country*",
+                "placeholder": null,
+                "value": "",
+                "checked": null,
+                "disabled": false,
+                "readOnly": null,
+                "isVisible": true,
+                "selector": "#country",
+                "options": [
+                  {
+                    "value": "",
+                    "text": "Select Country"
+                  },
+                  {
+                    "value": "Andorra",
+                    "text": "Andorra"
+                  },
+                  {
+                    "value": "United Arab Emirates",
+                    "text": "United Arab Emirates"
+                  },
+                  {
+                    "value": "Afghanistan",
+                    "text": "Afghanistan"
+                  },
+                  {
+                    "value": "Antigua and Barbuda",
+                    "text": "Antigua and Barbuda"
+                  },
+                  {
+                    "value": "Anguilla",
+                    "text": "Anguilla"
+                  },
+                  {
+                    "value": "Albania",
+                    "text": "Albania"
+                  },
+                  {
+                    "value": "Armenia",
+                    "text": "Armenia"
+                  },
+                  {
+                    "value": "Angola",
+                    "text": "Angola"
+                  },
+                  {
+                    "value": "Antarctica",
+                    "text": "Antarctica"
+                  },
+                  {
+                    "value": "Argentina",
+                    "text": "Argentina"
+                  },
+                  {
+                    "value": "American Samoa",
+                    "text": "American Samoa"
+                  },
+                  {
+                    "value": "Austria",
+                    "text": "Austria"
+                  },
+                  {
+                    "value": "Australia",
+                    "text": "Australia"
+                  },
+                  {
+                    "value": "Aruba",
+                    "text": "Aruba"
+                  },
+                  {
+                    "value": "Aland",
+                    "text": "Aland"
+                  },
+                  {
+                    "value": "Azerbaijan",
+                    "text": "Azerbaijan"
+                  },
+                  {
+                    "value": "Bosnia and Herzegovina",
+                    "text": "Bosnia and Herzegovina"
+                  },
+                  {
+                    "value": "Barbados",
+                    "text": "Barbados"
+                  },
+                  {
+                    "value": "Bangladesh",
+                    "text": "Bangladesh"
+                  },
+                  {
+                    "value": "Belgium",
+                    "text": "Belgium"
+                  },
+                  {
+                    "value": "Burkina Faso",
+                    "text": "Burkina Faso"
+                  },
+                  {
+                    "value": "Bulgaria",
+                    "text": "Bulgaria"
+                  },
+                  {
+                    "value": "Bahrain",
+                    "text": "Bahrain"
+                  },
+                  {
+                    "value": "Burundi",
+                    "text": "Burundi"
+                  },
+                  {
+                    "value": "Benin",
+                    "text": "Benin"
+                  },
+                  {
+                    "value": "Saint Barthelemy",
+                    "text": "Saint Barthelemy"
+                  },
+                  {
+                    "value": "Bermuda",
+                    "text": "Bermuda"
+                  },
+                  {
+                    "value": "Brunei",
+                    "text": "Brunei"
+                  },
+                  {
+                    "value": "Bolivia",
+                    "text": "Bolivia"
+                  },
+                  {
+                    "value": "Bonaire",
+                    "text": "Bonaire"
+                  },
+                  {
+                    "value": "Brazil",
+                    "text": "Brazil"
+                  },
+                  {
+                    "value": "Bahamas",
+                    "text": "Bahamas"
+                  },
+                  {
+                    "value": "Bhutan",
+                    "text": "Bhutan"
+                  },
+                  {
+                    "value": "Bouvet Island",
+                    "text": "Bouvet Island"
+                  },
+                  {
+                    "value": "Botswana",
+                    "text": "Botswana"
+                  },
+                  {
+                    "value": "Belarus",
+                    "text": "Belarus"
+                  },
+                  {
+                    "value": "Belize",
+                    "text": "Belize"
+                  },
+                  {
+                    "value": "Canada",
+                    "text": "Canada"
+                  },
+                  {
+                    "value": "Cocos (Keeling) Islands",
+                    "text": "Cocos (Keeling) Islands"
+                  },
+                  {
+                    "value": "Democratic Republic of the Congo",
+                    "text": "Democratic Republic of the Congo"
+                  },
+                  {
+                    "value": "Central African Republic",
+                    "text": "Central African Republic"
+                  },
+                  {
+                    "value": "Republic of the Congo",
+                    "text": "Republic of the Congo"
+                  },
+                  {
+                    "value": "Switzerland",
+                    "text": "Switzerland"
+                  },
+                  {
+                    "value": "Ivory Coast",
+                    "text": "Ivory Coast"
+                  },
+                  {
+                    "value": "Cook Islands",
+                    "text": "Cook Islands"
+                  },
+                  {
+                    "value": "Chile",
+                    "text": "Chile"
+                  },
+                  {
+                    "value": "Cameroon",
+                    "text": "Cameroon"
+                  },
+                  {
+                    "value": "China",
+                    "text": "China"
+                  },
+                  {
+                    "value": "Colombia",
+                    "text": "Colombia"
+                  },
+                  {
+                    "value": "Costa Rica",
+                    "text": "Costa Rica"
+                  },
+                  {
+                    "value": "Cuba",
+                    "text": "Cuba"
+                  },
+                  {
+                    "value": "Cape Verde",
+                    "text": "Cape Verde"
+                  },
+                  {
+                    "value": "Curacao",
+                    "text": "Curacao"
+                  },
+                  {
+                    "value": "Christmas Island",
+                    "text": "Christmas Island"
+                  },
+                  {
+                    "value": "Cyprus",
+                    "text": "Cyprus"
+                  },
+                  {
+                    "value": "Czech Republic",
+                    "text": "Czech Republic"
+                  },
+                  {
+                    "value": "Germany",
+                    "text": "Germany"
+                  },
+                  {
+                    "value": "Djibouti",
+                    "text": "Djibouti"
+                  },
+                  {
+                    "value": "Denmark",
+                    "text": "Denmark"
+                  },
+                  {
+                    "value": "Dominica",
+                    "text": "Dominica"
+                  },
+                  {
+                    "value": "Dominican Republic",
+                    "text": "Dominican Republic"
+                  },
+                  {
+                    "value": "Algeria",
+                    "text": "Algeria"
+                  },
+                  {
+                    "value": "Ecuador",
+                    "text": "Ecuador"
+                  },
+                  {
+                    "value": "Estonia",
+                    "text": "Estonia"
+                  },
+                  {
+                    "value": "Egypt",
+                    "text": "Egypt"
+                  },
+                  {
+                    "value": "Western Sahara",
+                    "text": "Western Sahara"
+                  },
+                  {
+                    "value": "Eritrea",
+                    "text": "Eritrea"
+                  },
+                  {
+                    "value": "Spain",
+                    "text": "Spain"
+                  },
+                  {
+                    "value": "Ethiopia",
+                    "text": "Ethiopia"
+                  },
+                  {
+                    "value": "Finland",
+                    "text": "Finland"
+                  },
+                  {
+                    "value": "Fiji",
+                    "text": "Fiji"
+                  },
+                  {
+                    "value": "Falkland Islands",
+                    "text": "Falkland Islands"
+                  },
+                  {
+                    "value": "Micronesia",
+                    "text": "Micronesia"
+                  },
+                  {
+                    "value": "Faroe Islands",
+                    "text": "Faroe Islands"
+                  },
+                  {
+                    "value": "France",
+                    "text": "France"
+                  },
+                  {
+                    "value": "Gabon",
+                    "text": "Gabon"
+                  },
+                  {
+                    "value": "United Kingdom",
+                    "text": "United Kingdom"
+                  },
+                  {
+                    "value": "Grenada",
+                    "text": "Grenada"
+                  },
+                  {
+                    "value": "Georgia",
+                    "text": "Georgia"
+                  },
+                  {
+                    "value": "French Guiana",
+                    "text": "French Guiana"
+                  },
+                  {
+                    "value": "Guernsey",
+                    "text": "Guernsey"
+                  },
+                  {
+                    "value": "Ghana",
+                    "text": "Ghana"
+                  },
+                  {
+                    "value": "Gibraltar",
+                    "text": "Gibraltar"
+                  },
+                  {
+                    "value": "Greenland",
+                    "text": "Greenland"
+                  },
+                  {
+                    "value": "Gambia",
+                    "text": "Gambia"
+                  },
+                  {
+                    "value": "Guinea",
+                    "text": "Guinea"
+                  },
+                  {
+                    "value": "Guadeloupe",
+                    "text": "Guadeloupe"
+                  },
+                  {
+                    "value": "Equatorial Guinea",
+                    "text": "Equatorial Guinea"
+                  },
+                  {
+                    "value": "Greece",
+                    "text": "Greece"
+                  },
+                  {
+                    "value": "South Georgia and the South Sandwich Islands",
+                    "text": "South Georgia and the South Sandwich Islands"
+                  },
+                  {
+                    "value": "Guatemala",
+                    "text": "Guatemala"
+                  },
+                  {
+                    "value": "Guam",
+                    "text": "Guam"
+                  },
+                  {
+                    "value": "Guinea-Bissau",
+                    "text": "Guinea-Bissau"
+                  },
+                  {
+                    "value": "Guyana",
+                    "text": "Guyana"
+                  },
+                  {
+                    "value": "Hong Kong",
+                    "text": "Hong Kong"
+                  },
+                  {
+                    "value": "Heard Island and McDonald Islands",
+                    "text": "Heard Island and McDonald Islands"
+                  },
+                  {
+                    "value": "Honduras",
+                    "text": "Honduras"
+                  },
+                  {
+                    "value": "Croatia",
+                    "text": "Croatia"
+                  },
+                  {
+                    "value": "Haiti",
+                    "text": "Haiti"
+                  },
+                  {
+                    "value": "Hungary",
+                    "text": "Hungary"
+                  },
+                  {
+                    "value": "Indonesia",
+                    "text": "Indonesia"
+                  },
+                  {
+                    "value": "Ireland",
+                    "text": "Ireland"
+                  },
+                  {
+                    "value": "Israel",
+                    "text": "Israel"
+                  },
+                  {
+                    "value": "Isle of Man",
+                    "text": "Isle of Man"
+                  },
+                  {
+                    "value": "India",
+                    "text": "India"
+                  },
+                  {
+                    "value": "British Indian Ocean Territory",
+                    "text": "British Indian Ocean Territory"
+                  },
+                  {
+                    "value": "Iraq",
+                    "text": "Iraq"
+                  },
+                  {
+                    "value": "Iran",
+                    "text": "Iran"
+                  },
+                  {
+                    "value": "Iceland",
+                    "text": "Iceland"
+                  },
+                  {
+                    "value": "Italy",
+                    "text": "Italy"
+                  },
+                  {
+                    "value": "Jersey",
+                    "text": "Jersey"
+                  },
+                  {
+                    "value": "Jamaica",
+                    "text": "Jamaica"
+                  },
+                  {
+                    "value": "Jordan",
+                    "text": "Jordan"
+                  },
+                  {
+                    "value": "Japan",
+                    "text": "Japan"
+                  },
+                  {
+                    "value": "Kenya",
+                    "text": "Kenya"
+                  },
+                  {
+                    "value": "Kyrgyzstan",
+                    "text": "Kyrgyzstan"
+                  },
+                  {
+                    "value": "Cambodia",
+                    "text": "Cambodia"
+                  },
+                  {
+                    "value": "Kiribati",
+                    "text": "Kiribati"
+                  },
+                  {
+                    "value": "Comoros",
+                    "text": "Comoros"
+                  },
+                  {
+                    "value": "Saint Kitts and Nevis",
+                    "text": "Saint Kitts and Nevis"
+                  },
+                  {
+                    "value": "North Korea",
+                    "text": "North Korea"
+                  },
+                  {
+                    "value": "South Korea",
+                    "text": "South Korea"
+                  },
+                  {
+                    "value": "Kuwait",
+                    "text": "Kuwait"
+                  },
+                  {
+                    "value": "Cayman Islands",
+                    "text": "Cayman Islands"
+                  },
+                  {
+                    "value": "Kazakhstan",
+                    "text": "Kazakhstan"
+                  },
+                  {
+                    "value": "Laos",
+                    "text": "Laos"
+                  },
+                  {
+                    "value": "Lebanon",
+                    "text": "Lebanon"
+                  },
+                  {
+                    "value": "Saint Lucia",
+                    "text": "Saint Lucia"
+                  },
+                  {
+                    "value": "Liechtenstein",
+                    "text": "Liechtenstein"
+                  },
+                  {
+                    "value": "Sri Lanka",
+                    "text": "Sri Lanka"
+                  },
+                  {
+                    "value": "Liberia",
+                    "text": "Liberia"
+                  },
+                  {
+                    "value": "Lesotho",
+                    "text": "Lesotho"
+                  },
+                  {
+                    "value": "Lithuania",
+                    "text": "Lithuania"
+                  },
+                  {
+                    "value": "Luxembourg",
+                    "text": "Luxembourg"
+                  },
+                  {
+                    "value": "Latvia",
+                    "text": "Latvia"
+                  },
+                  {
+                    "value": "Libya",
+                    "text": "Libya"
+                  },
+                  {
+                    "value": "Morocco",
+                    "text": "Morocco"
+                  },
+                  {
+                    "value": "Monaco",
+                    "text": "Monaco"
+                  },
+                  {
+                    "value": "Moldova",
+                    "text": "Moldova"
+                  },
+                  {
+                    "value": "Montenegro",
+                    "text": "Montenegro"
+                  },
+                  {
+                    "value": "Saint Martin",
+                    "text": "Saint Martin"
+                  },
+                  {
+                    "value": "Madagascar",
+                    "text": "Madagascar"
+                  },
+                  {
+                    "value": "Marshall Islands",
+                    "text": "Marshall Islands"
+                  },
+                  {
+                    "value": "North Macedonia",
+                    "text": "North Macedonia"
+                  },
+                  {
+                    "value": "Mali",
+                    "text": "Mali"
+                  },
+                  {
+                    "value": "Myanmar (Burma)",
+                    "text": "Myanmar (Burma)"
+                  },
+                  {
+                    "value": "Mongolia",
+                    "text": "Mongolia"
+                  },
+                  {
+                    "value": "Macao",
+                    "text": "Macao"
+                  },
+                  {
+                    "value": "Northern Mariana Islands",
+                    "text": "Northern Mariana Islands"
+                  },
+                  {
+                    "value": "Martinique",
+                    "text": "Martinique"
+                  },
+                  {
+                    "value": "Mauritania",
+                    "text": "Mauritania"
+                  },
+                  {
+                    "value": "Montserrat",
+                    "text": "Montserrat"
+                  },
+                  {
+                    "value": "Malta",
+                    "text": "Malta"
+                  },
+                  {
+                    "value": "Mauritius",
+                    "text": "Mauritius"
+                  },
+                  {
+                    "value": "Maldives",
+                    "text": "Maldives"
+                  },
+                  {
+                    "value": "Malawi",
+                    "text": "Malawi"
+                  },
+                  {
+                    "value": "Mexico",
+                    "text": "Mexico"
+                  },
+                  {
+                    "value": "Malaysia",
+                    "text": "Malaysia"
+                  },
+                  {
+                    "value": "Mozambique",
+                    "text": "Mozambique"
+                  },
+                  {
+                    "value": "Namibia",
+                    "text": "Namibia"
+                  },
+                  {
+                    "value": "New Caledonia",
+                    "text": "New Caledonia"
+                  },
+                  {
+                    "value": "Niger",
+                    "text": "Niger"
+                  },
+                  {
+                    "value": "Norfolk Island",
+                    "text": "Norfolk Island"
+                  },
+                  {
+                    "value": "Nigeria",
+                    "text": "Nigeria"
+                  },
+                  {
+                    "value": "Nicaragua",
+                    "text": "Nicaragua"
+                  },
+                  {
+                    "value": "Netherlands",
+                    "text": "Netherlands"
+                  },
+                  {
+                    "value": "Norway",
+                    "text": "Norway"
+                  },
+                  {
+                    "value": "Nepal",
+                    "text": "Nepal"
+                  },
+                  {
+                    "value": "Nauru",
+                    "text": "Nauru"
+                  },
+                  {
+                    "value": "Niue",
+                    "text": "Niue"
+                  },
+                  {
+                    "value": "New Zealand",
+                    "text": "New Zealand"
+                  },
+                  {
+                    "value": "Oman",
+                    "text": "Oman"
+                  },
+                  {
+                    "value": "Panama",
+                    "text": "Panama"
+                  },
+                  {
+                    "value": "Peru",
+                    "text": "Peru"
+                  },
+                  {
+                    "value": "French Polynesia",
+                    "text": "French Polynesia"
+                  },
+                  {
+                    "value": "Papua New Guinea",
+                    "text": "Papua New Guinea"
+                  },
+                  {
+                    "value": "Philippines",
+                    "text": "Philippines"
+                  },
+                  {
+                    "value": "Pakistan",
+                    "text": "Pakistan"
+                  },
+                  {
+                    "value": "Poland",
+                    "text": "Poland"
+                  },
+                  {
+                    "value": "Saint Pierre and Miquelon",
+                    "text": "Saint Pierre and Miquelon"
+                  },
+                  {
+                    "value": "Pitcairn Islands",
+                    "text": "Pitcairn Islands"
+                  },
+                  {
+                    "value": "Puerto Rico",
+                    "text": "Puerto Rico"
+                  },
+                  {
+                    "value": "Palestine",
+                    "text": "Palestine"
+                  },
+                  {
+                    "value": "Portugal",
+                    "text": "Portugal"
+                  },
+                  {
+                    "value": "Palau",
+                    "text": "Palau"
+                  },
+                  {
+                    "value": "Paraguay",
+                    "text": "Paraguay"
+                  },
+                  {
+                    "value": "Qatar",
+                    "text": "Qatar"
+                  },
+                  {
+                    "value": "Reunion",
+                    "text": "Reunion"
+                  },
+                  {
+                    "value": "Romania",
+                    "text": "Romania"
+                  },
+                  {
+                    "value": "Serbia",
+                    "text": "Serbia"
+                  },
+                  {
+                    "value": "Russia",
+                    "text": "Russia"
+                  },
+                  {
+                    "value": "Rwanda",
+                    "text": "Rwanda"
+                  },
+                  {
+                    "value": "Saudi Arabia",
+                    "text": "Saudi Arabia"
+                  },
+                  {
+                    "value": "Solomon Islands",
+                    "text": "Solomon Islands"
+                  },
+                  {
+                    "value": "Seychelles",
+                    "text": "Seychelles"
+                  },
+                  {
+                    "value": "Sudan",
+                    "text": "Sudan"
+                  },
+                  {
+                    "value": "Sweden",
+                    "text": "Sweden"
+                  },
+                  {
+                    "value": "Singapore",
+                    "text": "Singapore"
+                  },
+                  {
+                    "value": "Saint Helena",
+                    "text": "Saint Helena"
+                  },
+                  {
+                    "value": "Slovenia",
+                    "text": "Slovenia"
+                  },
+                  {
+                    "value": "Svalbard and Jan Mayen",
+                    "text": "Svalbard and Jan Mayen"
+                  },
+                  {
+                    "value": "Slovakia",
+                    "text": "Slovakia"
+                  },
+                  {
+                    "value": "Sierra Leone",
+                    "text": "Sierra Leone"
+                  },
+                  {
+                    "value": "San Marino",
+                    "text": "San Marino"
+                  },
+                  {
+                    "value": "Senegal",
+                    "text": "Senegal"
+                  },
+                  {
+                    "value": "Somalia",
+                    "text": "Somalia"
+                  },
+                  {
+                    "value": "Suriname",
+                    "text": "Suriname"
+                  },
+                  {
+                    "value": "South Sudan",
+                    "text": "South Sudan"
+                  },
+                  {
+                    "value": "Sao Tome and Principe",
+                    "text": "Sao Tome and Principe"
+                  },
+                  {
+                    "value": "El Salvador",
+                    "text": "El Salvador"
+                  },
+                  {
+                    "value": "Sint Maarten",
+                    "text": "Sint Maarten"
+                  },
+                  {
+                    "value": "Syria",
+                    "text": "Syria"
+                  },
+                  {
+                    "value": "Eswatini",
+                    "text": "Eswatini"
+                  },
+                  {
+                    "value": "Turks and Caicos Islands",
+                    "text": "Turks and Caicos Islands"
+                  },
+                  {
+                    "value": "Chad",
+                    "text": "Chad"
+                  },
+                  {
+                    "value": "French Southern Territories",
+                    "text": "French Southern Territories"
+                  },
+                  {
+                    "value": "Togo",
+                    "text": "Togo"
+                  },
+                  {
+                    "value": "Thailand",
+                    "text": "Thailand"
+                  },
+                  {
+                    "value": "Tajikistan",
+                    "text": "Tajikistan"
+                  },
+                  {
+                    "value": "Tokelau",
+                    "text": "Tokelau"
+                  },
+                  {
+                    "value": "East Timor",
+                    "text": "East Timor"
+                  },
+                  {
+                    "value": "Turkmenistan",
+                    "text": "Turkmenistan"
+                  },
+                  {
+                    "value": "Tunisia",
+                    "text": "Tunisia"
+                  },
+                  {
+                    "value": "Tonga",
+                    "text": "Tonga"
+                  },
+                  {
+                    "value": "Turkey",
+                    "text": "Turkey"
+                  },
+                  {
+                    "value": "Trinidad and Tobago",
+                    "text": "Trinidad and Tobago"
+                  },
+                  {
+                    "value": "Tuvalu",
+                    "text": "Tuvalu"
+                  },
+                  {
+                    "value": "Taiwan",
+                    "text": "Taiwan"
+                  },
+                  {
+                    "value": "Tanzania",
+                    "text": "Tanzania"
+                  },
+                  {
+                    "value": "Ukraine",
+                    "text": "Ukraine"
+                  },
+                  {
+                    "value": "Uganda",
+                    "text": "Uganda"
+                  },
+                  {
+                    "value": "U.S. Minor Outlying Islands",
+                    "text": "U.S. Minor Outlying Islands"
+                  },
+                  {
+                    "value": "United States",
+                    "text": "United States"
+                  },
+                  {
+                    "value": "Uruguay",
+                    "text": "Uruguay"
+                  },
+                  {
+                    "value": "Uzbekistan",
+                    "text": "Uzbekistan"
+                  },
+                  {
+                    "value": "Vatican City",
+                    "text": "Vatican City"
+                  },
+                  {
+                    "value": "Saint Vincent and the Grenadines",
+                    "text": "Saint Vincent and the Grenadines"
+                  },
+                  {
+                    "value": "Venezuela",
+                    "text": "Venezuela"
+                  },
+                  {
+                    "value": "British Virgin Islands",
+                    "text": "British Virgin Islands"
+                  },
+                  {
+                    "value": "U.S. Virgin Islands",
+                    "text": "U.S. Virgin Islands"
+                  },
+                  {
+                    "value": "Vietnam",
+                    "text": "Vietnam"
+                  },
+                  {
+                    "value": "Vanuatu",
+                    "text": "Vanuatu"
+                  },
+                  {
+                    "value": "Wallis and Futuna",
+                    "text": "Wallis and Futuna"
+                  },
+                  {
+                    "value": "Samoa",
+                    "text": "Samoa"
+                  },
+                  {
+                    "value": "Kosovo",
+                    "text": "Kosovo"
+                  },
+                  {
+                    "value": "Yemen",
+                    "text": "Yemen"
+                  },
+                  {
+                    "value": "Mayotte",
+                    "text": "Mayotte"
+                  },
+                  {
+                    "value": "South Africa",
+                    "text": "South Africa"
+                  },
+                  {
+                    "value": "Zambia",
+                    "text": "Zambia"
+                  },
+                  {
+                    "value": "Zimbabwe",
+                    "text": "Zimbabwe"
+                  }
+                ]
+              },
+              {
+                "tag": "select",
+                "type": "select-one",
+                "id": "account",
+                "name": "account",
+                "label": "Account Type*",
+                "placeholder": null,
+                "value": "",
+                "checked": null,
+                "disabled": false,
+                "readOnly": null,
+                "isVisible": true,
+                "selector": "#account",
+                "options": [
+                  {
+                    "value": "",
+                    "text": "Select Account Type"
+                  },
+                  {
+                    "value": "Engineer",
+                    "text": "Engineer"
+                  },
+                  {
+                    "value": "Private Job",
+                    "text": "Private Job"
+                  },
+                  {
+                    "value": "Student",
+                    "text": "Student"
+                  },
+                  {
+                    "value": "Government Job",
+                    "text": "Government Job"
+                  }
+                ]
+              },
+              {
+                "tag": "input",
+                "type": "email",
+                "id": "email",
+                "name": "email",
+                "label": "Email*",
+                "placeholder": "eg. user@user.com",
+                "value": "",
+                "checked": false,
+                "disabled": false,
+                "readOnly": false,
+                "isVisible": true,
+                "selector": "#email"
+              },
+              {
+                "tag": "input",
+                "type": "password",
+                "id": "password",
+                "name": "password",
+                "label": "Password*",
+                "placeholder": "Enter password",
+                "value": "",
+                "checked": false,
+                "disabled": false,
+                "readOnly": false,
+                "isVisible": true,
+                "selector": "#password"
+              },
+              {
+                "tag": "button",
+                "type": "button",
+                "id": null,
+                "name": null,
+                "label": null,
+                "placeholder": null,
+                "value": "",
+                "checked": null,
+                "disabled": false,
+                "readOnly": null,
+                "isVisible": true,
+                "selector": "button.absolute.right-3"
+              },
+              {
+                "tag": "input",
+                "type": "password",
+                "id": "confirm_password",
+                "name": "confirm_password",
+                "label": "Confirm Password*",
+                "placeholder": "Enter password",
+                "value": "",
+                "checked": false,
+                "disabled": false,
+                "readOnly": false,
+                "isVisible": true,
+                "selector": "#confirm_password"
+              },
+              {
+                "tag": "button",
+                "type": "button",
+                "id": null,
+                "name": null,
+                "label": null,
+                "placeholder": null,
+                "value": "",
+                "checked": null,
+                "disabled": false,
+                "readOnly": null,
+                "isVisible": true,
+                "selector": "button.absolute.right-3"
+              },
+              {
+                "tag": "button",
+                "type": "submit",
+                "id": null,
+                "name": null,
+                "label": "SIGNUP",
+                "placeholder": null,
+                "value": "",
+                "checked": null,
+                "disabled": false,
+                "readOnly": null,
+                "isVisible": true,
+                "selector": "button.btn-submit"
+              }
+            ]
+          }
+        ]
+      },
+      "discovered_urls": [
+        "http://www.w3.org/2000/svg",
+        "https://accounts.google.com/gsi/client",
+        "https://admin.qabrains.com/api/v1/categories",
+        "https://admin.qabrains.com/api/v1/component/categories",
+        "https://admin.qabrains.com/api/v1/component/registration",
+        "https://lh3.googleusercontent.com/a/ACg8ocI29Nct6qIOxS7F_DvwzSLtahJvxc5Kt_vP9oCaNlo7g_Z349vN=s384-c",
+        "https://practice.qabrains.com/",
+        "https://practice.qabrains.com/afterInteractive",
+        "https://practice.qabrains.com/button",
+        "https://practice.qabrains.com/closed",
+        "https://practice.qabrains.com/dialog-trigger",
+        "https://practice.qabrains.com/false",
+        "https://practice.qabrains.com/GTM",
+        "https://practice.qabrains.com/light",
+        "https://practice.qabrains.com/next",
+        "https://practice.qabrains.com/rc-menu-uuid-29044-1-auth",
+        "https://practice.qabrains.com/rc-menu-uuid-29044-1-drag-drop",
+        "https://practice.qabrains.com/rc-menu-uuid-29044-1-forgot-password",
+        "https://practice.qabrains.com/rc-menu-uuid-29044-1-form-submission",
+        "https://practice.qabrains.com/rc-menu-uuid-29044-1-login",
+        "https://practice.qabrains.com/rc-menu-uuid-29044-1-registration",
+        "https://practice.qabrains.com/rc-menu-uuid-29044-2-booking-site",
+        "https://practice.qabrains.com/rc-menu-uuid-29044-2-ecommerce-site",
+        "https://practice.qabrains.com/registration",
+        "https://practice.qabrains.com/sitemap_index.xml",
+        "https://practice.qabrains.com/sitemap.xml",
+        "https://practice.qabrains.com/true",
+        "https://qabrains.com/",
+        "https://qabrains.com/about",
+        "https://qabrains.com/auth/login",
+        "https://qabrains.com/discussion",
+        "https://qabrains.com/jobs",
+        "https://qabrains.com/policy",
+        "https://qabrains.com/practice-site",
+        "https://qabrains.com/tags",
+        "https://qabrains.com/terms",
+        "https://qabrains.com/topics",
+        "https://qabrains.com/topics/interview-questions",
+        "https://qabrains.com/topics/testing-framework",
+        "https://qabrains.com/topics/web-testing",
+        "https://static.cloudflareinsights.com/beacon.min.js/vcd15cbe7772f49c399c6a5babf22c1241717689176015",
+        "https://www.facebook.com/qabrainscom",
+        "https://www.linkedin.com/showcase/qabrainscom",
+        "https://www.youtube.com/@QABrains"
+      ],
+      "interactive_routes": {
+        "total": 5,
+        "urls": [
+          "https://practice.qabrains.com/",
+          "https://practice.qabrains.com/forgot-password",
+          "https://practice.qabrains.com/form-submission",
+          "https://practice.qabrains.com/drag-drop",
+          "https://practice.qabrains.com/ecommerce-site"
+        ]
+      },
+      "network_requests": [
+        {
+          "url": "https://practice.qabrains.com/registration",
+          "status": 200,
+          "method": "GET",
+          "resource_type": "document"
+        },
+        {
+          "url": "https://static.cloudflareinsights.com/beacon.min.js/vcd15cbe7772f49c399c6a5babf22c1241717689176015",
+          "status": 200,
+          "method": "GET",
+          "resource_type": "script"
+        },
+        {
+          "url": "https://www.googletagmanager.com/gtag/js?id=G-459KRV6RZF",
+          "status": 200,
+          "method": "GET",
+          "resource_type": "script"
+        },
+        {
+          "url": "https://practice.qabrains.com/_next/static/chunks/2619-3c9e02e22d10480a.js",
+          "status": 200,
+          "method": "GET",
+          "resource_type": "script"
+        },
+        {
+          "url": "https://practice.qabrains.com/_next/static/css/97dfc5d0cc2cd02b.css",
+          "status": 200,
+          "method": "GET",
+          "resource_type": "stylesheet"
+        },
+        {
+          "url": "https://practice.qabrains.com/_next/static/css/fc88df96f5c3b850.css",
+          "status": 200,
+          "method": "GET",
+          "resource_type": "stylesheet"
+        },
+        {
+          "url": "https://practice.qabrains.com/_next/static/chunks/2616-9817f6e38151b127.js",
+          "status": 200,
+          "method": "GET",
+          "resource_type": "script"
+        },
+        {
+          "url": "https://www.googletagmanager.com/gtm.js?id=GTM-NHHF5BQT",
+          "status": 200,
+          "method": "GET",
+          "resource_type": "script"
+        },
+        {
+          "url": "https://practice.qabrains.com/_next/static/chunks/main-app-08607c612937c180.js",
+          "status": 200,
+          "method": "GET",
+          "resource_type": "script"
+        },
+        {
+          "url": "https://practice.qabrains.com/_next/static/chunks/0e762574-697baee8769e2dd6.js",
+          "status": 200,
+          "method": "GET",
+          "resource_type": "script"
+        },
+        {
+          "url": "https://practice.qabrains.com/_next/static/chunks/9c4e2130-527bff446fc8b86c.js",
+          "status": 200,
+          "method": "GET",
+          "resource_type": "script"
+        },
+        {
+          "url": "https://practice.qabrains.com/_next/static/chunks/7646-48515e7ff657679b.js",
+          "status": 200,
+          "method": "GET",
+          "resource_type": "script"
+        },
+        {
+          "url": "https://practice.qabrains.com/_next/static/chunks/3137-a26309f5d4ca5951.js",
+          "status": 200,
+          "method": "GET",
+          "resource_type": "script"
+        },
+        {
+          "url": "https://practice.qabrains.com/_next/static/chunks/59650de3-f26025067dbbc7d5.js",
+          "status": 200,
+          "method": "GET",
+          "resource_type": "script"
+        },
+        {
+          "url": "https://practice.qabrains.com/_next/static/chunks/app/not-found-5498420366790700.js",
+          "status": 200,
+          "method": "GET",
+          "resource_type": "script"
+        },
+        {
+          "url": "https://practice.qabrains.com/_next/static/chunks/8571-a642d85b9370c2dd.js",
+          "status": 200,
+          "method": "GET",
+          "resource_type": "script"
+        },
+        {
+          "url": "https://practice.qabrains.com/_next/static/chunks/1311-fcfcc5fecb199a25.js",
+          "status": 200,
+          "method": "GET",
+          "resource_type": "script"
+        },
+        {
+          "url": "https://practice.qabrains.com/_next/static/chunks/webpack-7f89f43bd35b7caf.js",
+          "status": 200,
+          "method": "GET",
+          "resource_type": "script"
+        },
+        {
+          "url": "https://practice.qabrains.com/_next/static/chunks/4bd1b696-f785427dddbba9fb.js",
+          "status": 200,
+          "method": "GET",
+          "resource_type": "script"
+        },
+        {
+          "url": "https://practice.qabrains.com/_next/static/chunks/1255-d271660abf95e684.js",
+          "status": 200,
+          "method": "GET",
+          "resource_type": "script"
+        },
+        {
+          "url": "https://practice.qabrains.com/_next/static/media/d597563c1dad72cc-s.p.woff2",
+          "status": 200,
+          "method": "GET",
+          "resource_type": "font"
+        },
+        {
+          "url": "https://practice.qabrains.com/_next/static/media/7f06be3f780a819a-s.p.woff2",
+          "status": 200,
+          "method": "GET",
+          "resource_type": "font"
+        },
+        {
+          "url": "https://practice.qabrains.com/_next/static/chunks/8720-d7f67a5726cf715d.js",
+          "status": 200,
+          "method": "GET",
+          "resource_type": "script"
+        },
+        {
+          "url": "https://practice.qabrains.com/_next/static/chunks/4243-e1cb11d2e59a0e94.js",
+          "status": 200,
+          "method": "GET",
+          "resource_type": "script"
+        },
+        {
+          "url": "https://practice.qabrains.com/_next/static/chunks/app/layout-6b41a32ab3212047.js",
+          "status": 200,
+          "method": "GET",
+          "resource_type": "script"
+        },
+        {
+          "url": "https://practice.qabrains.com/_next/static/chunks/5125-8626032b05185706.js",
+          "status": 200,
+          "method": "GET",
+          "resource_type": "script"
+        },
+        {
+          "url": "https://practice.qabrains.com/_next/static/chunks/app/error-fdf21f2cb5b2146c.js",
+          "status": 200,
+          "method": "GET",
+          "resource_type": "script"
+        },
+        {
+          "url": "https://practice.qabrains.com/_next/static/chunks/eec3d76d-0a049712e5d05b66.js",
+          "status": 200,
+          "method": "GET",
+          "resource_type": "script"
+        },
+        {
+          "url": "https://practice.qabrains.com/_next/static/chunks/53c13509-196f88a8e2724a30.js",
+          "status": 200,
+          "method": "GET",
+          "resource_type": "script"
+        },
+        {
+          "url": "https://practice.qabrains.com/_next/static/chunks/7471-9d1a53eb4dc7cafc.js",
+          "status": 200,
+          "method": "GET",
+          "resource_type": "script"
+        },
+        {
+          "url": "https://practice.qabrains.com/_next/static/chunks/e37a0b60-d8cc2fcd40948ff1.js",
+          "status": 200,
+          "method": "GET",
+          "resource_type": "script"
+        },
+        {
+          "url": "https://practice.qabrains.com/_next/static/chunks/3433-748e0cde711504e4.js",
+          "status": 200,
+          "method": "GET",
+          "resource_type": "script"
+        },
+        {
+          "url": "https://practice.qabrains.com/_next/static/chunks/6060-422ca1cd49646bba.js",
+          "status": 200,
+          "method": "GET",
+          "resource_type": "script"
+        },
+        {
+          "url": "https://practice.qabrains.com/_next/static/chunks/5290-1bdcc5f5cddbabf4.js",
+          "status": 200,
+          "method": "GET",
+          "resource_type": "script"
+        },
+        {
+          "url": "https://practice.qabrains.com/_next/static/chunks/6327-33bdea4e3125c180.js",
+          "status": 200,
+          "method": "GET",
+          "resource_type": "script"
+        },
+        {
+          "url": "https://practice.qabrains.com/_next/static/chunks/app/global-error-139af275cefb7fac.js",
+          "status": 200,
+          "method": "GET",
+          "resource_type": "script"
+        },
+        {
+          "url": "https://practice.qabrains.com/_next/static/chunks/app/(app-root)/%5Bslug%5D/page-9f5088c326778b66.js",
+          "status": 200,
+          "method": "GET",
+          "resource_type": "script"
+        },
+        {
+          "url": "https://practice.qabrains.com/_next/static/chunks/app/(app-root)/layout-f83c136e28fd6d6c.js",
+          "status": 200,
+          "method": "GET",
+          "resource_type": "script"
+        },
+        {
+          "url": "https://practice.qabrains.com/_next/static/chunks/2311-48e255ce2024ba28.js",
+          "status": 200,
+          "method": "GET",
+          "resource_type": "script"
+        },
+        {
+          "url": "https://practice.qabrains.com/cdn-cgi/rum?",
+          "status": 204,
+          "method": "POST",
+          "resource_type": "xhr"
+        },
+        {
+          "url": "https://practice.qabrains.com/assets/qa-logo.svg",
+          "status": 200,
+          "method": "GET",
+          "resource_type": "image"
+        },
+        {
+          "url": "https://practice.qabrains.com/api/form-config?slug=registration",
+          "status": 200,
+          "method": "GET",
+          "resource_type": "fetch"
+        },
+        {
+          "url": "https://admin.qabrains.com/api/v1/component/registration",
+          "status": 200,
+          "method": "GET",
+          "resource_type": "fetch"
+        },
+        {
+          "url": "https://www.google-analytics.com/g/collect?v=2&tid=G-459KRV6RZF&gtm=45je62a1h1v9228338079za200zd9228338079&_p=1770894220561&gcd=13l3l3l3l1l1&npa=0&dma=0&cid=1001572728.1770894221&ul=en-us&sr=1280x720&uaa=x86&uab=64&uafvl=Chromium%3B143.0.7499.4%7CNot%2520A(Brand%3B24.0.0.0&uamb=0&uam=&uap=Linux&uapv=6.17.0&uaw=0&are=1&frm=0&pscdl=noapi&_s=1&tag_exp=103116026~103200004~104527907~104528500~104684208~104684211~115938466~115938469~116185181~116185182~116491846~116988315~117447493&sid=1770894220&sct=1&seg=0&dl=https%3A%2F%2Fpractice.qabrains.com%2Fregistration&dt=QA%20Practice%20Site&en=page_view&_fv=1&_nsi=1&_ss=1&_ee=1&tfd=14118",
+          "status": 204,
+          "method": "POST",
+          "resource_type": "fetch"
+        },
+        {
+          "url": "https://admin.qabrains.com/api/v1/component/categories",
+          "status": 200,
+          "method": "GET",
+          "resource_type": "xhr"
+        },
+        {
+          "url": "https://admin.qabrains.com/api/v1/categories",
+          "status": 200,
+          "method": "GET",
+          "resource_type": "xhr"
+        },
+        {
+          "url": "https://practice.qabrains.com/assets/qa-brains-w.svg",
+          "status": 200,
+          "method": "GET",
+          "resource_type": "image"
+        },
+        {
+          "url": "https://practice.qabrains.com/?_rsc=tutql",
+          "status": 200,
+          "method": "GET",
+          "resource_type": "fetch"
+        },
+        {
+          "url": "https://accounts.google.com/gsi/client",
+          "status": 200,
+          "method": "GET",
+          "resource_type": "script"
+        },
+        {
+          "url": "https://admin.qabrains.com/api/v1/component/feedbacks?slug=registration&page=1",
+          "status": 200,
+          "method": "GET",
+          "resource_type": "xhr"
+        },
+        {
+          "url": "https://lh3.googleusercontent.com/a/ACg8ocI29Nct6qIOxS7F_DvwzSLtahJvxc5Kt_vP9oCaNlo7g_Z349vN=s384-c",
+          "status": 200,
+          "method": "GET",
+          "resource_type": "image"
+        },
+        {
+          "url": "https://www.google-analytics.com/g/collect?v=2&tid=G-459KRV6RZF&gtm=45je62a1h1v9228338079za200zd9228338079&_p=1770894220561&gcd=13l3l3l3l1l1&npa=0&dma=0&cid=1001572728.1770894221&ul=en-us&sr=1280x720&uaa=x86&uab=64&uafvl=Chromium%3B143.0.7499.4%7CNot%2520A(Brand%3B24.0.0.0&uamb=0&uam=&uap=Linux&uapv=6.17.0&uaw=0&are=1&frm=0&pscdl=noapi&_eu=AEAAAAQ&_s=2&tag_exp=103116026~103200004~104527907~104528500~104684208~104684211~115938466~115938469~116185181~116185182~116491846~116988315~117447493&sid=1770894220&sct=1&seg=0&dl=https%3A%2F%2Fpractice.qabrains.com%2Fregistration&dt=QA%20Practice%20Site&en=scroll&epn.percent_scrolled=90&_et=2583&tfd=21704",
+          "status": 204,
+          "method": "POST",
+          "resource_type": "fetch"
+        }
+      ],
+      "agent_summary": "Agent Error: 429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/rate-limit. \\n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 20, model: gemini-2.5-flash\\nPlease retry in 26.281182807s.', 'status': 'RESOURCE_EXHAUSTED', 'details': [{'@type': 'type.googleapis.com/google.rpc.Help', 'links': [{'description': 'Learn more about Gemini API quotas', 'url': 'https://ai.google.dev/gemini-api/docs/rate-limits'}]}, {'@type': 'type.googleapis.com/google.rpc.QuotaFailure', 'violations': [{'quotaMetric': 'generativelanguage.googleapis.com/generate_content_free_tier_requests', 'quotaId': 'GenerateRequestsPerDayPerProjectPerModel-FreeTier', 'quotaDimensions': {'location': 'global', 'model': 'gemini-2.5-flash'}, 'quotaValue': '20'}]}, {'@type': 'type.googleapis.com/google.rpc.RetryInfo', 'retryDelay': '26s'}]}}"
+    }
+  ],
+  "external_reports": [],
+  "total_internal_pages_visited": 1
+}

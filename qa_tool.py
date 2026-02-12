@@ -49,7 +49,9 @@ class qa_toolConfig:
     headless: bool = field(default_factory=lambda: settings.browser.headless)
     max_pages: Optional[int] = field(default_factory=lambda: settings.crawler.max_pages)
     max_depth: Optional[int] = field(default_factory=lambda: settings.crawler.max_depth)
+    interactive: bool = False
     output_file: Optional[str] = None
+
 
 
 
@@ -82,7 +84,7 @@ class PageAnalyzer:
         self.loader = loader
         self.verifier = URLVerifier()
 
-    async def analyze(self, url: str, deep_analysis: bool = True, run_ai: bool = True) -> Dict[str, Any]:
+    async def analyze(self, url: str, deep_analysis: bool = True, run_ai: bool = True, interactive: bool = False) -> Dict[str, Any]:
         """Performs automated checks and conditionally runs agent-led QA."""
         logger.info(f"🔍 Analyzing URL ({'Internal' if deep_analysis else 'External'}): {url}")
         
@@ -119,20 +121,110 @@ class PageAnalyzer:
                 "network_requests": loader_result.get("network_requests") or [],
             }
 
-            # Step 3: AI Agent "Observe and Act" (Skipped for external links)
+            # Step 3: AI Agent "Observe and Act" (Initial Verification)
             if run_ai:
                 await self._run_agent_analysis(url, base_report)
+                
+            # Step 4: Interactive Mode (Manual form testing)
+            has_forms = False
+            if isinstance(base_report.get("forms_html"), dict):
+                has_forms = bool(base_report["forms_html"].get("forms"))
+            elif isinstance(base_report.get("forms_html"), list):
+                has_forms = bool(base_report["forms_html"])
+
+            if interactive and has_forms and run_ai:
+                await self._run_interactive_session(url, base_report)
+
             
             return base_report
+
 
 
         except Exception as exc:
             logger.error(f"Failed to analyze URL {url}: {exc}", exc_info=True)
             return {"url": url, "error": str(exc), "status": "error"}
 
+    async def _run_interactive_session(self, url: str, report: Dict[str, Any]) -> None:
+        """Prompts the user for manual form inputs in the terminal."""
+        forms_data = report.get("forms_html")
+        forms = []
+        if isinstance(forms_data, dict):
+            forms = forms_data.get("forms", [])
+        elif isinstance(forms_data, list):
+            forms = forms_data
+
+        if not forms:
+            return
+
+        print(f"\n{'#'*80}")
+        print(f"✋ INTERACTIVE FORM TESTING for: {url}")
+        print(f"   Found {len(forms)} forms. Please provide inputs below.")
+        print(f"{'#'*80}")
+
+        
+        user_input_map = []
+
+        for i, form in enumerate(forms):
+            print(f"\n--- Form {i+1} ---")
+            fields = form.get("fields", [])
+            form_data = {}
+            for field in fields:
+                f_name = field.get("name") or field.get("id") or "unnamed"
+                f_type = field.get("type", "text")
+                # Skip logic for buttons/submit in data gathering
+                if f_type in ("submit", "button", "reset", "hidden"):
+                    continue
+                
+                prompt = f"  👉 {f_name} [{f_type}] > "
+                user_val = await asyncio.to_thread(input, prompt)
+                if user_val.strip():
+                    form_data[f_name] = user_val
+            
+            if form_data:
+                user_input_map.append({
+                    "form_index": i,
+                    "inputs": form_data
+                })
+
+        if user_input_map:
+            logger.info("🤖 AI is now testing the forms with your values...")
+            await self._run_agent_interactive_testing(url, report, user_input_map)
+        else:
+            print("  (No manual data provided, skipping interactive test)")
+
+    async def _run_agent_interactive_testing(self, url: str, report: Dict[str, Any], user_input_map: List[Dict[str, Any]]) -> None:
+        """Force the AI agent to use specific manual inputs for form testing."""
+        api_key = _get_api_key()
+        if not api_key:
+            return
+
+        agent = GeminiAgent(api_key=api_key, loader=self.loader)
+        
+        # Prepare a specialized task for the agent
+        interactive_task = (
+            f"INTERACTIVE SESSION for {url}.\n\n"
+            "I have manually provided the following test data for the forms detected on this page:\n"
+            f"{json.dumps(user_input_map, indent=2)}\n\n"
+            "YOUR MISSION:\n"
+            "1. Use 'intelligent_form_filler' to fill only the forms I provided data for.\n"
+            "2. Use my EXACT values for the fields. If a field I provided is not found by name, try to match it by ID or label.\n"
+            "3. SUBMIT THE FORM: If the 'button_selector' is not provided in my data, you MUST find the correct submit button selector from the HTML and use it.\n"
+            "4. REPORT: Return a summary of what happened after the submission (e.g., success message, error, or navigation).\n"
+        )
+        
+        try:
+            agent_response = await asyncio.to_thread(agent.run, task=interactive_task, max_steps=10)
+            # Store interactive result separately to avoid overwriting initial audit
+            report["interactive_session_result"] = agent_response
+            print(f"\n🏆 INTERACTIVE TEST RESULT:\n{agent_response}\n")
+        except Exception as e:
+            logger.error(f"Interactive agent analysis failed for {url}: {e}")
+            report["interactive_agent_error"] = str(e)
+
     async def _run_agent_analysis(self, url: str, report: Dict[str, Any]) -> None:
         """Runs the Gemini agent to analyze the page report."""
         api_key = _get_api_key()
+
         if not api_key:
             report["agent_error"] = "Missing API key for Gemini Agent."
             return
@@ -214,8 +306,11 @@ class BFSCrawler:
                 report = await self.analyzer.analyze(
                     current_url, 
                     deep_analysis=is_internal, 
-                    run_ai=is_internal
+                    run_ai=is_internal,
+                    interactive=self.config.interactive
                 )
+
+
                 
                 if is_internal:
                     self.results.internal_reports.append(report)
@@ -240,6 +335,8 @@ class BFSCrawler:
         print(f"{'='*80}")
         if "agent_summary" in report:
             print(report["agent_summary"])
+        elif "url_report" in report:
+            print(json.dumps(report["url_report"], indent=2))
         elif "error" in report:
             print(f"❌ ERROR: {report['error']}")
         print(f"{'='*80}\n")
@@ -335,7 +432,9 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="BFS Crawler qa_tool: Analyze an entire site.")
     parser.add_argument("--url", required=True, help="Starting URL.")
     parser.add_argument("--headless", action="store_true", help="Run browser headless.")
+    parser.add_argument("--interactive", action="store_true", help="Manually provide form inputs during crawl.")
     parser.add_argument("--output", help="Optional output file path for the JSON result.")
+
     parser.add_argument("--max-pages", type=int, default=None, help="Max pages to crawl. Default: Unlimited.")
     parser.add_argument("--max-depth", type=int, default=None, help="Max depth to crawl. Default: Unlimited.")
 
@@ -344,7 +443,9 @@ def main() -> None:
     config = qa_toolConfig(
         initial_url=args.url,
         headless=args.headless,
+        interactive=args.interactive,
         max_pages=args.max_pages,
+
         max_depth=args.max_depth,
         output_file=args.output
     )
@@ -352,8 +453,8 @@ def main() -> None:
     try:
         payload = asyncio.run(run_qa_tool(config))
         
-        # Always print JSON to stdout for data piping
-        print(json.dumps(payload, indent=2, ensure_ascii=False))
+        # Optionally printing payload
+        #print(json.dumps(payload, indent=2, ensure_ascii=False))
 
         # Optionally save to file
         if config.output_file:
