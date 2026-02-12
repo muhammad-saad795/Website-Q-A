@@ -21,17 +21,20 @@ from urllib.parse import urlparse, urljoin
 from typing import Any, Dict, List, Set, Optional
 from dataclasses import dataclass, asdict, field
 
+from config import settings
 from AgentBased.loader import PageLoader
 from AgentBased.layout_validator import validate_layout
 from AgentBased.url_verifier import URLVerifier
 from AgentBased.gemini_agent import GeminiAgent, _get_api_key
 
+
 # Configure logging
 logging.basicConfig(
-    level=logging.INFO,
+    level=settings.logging_level,
     format="%(asctime)s - [%(levelname)s] - %(name)s - %(message)s",
     datefmt="%H:%M:%S"
 )
+
 logger = logging.getLogger("qa_tool")
 
 
@@ -39,10 +42,11 @@ logger = logging.getLogger("qa_tool")
 class qa_toolConfig:
     """Configuration for the crawler qa_tool."""
     initial_url: str
-    headless: bool = True
-    max_pages: Optional[int] = None
-    max_depth: Optional[int] = None
+    headless: bool = field(default_factory=lambda: settings.browser.headless)
+    max_pages: Optional[int] = field(default_factory=lambda: settings.crawler.max_pages)
+    max_depth: Optional[int] = field(default_factory=lambda: settings.crawler.max_depth)
     output_file: Optional[str] = None
+
 
 
 @dataclass
@@ -342,9 +346,22 @@ def main() -> None:
 
         # Optionally save to file
         if config.output_file:
-            with open(config.output_file, 'w', encoding='utf-8') as f:
+            output_path = Path(config.output_file)
+            output_path.parent.mkdir(parents=True, exist_ok=True)
+            with open(output_path, 'w', encoding='utf-8') as f:
                 json.dump(payload, f, indent=2, ensure_ascii=False)
-            logger.info(f"Results saved to {config.output_file}")
+            logger.info(f"Results saved to {output_path}")
+        else:
+            # Save to default output dir if no output file specified
+            output_dir = Path(settings.crawler.output_dir)
+            output_dir.mkdir(parents=True, exist_ok=True)
+            domain = urlparse(config.initial_url).netloc.replace(".", "_")
+            timestamp = time.strftime("%Y%m%d-%H%M%S")
+            output_path = output_dir / f"crawl_{domain}_{timestamp}.json"
+            with open(output_path, 'w', encoding='utf-8') as f:
+                json.dump(payload, f, indent=2, ensure_ascii=False)
+            logger.info(f"Results saved to {output_path}")
+
             
     except KeyboardInterrupt:
         logger.warning("qa_tool interrupted by user.")

@@ -1,0 +1,32 @@
+# =================================================================
+# Website QA Tool - Configuration
+# =================================================================
+# Settings can be overridden by Environment Variables.
+# Nested keys use double underscores: e.g. GEMINI__API_KEY
+# =================================================================
+
+gemini:
+  # api_key: "AIza..." # RECOMMENDED: Set via GEMINI_API_KEY environment variable
+  model: "gemini-2.5-flash"
+  max_steps: 15
+
+browser:
+  headless: true
+  max_load_seconds: 60
+  nav_timeout_ms: 30000
+  settle_time_ms: 1000
+  retries: 3
+  viewports:
+    desktop:
+      width: 1920
+      height: 1080
+    mobile:
+      width: 375
+      height: 812
+
+crawler:
+  max_pages: 50
+  max_depth: 3
+  output_dir: "crawl_results"
+
+logging_level: "INFO"

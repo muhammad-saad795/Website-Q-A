@@ -1,33 +1,31 @@
 import asyncio
 import logging
 import time
+import json
 from pathlib import Path
 from typing import Optional, Dict, Any, List
 from playwright.async_api import async_playwright, Browser, BrowserContext, Page, Error as PlaywrightError
-import json
 
+from config import settings
 
-# ──────────────────────────────────────────────
-# Config
-# ──────────────────────────────────────────────
-MAX_LOAD_SECONDS = 60
-NAV_TIMEOUT_MS = 30_000
-SETTLE_TIME_MS = 1_000
-RETRIES = 3  # retry on connection failures
-
-logging.basicConfig(level=logging.INFO, format="%(asctime)s - [%(levelname)s] - %(message)s")
+logging.basicConfig(
+    level=settings.logging_level, 
+    format="%(asctime)s - [%(levelname)s] - %(name)s - %(message)s"
+)
 logger = logging.getLogger(__name__)
 
 
 class PageLoader:
-    def __init__(self, headless: bool = False):
-        self.headless = headless
+    def __init__(self, headless: Optional[bool] = None):
+
+        self.headless = headless if headless is not None else settings.browser.headless
         self.playwright = None
         self.browser: Optional[Browser] = None
         self.context: Optional[BrowserContext] = None
 
         # Scripts directory
         self.scripts_dir = Path("AgentBased/scripts")
+
         self.scroll_script_path = self.scripts_dir / "scroll_page.js"
         self.text_script_path = self.scripts_dir / "extract_visible_text.js"
         self.layout_snapshot_script_path = self.scripts_dir / "layout_snapshot.js"
@@ -90,8 +88,9 @@ class PageLoader:
     async def _discover_interactive_routes(self, page: Page):
         if self.interactive_route_discovery_path.exists():
             return await page.evaluate(self.interactive_route_discovery_path.read_text())
-            page.wait_for_timeout(SETTLE_TIME_MS)
+            page.wait_for_timeout(settings.browser.settle_time_ms)
         return []
+
     async def _scan_forms(self, page: Page):
         if self.form_html_extractor_script_path.exists():
             return await page.evaluate(self.form_html_extractor_script_path.read_text())
@@ -142,8 +141,9 @@ class PageLoader:
 
         # ── Navigate ──
         start_time = time.perf_counter()
-        response = await page.goto(url, wait_until="domcontentloaded", timeout=NAV_TIMEOUT_MS)
+        response = await page.goto(url, wait_until="domcontentloaded", timeout=settings.browser.nav_timeout_ms)
         navigation_time = time.perf_counter() - start_time
+
         
         if not response:
             raise RuntimeError("No response received")
@@ -154,7 +154,7 @@ class PageLoader:
         result["navigation_time_seconds"] = navigation_time
 
         try:
-            await page.wait_for_load_state("networkidle", timeout=NAV_TIMEOUT_MS)
+            await page.wait_for_load_state("networkidle", timeout=settings.browser.nav_timeout_ms)
             result["load_time_seconds"] = time.perf_counter() - start_time
         except PlaywrightError:
             logger.warning("networkidle not reached, continuing")
@@ -162,7 +162,8 @@ class PageLoader:
 
         # ── Lazy-load scrolling ──
         await self._scroll_page(page)
-        await page.wait_for_timeout(SETTLE_TIME_MS)
+        await page.wait_for_timeout(settings.browser.settle_time_ms)
+
 
         # ── Capture visible text, and layout snapshot ──
         result["visible_text"] = await self._extract_visible_text(page)
@@ -174,12 +175,15 @@ class PageLoader:
         result["layout_snapshot_desktop"] = await self._capture_layout_snapshot(page)
         
         # Mobile
-        await page.set_viewport_size({"width": 375, "height": 812})
-        await page.wait_for_timeout(SETTLE_TIME_MS)
+        mobile_vp = settings.browser.viewports["mobile"]
+        await page.set_viewport_size({"width": mobile_vp.width, "height": mobile_vp.height})
+        await page.wait_for_timeout(settings.browser.settle_time_ms)
         result["layout_snapshot_mobile"] = await self._capture_layout_snapshot(page)
         #-----Set back to desktop mode (Maximized)-----
-        await page.set_viewport_size({"width": 1280, "height": 720})
-        await page.wait_for_timeout(SETTLE_TIME_MS)
+        desktop_vp = settings.browser.viewports["desktop"]
+        await page.set_viewport_size({"width": desktop_vp.width, "height": desktop_vp.height})
+        await page.wait_for_timeout(settings.browser.settle_time_ms)
+
 
         # ── Add network & console logs ──
         result["network_requests"] = network_requests
@@ -208,7 +212,8 @@ class PageLoader:
         if page.url != url:
             #logger.info(f"Returning to original URL: {url}")
             await page.goto(url, wait_until="domcontentloaded")
-            await page.wait_for_timeout(SETTLE_TIME_MS)
+            await page.wait_for_timeout(settings.browser.settle_time_ms)
+
 
 
     async def load(self, url: str, form_data: Optional[Any] = None, keep_open: bool = False) -> Dict[str, Any]:
@@ -217,20 +222,21 @@ class PageLoader:
 
         result: Dict[str, Any] = self._initial_result_dict(url)
 
-        for attempt in range(1, RETRIES + 1):
+        for attempt in range(1, settings.browser.retries + 1):
             page: Optional[Page] = None
             try:
                 page = await self.context.new_page()
-                await asyncio.wait_for(self._load_page(page, url, result, form_data=form_data), timeout=MAX_LOAD_SECONDS)
+                await asyncio.wait_for(self._load_page(page, url, result, form_data=form_data), timeout=settings.browser.max_load_seconds)
                 return result
             except (PlaywrightError, RuntimeError) as e:
-                logger.warning(f"Attempt {attempt}/{RETRIES} failed: {e}")
+                logger.warning(f"Attempt {attempt}/{settings.browser.retries} failed: {e}")
                 result["status"] = "failed"
                 result["error"] = str(e)
             except asyncio.TimeoutError:
-                logger.warning(f"Attempt {attempt}/{RETRIES} timed out")
+                logger.warning(f"Attempt {attempt}/{settings.browser.retries} timed out")
                 result["status"] = "failed"
                 result["error"] = "Global timeout exceeded"
+
             finally:
                 if page:
                     if not keep_open:

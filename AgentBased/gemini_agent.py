@@ -10,17 +10,17 @@ from __future__ import annotations
 import argparse
 import json
 import os
-from dotenv import load_dotenv
 from logging import getLogger
 from typing import Any, Dict, List, Tuple, Optional
 
 from google import genai
 from google.genai import types
 
+from config import settings
+
 logger = getLogger(__name__)
 
-# Load environment variables from the AgentBased/.env file
-load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), ".env"), override=True)
+
 
 from tools import (
     TEXT_VERIFIER_SPEC,
@@ -33,8 +33,9 @@ from tools import (
 from AgentBased.loader import PageLoader
 
 
-DEFAULT_MODEL = os.environ.get("GEMINI_MODEL", "gemini-2.5-flash")
-DEFAULT_MAX_STEPS = 15
+DEFAULT_MODEL = settings.gemini.model
+DEFAULT_MAX_STEPS = settings.gemini.max_steps
+
 
 
 SYSTEM_INSTRUCTION = (
@@ -210,7 +211,8 @@ def run_from_agent_payload(
 
 
 def _get_api_key() -> str:
-    return os.getenv("GEMINI_API_KEY")
+    return settings.gemini.api_key
+
 
 
 def main() -> None:
