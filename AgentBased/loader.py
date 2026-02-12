@@ -113,7 +113,7 @@ class PageLoader:
             logger.warning(f"Form filling failed: {e}")
             return {"error": str(e)}
 
-    async def _load_page(self, page: Page, url: str, result: Dict[str, Any], form_data: Optional[Any] = None):
+    async def _load_page(self, page: Page, url: str, result: Dict[str, Any], deep_analysis: bool = False, form_data: Optional[Any] = None):
         # ── Setup listeners before navigation ──
         network_requests: List[Dict[str, Any]] = []
         console_errors: List[Dict[str, Any]] = []
@@ -160,6 +160,14 @@ class PageLoader:
             logger.warning("networkidle not reached, continuing")
             result["load_time_seconds"] = time.perf_counter() - start_time
 
+        if not deep_analysis:
+            # Clean up listeners and exit early for minimal load
+            page.remove_listener("response", on_response)
+            page.remove_listener("console", on_console)
+            return
+
+        # ── Deep Analysis Blocks ──
+        
         # ── Lazy-load scrolling ──
         await self._scroll_page(page)
         await page.wait_for_timeout(settings.browser.settle_time_ms)
@@ -216,9 +224,12 @@ class PageLoader:
 
 
 
-    async def load(self, url: str, form_data: Optional[Any] = None, keep_open: bool = False) -> Dict[str, Any]:
+    async def load(self, url: str, deep_analysis: Optional[bool] = None, form_data: Optional[Any] = None, keep_open: bool = False) -> Dict[str, Any]:
         if not self.context:
             raise RuntimeError("Loader not started")
+
+        if deep_analysis is None:
+            deep_analysis = settings.browser.deep_analysis
 
         result: Dict[str, Any] = self._initial_result_dict(url)
 
@@ -226,7 +237,7 @@ class PageLoader:
             page: Optional[Page] = None
             try:
                 page = await self.context.new_page()
-                await asyncio.wait_for(self._load_page(page, url, result, form_data=form_data), timeout=settings.browser.max_load_seconds)
+                await asyncio.wait_for(self._load_page(page, url, result, deep_analysis=deep_analysis, form_data=form_data), timeout=settings.browser.max_load_seconds)
                 return result
             except (PlaywrightError, RuntimeError) as e:
                 logger.warning(f"Attempt {attempt}/{settings.browser.retries} failed: {e}")
@@ -257,14 +268,15 @@ class PageLoader:
             "load_time_seconds": None,
             "error": None,
             "visible_text": None,
-            "network_requests": [],
-            "console_errors": [],
+            "network_requests": None,
+            "console_errors": None,
             "layout_snapshot_desktop": None,
             "layout_snapshot_mobile": None,
-            "discovered_urls": [],
-            "interactive_routes":[],
-            "forms_html": [],
+            "discovered_urls": None,
+            "interactive_routes": None,
+            "forms_html": None,
         }
+
 
 
 # ──────────────────────────────────────────────
@@ -276,16 +288,18 @@ async def main():
     
     url = "https://practice.qabrains.com/registration"
     
-    logger.info(f"Step 1: Loading and scanning page: {url}")
-    # Load with keep_open=True so we can fill later
-    scan_result = await loader.load(url, keep_open=True)
+    logger.info(f"Step 1: Minimal Loading: {url}")
+    min_result = await loader.load(url, deep_analysis=False)
+    logger.info("Minimal load finished.")
+    print(json.dumps(min_result, indent=2))
 
-    # Save scan result
-    Path("result.json").write_text(json.dumps(scan_result, indent=2))
-    logger.info("Scan finished and saved to result.json")
-    logger.info("Tasks finished. Keeping browser open... (Press Enter to stop)")
-    await asyncio.get_event_loop().run_in_executor(None, input, "")
+    logger.info(f"Step 2: Deep Analysis Loading: {url}")
+    deep_result = await loader.load(url, deep_analysis=True)
+    logger.info("Deep analysis load finished.")
+    # print(json.dumps(deep_result, indent=2)) # Truncated to avoid flooding
+
     await loader.stop()
+
 
 
 if __name__ == "__main__":

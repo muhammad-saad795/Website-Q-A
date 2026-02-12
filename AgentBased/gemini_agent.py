@@ -1,10 +1,3 @@
-"""
-Minimal Gemini tool-using agent.
-
-Usage:
-  python -m AgentBased.gemini_agent --task "Verify https://example.com"
-"""
-
 from __future__ import annotations
 
 import argparse

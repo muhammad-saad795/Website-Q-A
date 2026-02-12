@@ -6,7 +6,6 @@
 # =================================================================
 
 gemini:
-  # api_key: "AIza..." # RECOMMENDED: Set via GEMINI_API_KEY environment variable
   model: "gemini-2.5-flash"
   max_steps: 15
 
@@ -23,10 +22,5 @@ browser:
     mobile:
       width: 375
       height: 812
-
-crawler:
-  max_pages: 50
-  max_depth: 3
-  output_dir: "crawl_results"
 
 logging_level: "INFO"

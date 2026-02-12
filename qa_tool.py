@@ -7,15 +7,19 @@ qa_tool with BFS Crawler:
 5) Filters for internal vs external domains.
 6) Runs the full single-page QA suite on each internal page.
 """
-
+#Usage : python qa_tool.py --url <url> --headless --max-pages <max_pages> --max-depth <max_depth> --output <output_file>
 from __future__ import annotations
 
 import argparse
 import asyncio
 import json
 import io
+import time
 import logging
+
+from pathlib import Path
 from collections import deque
+
 from contextlib import redirect_stdout
 from urllib.parse import urlparse, urljoin
 from typing import Any, Dict, List, Set, Optional
@@ -55,7 +59,7 @@ class CrawlResult:
     initial_url: str
     base_domain: str
     internal_reports: List[Dict[str, Any]] = field(default_factory=list)
-    external_links: Set[str] = field(default_factory=set)
+    external_reports: List[Dict[str, Any]] = field(default_factory=list)
     visited_pages: Set[str] = field(default_factory=set)
     master_qa_audit: str = "Not generated"
 
@@ -65,9 +69,10 @@ class CrawlResult:
             "base_domain": self.base_domain,
             "master_qa_audit": self.master_qa_audit,
             "internal_reports": self.internal_reports,
-            "external_links_found": sorted(list(self.external_links)),
+            "external_reports": self.external_reports,
             "total_internal_pages_visited": len(self.visited_pages),
         }
+
 
 
 class PageAnalyzer:
@@ -77,13 +82,13 @@ class PageAnalyzer:
         self.loader = loader
         self.verifier = URLVerifier()
 
-    async def analyze(self, url: str) -> Dict[str, Any]:
-        """Performs automated checks and agent-led QA on a single page."""
-        logger.info(f"🔍 Analyzing URL: {url}")
+    async def analyze(self, url: str, deep_analysis: bool = True, run_ai: bool = True) -> Dict[str, Any]:
+        """Performs automated checks and conditionally runs agent-led QA."""
+        logger.info(f"🔍 Analyzing URL ({'Internal' if deep_analysis else 'External'}): {url}")
         
         try:
             # Step 1: Load & Scan
-            loader_result = await self.loader.load(url)
+            loader_result = await self.loader.load(url, deep_analysis=deep_analysis)
             
             # Step 2: Automated Verification (URL & Layout)
             url_report_obj = self.verifier.verify(
@@ -97,26 +102,29 @@ class PageAnalyzer:
                 load_time=loader_result.get("load_time_seconds"),
             )
 
-            # Silence layout validator stdout
-            with redirect_stdout(io.StringIO()):
-                layout_report = validate_layout(loader_result)
+            # Silence layout validator stdout for external urls if requested
+            layout_report = None
+            if deep_analysis:
+                with redirect_stdout(io.StringIO()):
+                    layout_report = validate_layout(loader_result)
 
             base_report = {
-                "url": url, # Ensure URL is present in the report
+                "url": url,
                 "url_report": asdict(url_report_obj),
                 "layout_report": layout_report,
-                "visible_text": loader_result.get("visible_text") or "",
-                "forms_html": loader_result.get("forms_html") or [],
-                # These will be used for BFS discovery
+                "visible_text": loader_result.get("visible_text"),
+                "forms_html": loader_result.get("forms_html"),
                 "discovered_urls": loader_result.get("discovered_urls") or [],
                 "interactive_routes": loader_result.get("interactive_routes") or [],
                 "network_requests": loader_result.get("network_requests") or [],
             }
 
-            # Step 3: AI Agent "Observe and Act"
-            await self._run_agent_analysis(url, base_report)
+            # Step 3: AI Agent "Observe and Act" (Skipped for external links)
+            if run_ai:
+                await self._run_agent_analysis(url, base_report)
             
             return base_report
+
 
         except Exception as exc:
             logger.error(f"Failed to analyze URL {url}: {exc}", exc_info=True)
@@ -136,7 +144,7 @@ class PageAnalyzer:
             "SYSTEM DATA PROVIDED:\n"
             f"1. URL Report: {json.dumps(report['url_report'], indent=2)}\n"
             f"2. Layout Report: {json.dumps(report['layout_report'], indent=2)}\n"
-            f"3. Page Text (excerpt): {report['visible_text'][:2000]}\n"
+            f"3. Page Text (excerpt): {report['visible_text']}\n"
             f"4. Detected Forms: {json.dumps(report['forms_html'], indent=2)}\n\n"
             "YOUR MISSION:\n"
             "1. VALIDATE TEXT: Use 'text_verifier' to make sure the content matches the page type.\n"
@@ -151,11 +159,6 @@ class PageAnalyzer:
         
         logger.info(f"🤖 Tasking AI agent for {url}...")
         try:
-            # The agent.run is synchronous but might be heavy, consider running in executor if needed.
-            # strict requirement: agent.run is blocking. 
-            # In a real async qa_tool we might want to offload this.
-            # For now, we keep it as is since GeminiAgent isn't async compatible yet?
-            # looking at source, GeminiAgent.run is sync.
             agent_response = await asyncio.to_thread(agent.run, task=task, max_steps=10)
             report["agent_summary"] = agent_response
         except Exception as e:
@@ -203,14 +206,26 @@ class BFSCrawler:
                 
                 self.results.visited_pages.add(normalized_url)
                 
+                # Determine if internal or external
+                is_internal = self._is_internal(current_url)
+                
                 # Analyze page
-                report = await self.analyzer.analyze(current_url)
-                self.results.internal_reports.append(report)
+                # If external: deep_analysis=False, run_ai=False
+                report = await self.analyzer.analyze(
+                    current_url, 
+                    deep_analysis=is_internal, 
+                    run_ai=is_internal
+                )
+                
+                if is_internal:
+                    self.results.internal_reports.append(report)
+                    if self.config.max_depth is None or current_depth < self.config.max_depth:
+                        self._discover_urls(current_url, report, current_depth)
+                else:
+                    self.results.external_reports.append(report)
                 
                 self._log_report(current_url, report)
-                
-                if self.config.max_depth is None or current_depth < self.config.max_depth:
-                    self._discover_urls(current_url, report, current_depth)
+
 
             await self._generate_master_report()
             
@@ -252,13 +267,13 @@ class BFSCrawler:
                 continue
                 
             full_url = urljoin(current_url, raw_url)
+            norm_discovered = self._normalize_url(full_url)
             
-            if self._is_internal(full_url):
-                norm_discovered = self._normalize_url(full_url)
-                if norm_discovered not in self.results.visited_pages:
-                    self.queue.append((full_url, current_depth + 1))
-            else:
-                self.results.external_links.add(full_url)
+            if norm_discovered not in self.results.visited_pages:
+                # Add to queue regardless of internal/external,
+                # the run loop will handle the analysis logic.
+                self.queue.append((full_url, current_depth + 1))
+
 
     async def _generate_master_report(self):
         """Generates the final AI master report."""
@@ -284,9 +299,10 @@ class BFSCrawler:
         agent = GeminiAgent(api_key=api_key)
         master_task = (
             f"You are a Lead QA Engineer. I have crawled the website starting at {self.config.initial_url}.\n"
-            f"Total Pages Visited: {len(self.results.visited_pages)}\n"
-            f"External Links Found: {len(self.results.external_links)}\n\n"
-            "Here is a summary of the findings for each page:\n"
+            f"Total Internal Pages Visited: {len(self.results.internal_reports)}\n"
+            f"Total External Links Verified: {len(self.results.external_reports)}\n\n"
+            "Here is a summary of the findings for internal pages:\n"
+
             f"{json.dumps(condensed_results, indent=2)}\n\n"
             "YOUR MISSION:\n"
             "Provide a high-level 'Master QA Audit' for the entire website. "
@@ -296,21 +312,16 @@ class BFSCrawler:
         
         try:
             self.results.master_qa_audit = await asyncio.to_thread(agent.run, task=master_task)
-            
-            print(f"\n{'#'*80}")
-            print(f"🏆 AI MASTER QA AUDIT: {self.config.initial_url}")
-            print(f"{'#'*80}")
-            print(self.results.master_qa_audit)
-            print(f"{'#'*80}\n")
-            
         except Exception as e:
+
             logger.error(f"Failed to generate master report: {e}")
             self.results.master_qa_audit = f"Error generating report: {e}"
 
         print(f"📊 CRAWL METRICS:")
-        print(f" - Internal Pages Visited: {len(self.results.visited_pages)}")
-        print(f" - External Links Found: {len(self.results.external_links)}")
-        print(f" - Reports Generated: {len(self.results.internal_reports)}")
+        print(f" - Internal Pages Visited: {len(self.results.internal_reports)}")
+        print(f" - External Links Verified: {len(self.results.external_reports)}")
+        print(f" - Total Unique URLs Processed: {len(self.results.visited_pages)}")
+
         print(f"{'#'*80}\n")
 
 
