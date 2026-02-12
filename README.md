@@ -46,21 +46,6 @@ source venv/bin/activate  # On Windows: venv\Scripts\activate
 
 pip install -r requirements.txt
 ```
-Copilot said: I'll update the README to reflect that
-
-I'll update the README to reflect that this is a qualitative analysis tool for websites rather than a question-answering system.Here's a production-grade README for your qualitative website analysis tool:
-README.mdv2
-
-# Website Qualitative Analysis Tool
-
-A sophisticated qualitative analysis framework for conducting in-depth, systematic analysis of website content, structure, and user experience elements.
-
-## Overview
-
-Website-Q-A/ ├── qa_tool.py # Core analysis engine and orchestrator ├── config.py # Python configuration module ├── config.yaml # YAML configuration and analysis parameters ├── requirements.txt # Python dependencies ├── result.json # Analysis results storage (JSON output) ├── AgentBased/ # Agent-based analysis modules │ └── [Analysis agents for specialized tasks] ├── tools/ # Utility functions and helper modules │ └── [Text processing, data extraction, analysis utilities] └── .gitignore # Git ignore rules
-Code
-
-
 ## Prerequisites
 
 - Python 3.8+
@@ -68,26 +53,6 @@ Code
 - pip (Python package manager)
 - Modern web browser (for JavaScript frontend components)
 
-## Installation
-
-### 1. Clone the Repository
-
-```bash
-git clone https://github.com/AliHaSSan-13/Website-Q-A.git
-cd Website-Q-A
-
-2. Set Up Virtual Environment (Recommended)
-bash
-
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-
-3. Install Dependencies
-bash
-
-pip install -r requirements.txt
-
-```
 ### 2. Set Up Virtual Environment (Recommended)
 ```bash
 
