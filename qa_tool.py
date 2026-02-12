@@ -169,14 +169,22 @@ class PageAnalyzer:
             fields = form.get("fields", [])
             form_data = {}
             for field in fields:
-                f_name = field.get("name") or field.get("id") or "unnamed"
+                f_name = field.get("name") or field.get("id") or field.get("selector") or "unnamed"
                 f_type = field.get("type", "text")
+                f_label = field.get("label") or ""
+                f_placeholder = field.get("placeholder") or ""
+                
                 # Skip logic for buttons/submit in data gathering
                 if f_type in ("submit", "button", "reset", "hidden"):
                     continue
                 
-                prompt = f"  👉 {f_name} [{f_type}] > "
+                info = f" ({f_label})" if f_label else ""
+                if f_placeholder:
+                    info += f" [e.g. {f_placeholder}]"
+                
+                prompt = f"  👉 {f_name}{info} [{f_type}] > "
                 user_val = await asyncio.to_thread(input, prompt)
+
                 if user_val.strip():
                     form_data[f_name] = user_val
             
@@ -202,19 +210,63 @@ class PageAnalyzer:
         
         # Prepare a specialized task for the agent
         interactive_task = (
-            f"INTERACTIVE SESSION for {url}.\n\n"
-            "I have manually provided the following test data for the forms detected on this page:\n"
+            f"🎯 INTERACTIVE FORM TESTING SESSION for {url}\n\n"
+            
+            "═══════════════════════════════════════════════════════════════\n"
+            "👤 USER-PROVIDED TEST DATA\n"
+            "═══════════════════════════════════════════════════════════════\n"
+            "The user has manually provided specific test values for form validation.\n"
+            "This is a targeted test to verify custom scenarios or reproduce specific issues.\n\n"
             f"{json.dumps(user_input_map, indent=2)}\n\n"
-            "YOUR MISSION:\n"
-            "1. Use 'intelligent_form_filler' to fill only the forms I provided data for.\n"
-            "2. Use my EXACT values for the fields. If a field I provided is not found by name, try to match it by ID or label.\n"
-            "3. SUBMIT THE FORM: If the 'button_selector' is not provided in my data, you MUST find the correct submit button selector from the HTML and use it.\n"
-            "4. REPORT: Return a summary of what happened after the submission (e.g., success message, error, or navigation).\n"
+            
+            "═══════════════════════════════════════════════════════════════\n"
+            "🤖 YOUR MISSION\n"
+            "═══════════════════════════════════════════════════════════════\n\n"
+            
+            "STEP 1: FORM IDENTIFICATION\n"
+            "├─ Locate the form(s) referenced in the user data (by form_index)\n"
+            "├─ Verify all fields mentioned in 'inputs' exist in the form structure\n"
+            "└─ If a field is not found by name/ID, intelligently match by label or selector\n\n"
+            
+            "STEP 2: INTELLIGENT FORM FILLING\n"
+            "├─ Use 'intelligent_form_filler' tool with the user's EXACT values\n"
+            "├─ Construct the payload: Include ALL normal fields from the form, replacing user-specified ones\n"
+            "├─ Field Order: MUST follow HTML top-to-bottom sequence\n"
+            "├─ Submit Button: If 'submitSelector' is missing, you MUST find it from the form structure or HTML\n"
+            "└─ Set 'submit': true to trigger submission\n\n"
+            
+            "STEP 3: OUTCOME DIAGNOSIS\n"
+            "After submission, perform comprehensive analysis:\n"
+            "├─ URL Change: Compare 'url_after_submission' to original URL\n"
+            "├─ Success Signals: Search 'visible_text_after_submission' for success messages\n"
+            "├─ Error Signals: Look for validation errors, warnings, or failure messages\n"
+            "├─ Network Issues: Check 'network_requests_after_submit' for 4xx/5xx errors\n"
+            "├─ Console Errors: Review 'console_errors_after_submit' for JavaScript exceptions\n"
+            "└─ Root Cause: Determine WHY the submission succeeded or failed\n\n"
+            
+            "STEP 4: DETAILED REPORTING\n"
+            "Generate a professional test report with:\n"
+            "├─ Test Scenario: Describe what was tested (e.g., 'Registration with custom email format')\n"
+            "├─ Inputs Used: List all field values submitted\n"
+            "├─ Expected Outcome: What should have happened?\n"
+            "├─ Actual Outcome: What actually happened? (success/failure/partial)\n"
+            "├─ Diagnostic Data: URL changes, messages, network/console logs\n"
+            "├─ Root Cause Analysis: Why did it succeed/fail?\n"
+            "└─ Recommendations: Next steps or fixes needed\n\n"
+            
+            "⚡ CRITICAL GUIDELINES:\n"
+            "• Treat user values as sacred—use them EXACTLY as provided\n"
+            "• If you cannot find a submit button, intelligently search for common selectors\n"
+            "• Focus on diagnosing the OUTCOME, not just executing the submission\n"
+            "• Provide actionable insights the user can act on immediately\n\n"
+            
+            "Return a clear, professional summary of the test execution and results."
         )
         
         try:
             agent_response = await asyncio.to_thread(agent.run, task=interactive_task, max_steps=10)
             # Store interactive result separately to avoid overwriting initial audit
+
             report["interactive_session_result"] = agent_response
             print(f"\n🏆 INTERACTIVE TEST RESULT:\n{agent_response}\n")
         except Exception as e:
@@ -232,21 +284,100 @@ class PageAnalyzer:
         agent = GeminiAgent(api_key=api_key, loader=self.loader)
         
         task = (
-            f"You are a Senior QA Automation Engineer. I have performed automated checks for {url}.\n\n"
-            "SYSTEM DATA PROVIDED:\n"
-            f"1. URL Report: {json.dumps(report['url_report'], indent=2)}\n"
-            f"2. Layout Report: {json.dumps(report['layout_report'], indent=2)}\n"
-            f"3. Page Text (excerpt): {report['visible_text']}\n"
-            f"4. Detected Forms: {json.dumps(report['forms_html'], indent=2)}\n\n"
-            "YOUR MISSION:\n"
-            "1. VALIDATE TEXT: Use 'text_verifier' to make sure the content matches the page type.\n"
-            "2. FORM TESTING (Strict Limit): If forms exist, use 'intelligent_form_filler' to test them.\n"
-            "   - Perform EXACTLY THREE distinct scenarios per form: 1) Happy Path (Valid), 2) Edge Case (Invalid/Boundary), 3) Error Handling (Missing fields).\n"
-            "   - DO NOT REPEAT any scenario. If a scenario is completed, move to the next one.\n"
-            "   - STOP testing after 3 attempts, regardless of the outcome.\n"
-            "   - CRITICAL: Your JSON payload keys MUST follow the EXACT sequential order of fields in the HTML.\n"
-            "3. FINAL AUDIT: Provide a master QA report covering URL health, Layout integrity, Content accuracy, and "
-            "a detailed breakdown of the 3 form test scenarios performed (Inputs used -> Outcomes recorded).\n"
+            f"🎯 MISSION: Comprehensive QA Analysis for {url}\n\n"
+            
+            "═══════════════════════════════════════════════════════════════\n"
+            "📦 SYSTEM DATA PROVIDED\n"
+            "═══════════════════════════════════════════════════════════════\n"
+            f"1️⃣ URL HEALTH REPORT:\n{json.dumps(report['url_report'], indent=2)}\n\n"
+            f"2️⃣ LAYOUT INTEGRITY REPORT:\n{json.dumps(report['layout_report'], indent=2)}\n\n"
+            f"3️⃣ PAGE CONTENT (Full Text):\n{report['visible_text'][:4000]}{'...' if len(report['visible_text']) > 4000 else ''}\n\n"
+            f"4️⃣ DETECTED FORMS:\n{json.dumps(report['forms_html'], indent=2)}\n\n"
+            
+            "═══════════════════════════════════════════════════════════════\n"
+            "🧠 YOUR ANALYTICAL MISSION\n"
+            "═══════════════════════════════════════════════════════════════\n\n"
+            
+            "PHASE 1: CONTENT VALIDATION\n"
+            "├─ Use 'text_verifier' to analyze the visible page text.\n"
+            "├─ Verify the content matches the page's inferred purpose (login, registration, product page, etc.).\n"
+            "└─ Flag any placeholder text, lorem ipsum, or unfinished content.\n\n"
+            
+            "PHASE 2: INTELLIGENT FORM TESTING (CRITICAL)\n"
+            "If forms are detected, perform EXACTLY 3 DISTINCT test scenarios per form:\n\n"
+            
+            "  Test 1 - Happy Path (Valid Data):\n"
+            "  ├─ Use realistic, valid input for all fields\n"
+            "  ├─ Example: Real email format, strong password, typical names\n"
+            "  └─ Expected: Successful submission (URL redirect or success message)\n\n"
+            
+            "  Test 2 - Edge Case (Invalid/Boundary Data):\n"
+            "  ├─ Use invalid formats: malformed email, weak password, special characters\n"
+            "  ├─ Example: 'invalid-email', 'aaa@', '123', or empty strings\n"
+            "  └─ Expected: Client-side validation error or server rejection\n\n"
+            
+            "  Test 3 - Error Handling (Missing Required Fields):\n"
+            "  ├─ Omit at least one required field (set to empty string '')\n"
+            "  ├─ Example: Leave 'name' or 'email' blank\n"
+            "  └─ Expected: Clear error message identifying the missing field\n\n"
+            
+            "🔍 POST-SUBMISSION ANALYSIS (MANDATORY FOR EACH TEST):\n"
+            "After EVERY form submission, perform deep diagnostics:\n"
+            "├─ EXAMINE the 'url_after_submission': Did it redirect? Stay on the same page?\n"
+            "├─ ANALYZE 'visible_text_after_submission': Look for success messages, error text, validation warnings\n"
+            "├─ INSPECT 'network_requests_after_submit': Check for 4xx/5xx errors, failed API calls\n"
+            "├─ REVIEW 'console_errors_after_submit': Identify JavaScript exceptions that prevented submission\n"
+            "└─ CORRELATE all signals to determine TRUE outcome (success/fail) and ROOT CAUSE of any issues\n\n"
+            
+            "⚠️ CRITICAL RULES:\n"
+            "• Field Order: MUST match HTML top-to-bottom sequence (validate against forms_html structure)\n"
+            "• No Repetition: Do NOT run the same scenario twice. Move to next test immediately.\n"
+            "• Stop After 3: Complete exactly 3 scenarios, then STOP form testing.\n"
+            "• Multi-Form: If multiple forms exist, test each one following the same 3-scenario protocol.\n\n"
+            
+            "═══════════════════════════════════════════════════════════════\n"
+            "📊 FINAL QA AUDIT REPORT\n"
+            "═══════════════════════════════════════════════════════════════\n"
+            "Generate a comprehensive, production-ready QA report with these sections:\n\n"
+            
+            "1. EXECUTIVE SUMMARY\n"
+            "   • Overall page health (PASS/WARNING/FAIL)\n"
+            "   • Critical issues count and severity breakdown\n\n"
+            
+            "2. URL HEALTH ASSESSMENT\n"
+            "   • HTTP status, redirect behavior, performance metrics\n"
+            "   • Console errors from initial load\n\n"
+            
+            "3. LAYOUT INTEGRITY\n"
+            "   • Mobile vs Desktop issues\n"
+            "   • Accessibility violations (touch targets, contrast, etc.)\n"
+            "   • Severity classification (CRITICAL/WARNING/INFO)\n\n"
+            
+            "4. CONTENT ACCURACY\n"
+            "   • Text verification results\n"
+            "   • Alignment with page purpose\n\n"
+            
+            "5. FORM FUNCTIONALITY (Detailed Test Report)\n"
+            "   For EACH form tested, document:\n"
+            "   ┌─ Form Identification (index, ID, purpose)\n"
+            "   ├─ Field Structure (order, types, required fields)\n"
+            "   ├─ Scenario 1 Results: [Inputs] → [Outcome] → [Analysis]\n"
+            "   ├─ Scenario 2 Results: [Inputs] → [Outcome] → [Analysis]\n"
+            "   ├─ Scenario 3 Results: [Inputs] → [Outcome] → [Analysis]\n"
+            "   └─ Root Cause Analysis: Why did failures occur? (e.g., server error, validation bug, missing endpoint)\n\n"
+            
+            "6. DIAGNOSTIC INSIGHTS\n"
+            "   • Network failures: Which endpoints failed and why?\n"
+            "   • Console errors: JavaScript exceptions and their impact\n"
+            "   • Validation gaps: Missing or insufficient error messages\n\n"
+            
+            "7. RECOMMENDATIONS\n"
+            "   • Prioritized action items for developers\n"
+            "   • Quick wins vs. long-term fixes\n"
+            "   • Impact assessment (user experience, security, accessibility)\n\n"
+            
+            "Use professional QA language, quantify all findings, and provide actionable next steps. "
+            "Your report should be ready to present to the development team."
         )
         
         logger.info(f"🤖 Tasking AI agent for {url}...")

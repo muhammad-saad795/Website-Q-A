@@ -81,6 +81,20 @@ async def _submit_form_workflow(
         context = await browser.new_context(viewport={"width": 1280, "height": 720})
         page = await context.new_page()
         
+        network_logs = []
+        console_logs = []
+        
+        page.on("response", lambda res: network_logs.append({
+            "url": res.url,
+            "status": res.status,
+            "method": res.request.method,
+            "resource_type": res.request.resource_type
+        }))
+        page.on("console", lambda msg: console_logs.append({
+            "type": msg.type,
+            "text": msg.text
+        }) if msg.type in ("error", "warning") else None)
+
         try:
             logger.info(f"🚀 Navigating to {url}...")
             await page.goto(url, wait_until="networkidle", timeout=30000)
@@ -95,6 +109,10 @@ async def _submit_form_workflow(
             
             # Step 2: Fill and Submit
             if FILL_FORMS_SCRIPT.exists():
+                # Clear logs before submission to focus on events triggered by the submit click
+                network_logs.clear()
+                console_logs.clear()
+
                 logger.info(f"✍️ Submitting form with payload: {json.dumps(payload, indent=2)}")
                 fill_script = FILL_FORMS_SCRIPT.read_text()
                 # fill_forms.js is an async function: async (payload) => { ... }
@@ -117,9 +135,12 @@ async def _submit_form_workflow(
                     "fill_details": fill_result,
                     "url_after_submission": final_url,
                     "visible_text_after_submission": visible_text,
+                    "network_requests_after_submit": network_logs,
+                    "console_errors_after_submit": console_logs
                 }
             else:
                 return {"error": f"Fill script missing at {FILL_FORMS_SCRIPT}"}
+
 
         except Exception as exc:
             logger.error(f"Form submission workflow failed: {exc}")
