@@ -6,10 +6,6 @@ A sophisticated qualitative analysis framework for conducting in-depth, systemat
 
 Website-Q-A is a comprehensive qualitative analysis platform designed to extract, process, and analyze website characteristics across multiple dimensions. The system enables researchers, UX specialists, and analysts to perform detailed qualitative assessments of websites through both automated processing and agent-based analysis workflows.
 
-**Language Composition:**
-- Python: 74.4%
-- JavaScript: 25.6%
-
 ## Features
 
 - 📊 **Multi-Dimensional Analysis**: Systematic evaluation of website content, structure, design, and UX elements
