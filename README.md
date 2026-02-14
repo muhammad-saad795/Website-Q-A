@@ -38,12 +38,6 @@ Website-Q-A is a comprehensive qualitative analysis platform designed to extract
 git clone https://github.com/AliHaSSan-13/Website-Q-A.git
 cd Website-Q-A 
 ```
-## Prerequisites
-
-- Python 3.8+
-- Node.js 14+ (for JavaScript components)
-- pip (Python package manager)
-- Modern web browser (for JavaScript frontend components)
 
 ### 2. Set Up Virtual Environment (Recommended)
 ```bash
