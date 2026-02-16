@@ -71,7 +71,7 @@ GEMINI_TOOL_SPEC: Dict[str, Any] = {
 async def _submit_form_workflow(
     url: str,
     payload: Dict[str, Any],
-    headless: bool = False,
+    headless: bool = True,
 ) -> Dict[str, Any]:
     """
     Standalone workflow: Start browser, navigate, scan, and fill.

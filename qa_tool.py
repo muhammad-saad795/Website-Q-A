@@ -47,8 +47,9 @@ class qa_toolConfig:
     """Configuration for the crawler qa_tool."""
     initial_url: str
     headless: bool = field(default_factory=lambda: settings.browser.headless)
-    max_pages: Optional[int] = field(default_factory=lambda: settings.crawler.max_pages)
-    max_depth: Optional[int] = field(default_factory=lambda: settings.crawler.max_depth)
+    max_pages: Optional[int] = None
+    max_depth: Optional[int] = None
+    run_ai: bool = True
     interactive: bool = False
     output_file: Optional[str] = None
 
@@ -437,7 +438,7 @@ class BFSCrawler:
                 report = await self.analyzer.analyze(
                     current_url, 
                     deep_analysis=is_internal, 
-                    run_ai=is_internal,
+                    run_ai=is_internal and self.config.run_ai,
                     interactive=self.config.interactive
                 )
 
@@ -453,7 +454,10 @@ class BFSCrawler:
                 self._log_report(current_url, report)
 
 
-            await self._generate_master_report()
+            if self.config.run_ai:
+                await self._generate_master_report()
+            else:
+                self.results.master_qa_audit = "Skipped: AI analysis disabled."
             
             return self.results
 
@@ -562,7 +566,7 @@ async def run_qa_tool(config: qa_toolConfig) -> Dict[str, Any]:
 def main() -> None:
     parser = argparse.ArgumentParser(description="BFS Crawler qa_tool: Analyze an entire site.")
     parser.add_argument("--url", required=True, help="Starting URL.")
-    parser.add_argument("--headless", action="store_true", help="Run browser headless.")
+    parser.add_argument("--headless", action=argparse.BooleanOptionalAction, help="Run browser headless.")
     parser.add_argument("--interactive", action="store_true", help="Manually provide form inputs during crawl.")
     parser.add_argument("--output", help="Optional output file path for the JSON result.")
 
@@ -573,11 +577,11 @@ def main() -> None:
     
     config = qa_toolConfig(
         initial_url=args.url,
-        headless=args.headless,
+        headless=args.headless if args.headless is not None else settings.browser.headless,
         interactive=args.interactive,
-        max_pages=args.max_pages,
+        max_pages=args.max_pages if args.max_pages is not None else settings.crawler.max_pages,
 
-        max_depth=args.max_depth,
+        max_depth=args.max_depth if args.max_depth is not None else settings.crawler.max_depth,
         output_file=args.output
     )
     

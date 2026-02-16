@@ -30,8 +30,8 @@ class BrowserSettings(BaseModel):
     }
 
 class CrawlerSettings(BaseModel):
-    max_pages: int = 50
-    max_depth: int = 3
+    max_pages: Optional[int] = None
+    max_depth: Optional[int] = None
     output_dir: str = "crawl_results"
 
 class Settings(BaseSettings):
