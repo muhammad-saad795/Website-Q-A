@@ -16,16 +16,16 @@ import asyncio
 import logging
 from playwright.async_api import async_playwright
 
-# Load environment variables from the AgentBased/.env file
+# Load environment variables from the src/.env file
 from dotenv import load_dotenv
-load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), "..", "AgentBased", ".env"), override=True)
+load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), "..", "src", ".env"), override=True)
 
 TOOL_NAME = "intelligent_form_filler"
 logger = logging.getLogger(__name__)
 
 # Paths to helper scripts
 BASE_DIR = Path(__file__).parent.parent
-SCRIPTS_DIR = BASE_DIR / "AgentBased" / "scripts"
+SCRIPTS_DIR = BASE_DIR / "src" / "scripts"
 SCAN_FORMS_SCRIPT = SCRIPTS_DIR / "scan_forms.js"
 FILL_FORMS_SCRIPT = SCRIPTS_DIR / "fill_forms.js"
 EXTRACT_TEXT_SCRIPT = SCRIPTS_DIR / "extract_visible_text.js"

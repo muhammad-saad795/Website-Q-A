@@ -24,7 +24,7 @@ class PageLoader:
         self.context: Optional[BrowserContext] = None
 
         # Scripts directory
-        self.scripts_dir = Path("AgentBased/scripts")
+        self.scripts_dir = Path("src/scripts")
 
         self.scroll_script_path = self.scripts_dir / "scroll_page.js"
         self.text_script_path = self.scripts_dir / "extract_visible_text.js"

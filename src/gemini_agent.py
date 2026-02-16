@@ -23,7 +23,7 @@ from tools import (
     FORM_FILLER_TOOL_NAME,
     run_form_filler_tool,
 )
-from AgentBased.loader import PageLoader
+from src.loader import PageLoader
 
 
 DEFAULT_MODEL = settings.gemini.model

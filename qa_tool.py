@@ -26,10 +26,10 @@ from typing import Any, Dict, List, Set, Optional
 from dataclasses import dataclass, asdict, field
 
 from config import settings
-from AgentBased.loader import PageLoader
-from AgentBased.layout_validator import validate_layout
-from AgentBased.url_verifier import URLVerifier
-from AgentBased.gemini_agent import GeminiAgent, _get_api_key
+from src.loader import PageLoader
+from src.layout_validator import validate_layout
+from src.url_verifier import URLVerifier
+from src.gemini_agent import GeminiAgent, _get_api_key
 
 
 # Configure logging

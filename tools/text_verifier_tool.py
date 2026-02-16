@@ -15,8 +15,8 @@ from google.genai import types
 from google.genai import errors as genai_errors
 from dotenv import load_dotenv
 
-# Load environment variables from the AgentBased/.env file
-load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), "..", "AgentBased", ".env"), override=True)
+# Load environment variables from the src/.env file
+load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), "..", "src", ".env"), override=True)
 
 
 TOOL_NAME = "text_verifier"
