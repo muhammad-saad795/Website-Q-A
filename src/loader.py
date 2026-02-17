@@ -291,14 +291,19 @@ async def main():
     loader = PageLoader(headless=False)
     await loader.start()
     
-    url = "https://qabrains.com/topic"
+    url = "https://qabrains.com/"
     
     logger.info(f"Step 1: Minimal Loading: {url}")
     result = await loader.load(url, deep_analysis=True)
     with open("result.json", "w") as f:
         json.dump(result, f, indent=2)
     await loader.stop()
-
+    
+    from src.layout_validator import validate_layout
+    report = validate_layout(result)
+    with open("layout_validations.json", "w") as f:
+        json.dump(report, f, indent=2)
+    logger.info("Layout validations saved to layout_validations.json")
 
 
 if __name__ == "__main__":

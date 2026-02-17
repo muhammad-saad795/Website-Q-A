@@ -5,10 +5,16 @@ Validates both mobile and desktop layouts from result.json
 Reports detailed, actionable issues with element context
 """
 
+import io
 import json
+import sys
 from typing import Dict, List, Any, Tuple
 from dataclasses import dataclass, field
 from enum import Enum
+
+# Fix Windows console encoding for emoji/unicode output
+if sys.stdout.encoding and sys.stdout.encoding.lower() != "utf-8":
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace")
 
 
 class Severity(Enum):
@@ -73,28 +79,36 @@ class LayoutValidator:
         Returns:
             List of detected layout issues
         """
+        # Guard against None snapshot data (e.g. layout capture failed)
+        if not snapshot_data:
+            return []
+
+        # Reset issues for this viewport so results don't bleed across calls
+        snapshot_issues_start = len(self.issues)
+
         viewport = snapshot_data.get('viewport', {})
         elements = snapshot_data.get('elements', [])
-        
+
         viewport_width = viewport.get('width', 0)
         viewport_height = viewport.get('height', 0)
-        
+
         print(f"\n{'='*80}")
         print(f"🔍 Analyzing {viewport_type.upper()} Layout ({viewport_width}x{viewport_height})")
         print(f"{'='*80}")
         print(f"📊 Processing {len(elements)} elements...")
-        
+
         # Run all validation checks
         self._check_horizontal_overflow(elements, viewport_width, viewport_type)
         self._check_broken_interactive_elements(elements, viewport_type)
         self._check_text_rendering_issues(elements, viewport_type)
         self._check_fixed_position_issues(elements, viewport_width, viewport_height, viewport_type)
-        
+
         # Only check touch targets on mobile
         if viewport_type == 'mobile':
             self._check_touch_targets(elements, viewport_type)
-        
-        return self.issues
+
+        # Return only the issues found in this snapshot
+        return self.issues[snapshot_issues_start:]
     
     def _is_off_canvas_element(self, elem: Dict) -> bool:
         """
@@ -203,11 +217,11 @@ class LayoutValidator:
             # Element is visible but not in viewport
             is_visible = flags.get('isVisible', False)
             is_in_viewport = flags.get('isInViewport', False)
-            
+
             rect = elem.get('rect', {})
             width = rect.get('width', 0)
             height = rect.get('height', 0)
-            
+
             # Check for zero-size interactive elements
             if is_visible and (width <= 0 or height <= 0):
                 self.issues.append(LayoutIssue(
@@ -284,10 +298,8 @@ class LayoutValidator:
             flags = elem.get('flags', {})
             if not flags.get('isVisible', False):
                 continue
-            
             rect = elem.get('rect', {})
             x = rect.get('x', 0)
-            y = rect.get('y', 0)
             width = rect.get('width', 0)
             
             # Fixed element overflowing viewport is usually a bug
@@ -336,8 +348,8 @@ class LayoutValidator:
             
             # Different thresholds for icons vs. text buttons
             min_size = self.min_icon_size if is_icon_button else self.min_interactive_size
-            
-            if width < min_size and height < min_size:
+
+            if width < min_size or height < min_size:
                 # Only report if it's way too small
                 if width < 20 or height < 20:
                     severity = Severity.CRITICAL
@@ -360,7 +372,7 @@ class LayoutValidator:
                     },
                     recommendation="Add padding or increase button size to meet WCAG touch target guidelines (44x44px)."
                 ))
-    
+
     def _simplify_element(self, elem: Dict) -> Dict:
         """Create a simplified element representation for reporting"""
         tag = elem.get('tag', '')
