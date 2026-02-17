@@ -130,6 +130,29 @@ api:
   results_dir: "job_results"  # Folder where JSON reports are saved
 ```
 
+---
+
+## 🚂 Deployment to Railway
+
+Railway is the recommended platform for this tool because it supports long-running background threads and persistent volumes.
+
+### 1. Simple Deploy
+1. Link your GitHub repository to [Railway.app](https://railway.app).
+2. Railway will automatically detect the `Procfile` and `nixpacks.toml`.
+3. Add your `GEMINI_API_KEY` to the **Variables** tab in Railway.
+
+### 2. Enable Persistent Storage (CRITICAL)
+By default, Railway's file system is temporary. To keep your results after a restart:
+1. Go to your Railway project.
+2. Click **+ New** -> **Volume**.
+3. Mount the volume to `/app/job_results`.
+4. (Optional) Create another volume for `/app/crawl_results`.
+
+### 3. Build Configuration
+The included `nixpacks.toml` ensures that Playwright and Chromium dependencies are correctly installed during the build process.
+
+---
+
 ## 🛠️ Performance & Scalability
 
 - **Memory Management**: The API stores the final report on disk in `job_results/` immediately after completion. RAM is only consumed when the result is explicitly requested via the status API.
