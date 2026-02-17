@@ -6,6 +6,11 @@ from pathlib import Path
 from typing import Optional, Dict, Any, List
 from playwright.async_api import async_playwright, Browser, BrowserContext, Page, Error as PlaywrightError
 
+import os
+import sys
+
+sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+
 from config import settings
 
 logging.basicConfig(
@@ -52,7 +57,7 @@ class PageLoader:
         if not self.scroll_script_path.exists():
             logger.warning("Scroll script not found, skipping scroll.")
             return
-        script = self.scroll_script_path.read_text()
+        script = self.scroll_script_path.read_text(encoding="utf-8")
         try:
             await page.evaluate(script)
         except PlaywrightError as e:
@@ -62,7 +67,7 @@ class PageLoader:
         if not self.text_script_path.exists():
             logger.warning("Text extraction script not found.")
             return ""
-        script = self.text_script_path.read_text()
+        script = self.text_script_path.read_text(encoding="utf-8")
         try:
             return await page.evaluate(script)
         except PlaywrightError as e:
@@ -73,7 +78,7 @@ class PageLoader:
         if not self.layout_snapshot_script_path.exists():
             logger.warning("Layout snapshot script not found.")
             return {}
-        script = self.layout_snapshot_script_path.read_text()
+        script = self.layout_snapshot_script_path.read_text(encoding="utf-8")
         try:
             return await page.evaluate(script)
         except PlaywrightError as e:
@@ -82,18 +87,18 @@ class PageLoader:
     
     async def _capture_dynamic_links(self, page: Page) -> List[str]:
         if self.dynamic_links_script_path.exists():
-            return await page.evaluate(self.dynamic_links_script_path.read_text())
+            return await page.evaluate(self.dynamic_links_script_path.read_text(encoding="utf-8"))
         return []
 
     async def _discover_interactive_routes(self, page: Page):
         if self.interactive_route_discovery_path.exists():
-            return await page.evaluate(self.interactive_route_discovery_path.read_text())
+            return await page.evaluate(self.interactive_route_discovery_path.read_text(encoding="utf-8"))
             page.wait_for_timeout(settings.browser.settle_time_ms)
         return []
 
     async def _scan_forms(self, page: Page):
         if self.form_html_extractor_script_path.exists():
-            return await page.evaluate(self.form_html_extractor_script_path.read_text())
+            return await page.evaluate(self.form_html_extractor_script_path.read_text(encoding="utf-8"))
         return []
 
     async def _fill_forms(self, page: Page, form_payload: Dict[str, Any]) -> Dict[str, Any]:
@@ -106,7 +111,7 @@ class PageLoader:
         if not state_exists:
             return {"error": "Form state missing. scan_forms.js must run first."}
 
-        script = self.fill_forms_script_path.read_text()
+        script = self.fill_forms_script_path.read_text(encoding="utf-8")
         try:
             return await page.evaluate(script, form_payload)
         except PlaywrightError as e:
@@ -286,7 +291,7 @@ async def main():
     loader = PageLoader(headless=False)
     await loader.start()
     
-    url = "https://practice.qabrains.com/registration"
+    url = "https://qabrains.com/topic"
     
     logger.info(f"Step 1: Minimal Loading: {url}")
     result = await loader.load(url, deep_analysis=True)
