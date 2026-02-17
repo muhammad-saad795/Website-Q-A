@@ -44,7 +44,7 @@ class qa_toolConfig:
     max_pages: Optional[int] = None
     max_depth: Optional[int] = None
     run_ai: bool = True
-    interactive: bool = False
+    interactive: bool = field(default_factory=lambda: settings.crawler.interactive)
     output_file: Optional[str] = None
 
 
@@ -57,17 +57,19 @@ class CrawlResult:
     base_domain: str
     internal_reports: List[Dict[str, Any]] = field(default_factory=list)
     external_reports: List[Dict[str, Any]] = field(default_factory=list)
-    visited_pages: Set[str] = field(default_factory=set)
+    visited_urls: Set[str] = field(default_factory=set)  # Tracks ALL unique URLs to avoid re-visits
+    internal_visited: Set[str] = field(default_factory=set) # Tracks only internal URLs for accurate count
     master_qa_audit: str = "Not generated"
 
     def to_dict(self) -> Dict[str, Any]:
+        """Returns the structured report precisely matching the defined schema."""
         return {
             "initial_url": self.initial_url,
             "base_domain": self.base_domain,
             "master_qa_audit": self.master_qa_audit,
             "internal_reports": self.internal_reports,
             "external_reports": self.external_reports,
-            "total_internal_pages_visited": len(self.visited_pages),
+            "total_internal_pages_visited": len(self.internal_visited),
         }
 
 
@@ -415,23 +417,25 @@ class BFSCrawler:
         
         try:
             while self.queue:
-                if self.config.max_pages is not None and len(self.results.visited_pages) >= self.config.max_pages:
+                # Stop if we hit the max pages limit
+                if self.config.max_pages is not None and len(self.results.visited_urls) >= self.config.max_pages:
                     logger.info("Reached max pages limit.")
                     break
 
                 current_url, current_depth = self.queue.popleft()
                 normalized_url = self._normalize_url(current_url)
                 
-                if normalized_url in self.results.visited_pages:
+                if normalized_url in self.results.visited_urls:
                     continue
                 
-                self.results.visited_pages.add(normalized_url)
+                self.results.visited_urls.add(normalized_url)
                 
                 # Determine if internal or external
                 is_internal = self._is_internal(current_url)
+                if is_internal:
+                    self.results.internal_visited.add(normalized_url)
                 
                 # Analyze page
-                # If external: deep_analysis=False, run_ai=False
                 report = await self.analyzer.analyze(
                     current_url, 
                     deep_analysis=is_internal, 
@@ -439,18 +443,23 @@ class BFSCrawler:
                     interactive=self.config.interactive
                 )
 
-
-                
                 if is_internal:
-                    # Extract only necessary fields for internal reports to keep payload clean
-                    report_subset = {k: report.get(k) for k in ["url", "url_report", "agent_summary"]}
+                    # Return only the requested subset for output
+                    report_subset = {
+                        "url": report.get("url"),
+                        "url_report": report.get("url_report"),
+                        "agent_summary": report.get("agent_summary")
+                    }
                     self.results.internal_reports.append(report_subset)
                     
                     if self.config.max_depth is None or current_depth < self.config.max_depth:
                         self._discover_urls(current_url, report, current_depth)
                 else:
-                    # Extract only necessary fields for external reports
-                    report_subset = {k: report.get(k) for k in ["url", "url_report"]}
+                    # Return only the requested subset for external reports
+                    report_subset = {
+                        "url": report.get("url"),
+                        "url_report": report.get("url_report")
+                    }
                     self.results.external_reports.append(report_subset)
                 
                 self._log_report(current_url, report)
@@ -503,7 +512,7 @@ class BFSCrawler:
             full_url = urljoin(current_url, raw_url)
             norm_discovered = self._normalize_url(full_url)
             
-            if norm_discovered not in self.results.visited_pages:
+            if norm_discovered not in self.results.visited_urls:
                 # Add to queue regardless of internal/external,
                 # the run loop will handle the analysis logic.
                 self.queue.append((full_url, current_depth + 1))
@@ -554,7 +563,7 @@ class BFSCrawler:
         logger.info(f"📊 CRAWL METRICS:")
         logger.info(f" - Internal Pages Visited: {len(self.results.internal_reports)}")
         logger.info(f" - External Links Verified: {len(self.results.external_reports)}")
-        logger.info(f" - Total Unique URLs Processed: {len(self.results.visited_pages)}")
+        logger.info(f" - Total Unique URLs Processed: {len(self.results.visited_urls)}")
 
         logger.info(f"{'#'*80}\n")
 
@@ -597,9 +606,6 @@ def main() -> None:
     try:
         payload = asyncio.run(run_qa_tool(config))
         
-        # Optionally printing payload
-        #print(json.dumps(payload, indent=2, ensure_ascii=False))
-
         # Optionally save to file
         if config.output_file:
             output_path = Path(config.output_file)

@@ -33,12 +33,20 @@ class BrowserSettings(BaseModel):
 class CrawlerSettings(BaseModel):
     max_pages: Optional[int] = None
     max_depth: Optional[int] = None
+    interactive: bool = False
     output_dir: str = "crawl_results"
+
+class ApiSettings(BaseModel):
+    host: str = "0.0.0.0"
+    port: int = 8000
+    max_body_bytes: int = 256 * 1024
+    results_dir: str = "job_results"
 
 class Settings(BaseSettings):
     gemini: GeminiSettings = GeminiSettings()
     browser: BrowserSettings = BrowserSettings()
     crawler: CrawlerSettings = CrawlerSettings()
+    api: ApiSettings = ApiSettings()
     logging_level: str = "INFO"
 
     @classmethod
