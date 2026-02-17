@@ -11,7 +11,8 @@ load_dotenv()
 class GeminiSettings(BaseModel):
     api_key: str = Field(default_factory=lambda: os.getenv("GEMINI_API_KEY", ""))
     model: str = "gemini-2.5-flash"
-    max_steps: int = 15
+    ## REMOVED the max step limit for the agent , but it needs proper testing and trust
+    # max_steps: int = 15
 
 class Viewport(BaseModel):
     width: int
@@ -32,12 +33,20 @@ class BrowserSettings(BaseModel):
 class CrawlerSettings(BaseModel):
     max_pages: Optional[int] = None
     max_depth: Optional[int] = None
+    interactive: bool = False
     output_dir: str = "crawl_results"
+
+class ApiSettings(BaseModel):
+    host: str = "0.0.0.0"
+    port: int = 8000
+    max_body_bytes: int = 256 * 1024
+    results_dir: str = "job_results"
 
 class Settings(BaseSettings):
     gemini: GeminiSettings = GeminiSettings()
     browser: BrowserSettings = BrowserSettings()
     crawler: CrawlerSettings = CrawlerSettings()
+    api: ApiSettings = ApiSettings()
     logging_level: str = "INFO"
 
     @classmethod

@@ -27,7 +27,8 @@ from src.loader import PageLoader
 
 
 DEFAULT_MODEL = settings.gemini.model
-DEFAULT_MAX_STEPS = settings.gemini.max_steps
+## REMOVED the max step limit for the agent , but it needs proper testing and trust
+#DEFAULT_MAX_STEPS = settings.gemini.max_steps
 
 
 
@@ -135,8 +136,8 @@ class GeminiAgent:
         self.model = model
         self.loader = loader
         self.tools = _build_tools()
-
-    def run(self, task: str, max_steps: int = DEFAULT_MAX_STEPS) -> str:
+    # REMOVED the max step limit for the agent , but it needs proper testing and trust
+    def run(self, task: str, max_steps: Optional[int] = None) -> str:
         history: List[types.Content] = [
             types.Content(role="user", parts=[types.Part(text=task)])
         ]
@@ -147,7 +148,12 @@ class GeminiAgent:
         )
 
         try:
-            for _ in range(max_steps):
+            step = 0
+            while True:
+                if max_steps is not None and step >= max_steps:
+                    return "Stopped: reached max tool steps without a final answer."
+                step += 1
+
                 response = self.client.models.generate_content(
                     model=self.model,
                     contents=history,
@@ -178,8 +184,6 @@ class GeminiAgent:
         except Exception as exc:
             logger.error(f"Gemini agent execution failed: {exc}")
             return f"Agent Error: {str(exc)}"
-
-        return "Stopped: reached max tool steps without a final answer."
 
 
 def run_from_payload(api_key: str, model: str, payload: Dict[str, Any]) -> str:
