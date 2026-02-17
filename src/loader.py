@@ -289,15 +289,9 @@ async def main():
     url = "https://practice.qabrains.com/registration"
     
     logger.info(f"Step 1: Minimal Loading: {url}")
-    min_result = await loader.load(url, deep_analysis=False)
-    logger.info("Minimal load finished.")
-    print(json.dumps(min_result, indent=2))
-
-    logger.info(f"Step 2: Deep Analysis Loading: {url}")
-    deep_result = await loader.load(url, deep_analysis=True)
-    logger.info("Deep analysis load finished.")
-    # print(json.dumps(deep_result, indent=2)) # Truncated to avoid flooding
-
+    result = await loader.load(url, deep_analysis=True)
+    with open("result.json", "w") as f:
+        json.dump(result, f, indent=2)
     await loader.stop()
 
 
