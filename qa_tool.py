@@ -33,12 +33,6 @@ from src.gemini_agent import GeminiAgent, _get_api_key
 
 
 # Configure logging
-logging.basicConfig(
-    level=settings.logging_level,
-    format="%(asctime)s - [%(levelname)s] - %(name)s - %(message)s",
-    datefmt="%H:%M:%S"
-)
-
 logger = logging.getLogger("qa_tool")
 
 
@@ -157,16 +151,16 @@ class PageAnalyzer:
         if not forms:
             return
 
-        print(f"\n{'#'*80}")
-        print(f"✋ INTERACTIVE FORM TESTING for: {url}")
-        print(f"   Found {len(forms)} forms. Please provide inputs below.")
-        print(f"{'#'*80}")
+        logger.info(f"\n{'#'*80}")
+        logger.info(f"✋ INTERACTIVE FORM TESTING for: {url}")
+        logger.info(f"   Found {len(forms)} forms. Please provide inputs below.")
+        logger.info(f"{'#'*80}")
 
         
         user_input_map = []
 
         for i, form in enumerate(forms):
-            print(f"\n--- Form {i+1} ---")
+            logger.info(f"\n--- Form {i+1} ---")
             fields = form.get("fields", [])
             form_data = {}
             for field in fields:
@@ -199,7 +193,7 @@ class PageAnalyzer:
             logger.info("🤖 AI is now testing the forms with your values...")
             await self._run_agent_interactive_testing(url, report, user_input_map)
         else:
-            print("  (No manual data provided, skipping interactive test)")
+            logger.info("  (No manual data provided, skipping interactive test)")
 
     async def _run_agent_interactive_testing(self, url: str, report: Dict[str, Any], user_input_map: List[Dict[str, Any]]) -> None:
         """Force the AI agent to use specific manual inputs for form testing."""
@@ -269,7 +263,7 @@ class PageAnalyzer:
             # Store interactive result separately to avoid overwriting initial audit
 
             report["interactive_session_result"] = agent_response
-            print(f"\n🏆 INTERACTIVE TEST RESULT:\n{agent_response}\n")
+            logger.info(f"\n🏆 INTERACTIVE TEST RESULT:\n{agent_response}\n")
         except Exception as e:
             logger.error(f"Interactive agent analysis failed for {url}: {e}")
             report["interactive_agent_error"] = str(e)
@@ -383,7 +377,10 @@ class PageAnalyzer:
         
         logger.info(f"🤖 Tasking AI agent for {url}...")
         try:
-            agent_response = await asyncio.to_thread(agent.run, task=task, max_steps=10)
+            # Removed a CAP of max_steps=10 to allow agent to complete the task
+            # WARNING: This may cause the agent to run for a long or infinite time
+            # NEEDS proper testing and trust
+            agent_response = await asyncio.to_thread(agent.run, task=task)#max_steps=10
             report["agent_summary"] = agent_response
         except Exception as e:
             logger.error(f"Agent analysis failed for {url}: {e}")
@@ -445,11 +442,16 @@ class BFSCrawler:
 
                 
                 if is_internal:
-                    self.results.internal_reports.append(report)
+                    # Extract only necessary fields for internal reports to keep payload clean
+                    report_subset = {k: report.get(k) for k in ["url", "url_report", "agent_summary"]}
+                    self.results.internal_reports.append(report_subset)
+                    
                     if self.config.max_depth is None or current_depth < self.config.max_depth:
                         self._discover_urls(current_url, report, current_depth)
                 else:
-                    self.results.external_reports.append(report)
+                    # Extract only necessary fields for external reports
+                    report_subset = {k: report.get(k) for k in ["url", "url_report"]}
+                    self.results.external_reports.append(report_subset)
                 
                 self._log_report(current_url, report)
 
@@ -465,16 +467,16 @@ class BFSCrawler:
             await self.loader.stop()
 
     def _log_report(self, url: str, report: Dict[str, Any]):
-        print(f"\n{'='*80}")
-        print(f"📄 REPORT FOR: {url}")
-        print(f"{'='*80}")
+        logger.info(f"\n{'='*80}")
+        logger.info(f"📄 REPORT FOR: {url}")
+        logger.info(f"{'='*80}")
         if "agent_summary" in report:
-            print(report["agent_summary"])
+            logger.info(report["agent_summary"])
         elif "url_report" in report:
-            print(json.dumps(report["url_report"], indent=2))
+            logger.info(json.dumps(report["url_report"], indent=2))
         elif "error" in report:
-            print(f"❌ ERROR: {report['error']}")
-        print(f"{'='*80}\n")
+            logger.error(f"❌ ERROR: {report['error']}")
+        logger.info(f"{'='*80}\n")
 
     def _discover_urls(self, current_url: str, report: Dict[str, Any], current_depth: int):
         discovered_urls = report.get("discovered_urls", [])
@@ -549,12 +551,12 @@ class BFSCrawler:
             logger.error(f"Failed to generate master report: {e}")
             self.results.master_qa_audit = f"Error generating report: {e}"
 
-        print(f"📊 CRAWL METRICS:")
-        print(f" - Internal Pages Visited: {len(self.results.internal_reports)}")
-        print(f" - External Links Verified: {len(self.results.external_reports)}")
-        print(f" - Total Unique URLs Processed: {len(self.results.visited_pages)}")
+        logger.info(f"📊 CRAWL METRICS:")
+        logger.info(f" - Internal Pages Visited: {len(self.results.internal_reports)}")
+        logger.info(f" - External Links Verified: {len(self.results.external_reports)}")
+        logger.info(f" - Total Unique URLs Processed: {len(self.results.visited_pages)}")
 
-        print(f"{'#'*80}\n")
+        logger.info(f"{'#'*80}\n")
 
 
 async def run_qa_tool(config: qa_toolConfig) -> Dict[str, Any]:
@@ -575,6 +577,13 @@ def main() -> None:
 
     args = parser.parse_args()
     
+    # Setup logging for CLI usage
+    logging.basicConfig(
+        level=settings.logging_level,
+        format="%(asctime)s - [%(levelname)s] - %(name)s - %(message)s",
+        datefmt="%H:%M:%S"
+    )
+
     config = qa_toolConfig(
         initial_url=args.url,
         headless=args.headless if args.headless is not None else settings.browser.headless,
