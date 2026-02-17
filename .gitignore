@@ -2,3 +2,6 @@
 .env
 __pycache__/
 *.pyc
+job_results/
+crawl_results/
+server.log

@@ -43,6 +43,11 @@ class ApiSettings(BaseModel):
     results_dir: str = "job_results"
 
 class Settings(BaseSettings):
+    model_config = SettingsConfigDict(
+        env_nested_delimiter="__",
+        extra="ignore",
+    )
+
     gemini: GeminiSettings = GeminiSettings()
     browser: BrowserSettings = BrowserSettings()
     crawler: CrawlerSettings = CrawlerSettings()
@@ -56,6 +61,28 @@ class Settings(BaseSettings):
         if path.exists():
             with open(path) as f:
                 data = yaml.safe_load(f) or {}
+
+        # Allow nested env vars (e.g. API__RESULTS_DIR) to override config.yaml values.
+        for env_key, env_value in os.environ.items():
+            if "__" not in env_key:
+                continue
+            parts = [p.lower() for p in env_key.split("__") if p]
+            if not parts:
+                continue
+
+            cursor: Dict[str, Any] = data
+            for part in parts[:-1]:
+                if part not in cursor or not isinstance(cursor[part], dict):
+                    cursor[part] = {}
+                cursor = cursor[part]
+            cursor[parts[-1]] = env_value
+
+        if os.getenv("LOGGING_LEVEL"):
+            data["logging_level"] = os.getenv("LOGGING_LEVEL")
+        if os.getenv("GEMINI_API_KEY"):
+            data.setdefault("gemini", {})
+            data["gemini"]["api_key"] = os.getenv("GEMINI_API_KEY")
+
         return cls(**data)
 
 settings = Settings.load()
