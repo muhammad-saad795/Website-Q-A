@@ -63,11 +63,6 @@ python app.py
 ```
 By default, the server runs on `http://localhost:8000`.
 
-For production (native Python), use Gunicorn:
-```bash
-gunicorn -c gunicorn.conf.py app:app
-```
-
 ### 1. Start a QA Job
 Submit a website for analysis. This is an asynchronous operation.
 
@@ -139,44 +134,3 @@ api:
 
 - **Memory Management**: The API stores the final report on disk in `job_results/` immediately after completion. RAM is only consumed when the result is explicitly requested via the status API.
 - **Async Execution**: Each QA job runs in a dedicated background thread to keep the API responsive.
-
-## 🚢 Native Python Deploy
-
-This project is API-only. Deploy it as a Python web service (Render/Railway/Fly/VM) with a persistent disk.
-
-### Required Start Command
-```bash
-gunicorn -c gunicorn.conf.py app:app
-```
-
-### Required Build Command
-```bash
-pip install -r requirements.txt
-python -m playwright install chromium
-```
-
-### Required Environment Variables
-- `GEMINI_API_KEY`: your Gemini key.
-- `PORT`: provided by the platform.
-
-### Recommended Environment Variables
-- `API__RESULTS_DIR=/var/data/job_results`
-- `CRAWLER__OUTPUT_DIR=/var/data/crawl_results`
-- `WEB_CONCURRENCY=1`
-
-### Persistence
-Attach a persistent disk and mount it to `/var/data` (or equivalent), then use:
-- `API__RESULTS_DIR=/var/data/job_results`
-- `CRAWLER__OUTPUT_DIR=/var/data/crawl_results`
-
-Without persistent storage, completed job JSON files will be lost after restart.
-
-### Render Quick Start
-- Repo already includes `render.yaml`.
-- Create service from repo in Render and apply blueprint.
-- Set `GEMINI_API_KEY` in dashboard.
-- Deploy.
-
-### API Endpoints After Deploy
-- `POST /api/run-qa`
-- `GET /api/status/<job_id>`
