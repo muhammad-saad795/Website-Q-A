@@ -57,7 +57,7 @@ GEMINI_TOOL_SPEC: Dict[str, Any] = {
             },
             "headless": {
                 "type": "boolean",
-                "description": "Run browser in headless mode. Default: false",
+                "description": "Run browser in headless mode. Default: true",
             },
         },
         "required": ["url", "payload"],
@@ -158,7 +158,7 @@ def run_form_filler_tool(args: Dict[str, Any], loader: Optional[Any] = None) -> 
     """
     url = args.get("url")
     payload = args.get("payload")
-    headless = args.get("headless", False)
+    headless = args.get("headless", True)
 
     if not url or not payload:
         return {"error": "Missing required arguments: 'url' and 'payload'."}

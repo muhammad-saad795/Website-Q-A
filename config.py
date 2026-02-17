@@ -11,7 +11,8 @@ load_dotenv()
 class GeminiSettings(BaseModel):
     api_key: str = Field(default_factory=lambda: os.getenv("GEMINI_API_KEY", ""))
     model: str = "gemini-2.5-flash"
-    max_steps: int = 15
+    ## REMOVED the max step limit for the agent , but it needs proper testing and trust
+    # max_steps: int = 15
 
 class Viewport(BaseModel):
     width: int
