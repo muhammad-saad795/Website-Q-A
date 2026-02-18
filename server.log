@@ -1,9 +1,6 @@
 nohup: ignoring input
- * Serving Flask app 'app'
- * Debug mode: off
-2026-02-17 13:45:14,923 - [INFO] - werkzeug - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
- * Running on all addresses (0.0.0.0)
- * Running on http://127.0.0.1:8000
- * Running on http://192.168.1.38:8000
-2026-02-17 13:45:14,923 - [INFO] - werkzeug - [33mPress CTRL+C to quit[0m
-2026-02-17 13:45:25,732 - [INFO] - werkzeug - 127.0.0.1 - - [17/Feb/2026 13:45:25] "[33mGET /api/status/429e4187-303c-46cd-8017-687a153ac14b HTTP/1.1[0m" 404 -
+[2026-02-18 13:57:38 +0500] [308551] [INFO] Starting gunicorn 25.1.0
+[2026-02-18 13:57:38 +0500] [308551] [INFO] Listening at: http://0.0.0.0:8000 (308551)
+[2026-02-18 13:57:38 +0500] [308551] [INFO] Using worker: gthread
+[2026-02-18 13:57:38 +0500] [308551] [INFO] Control socket listening at /home/ali/Downloads/Website QA/gunicorn.ctl
+[2026-02-18 13:57:38 +0500] [308560] [INFO] Booting worker with pid: 308560

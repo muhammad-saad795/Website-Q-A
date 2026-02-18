@@ -451,23 +451,12 @@ class BFSCrawler:
                 )
 
                 if is_internal:
-                    # Return only the requested subset for output
-                    report_subset = {
-                        "url": report.get("url"),
-                        "url_report": report.get("url_report"),
-                        "agent_summary": report.get("agent_summary")
-                    }
-                    self.results.internal_reports.append(report_subset)
+                    self.results.internal_reports.append(report)
                     
                     if self.config.max_depth is None or current_depth < self.config.max_depth:
                         self._discover_urls(current_url, report, current_depth)
                 else:
-                    # Return only the requested subset for external reports
-                    report_subset = {
-                        "url": report.get("url"),
-                        "url_report": report.get("url_report")
-                    }
-                    self.results.external_reports.append(report_subset)
+                    self.results.external_reports.append(report)
                 
                 self._log_report(current_url, report)
 
