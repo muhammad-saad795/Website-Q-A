@@ -14,7 +14,7 @@ from google import genai
 from google.genai import types
 from google.genai import errors as genai_errors
 
-
+from config import settings
 
 TOOL_NAME = "text_verifier"
 
