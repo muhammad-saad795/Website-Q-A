@@ -40,7 +40,7 @@ class ApiSettings(BaseModel):
     host: str = "0.0.0.0"
     port: int = 8000
     max_body_bytes: int = 256 * 1024
-    results_dir: str = "job_results"
+    db_path: str = "jobs.db"
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(

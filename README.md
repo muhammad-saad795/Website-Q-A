@@ -142,11 +142,12 @@ Railway is the recommended platform for this tool because it supports long-runni
 3. Add your `GEMINI_API_KEY` to the **Variables** tab in Railway.
 
 ### 2. Enable Persistent Storage (CRITICAL)
-By default, Railway's file system is temporary. To keep your results after a restart:
+By default, Railway's file system is temporary. To keep your results and job database after a restart:
 1. Go to your Railway project.
 2. Click **+ New** -> **Volume**.
-3. Mount the volume to `/app/job_results`.
-4. (Optional) Create another volume for `/app/crawl_results`.
+3. Mount the volume to `/app/data`.
+4. Update `config.yaml` or set environment variable `API__DB_PATH` to `/app/data/jobs.db`.
+5. (Optional) Create another volume for `/app/crawl_results` if you use the CLI.
 
 ### 3. Build Configuration
 The included `nixpacks.toml` ensures that Playwright and Chromium dependencies are correctly installed during the build process.
@@ -155,5 +156,6 @@ The included `nixpacks.toml` ensures that Playwright and Chromium dependencies a
 
 ## 🛠️ Performance & Scalability
 
-- **Memory Management**: The API stores the final report on disk in `job_results/` immediately after completion. RAM is only consumed when the result is explicitly requested via the status API.
+- **Database Persistence**: The API uses a SQLite database (`jobs.db`) to store job metadata and results, ensuring your data survives server restarts.
+- **Memory Management**: Results are loaded from the database only when requested via the status API, keeping the server's idle memory usage low.
 - **Async Execution**: Each QA job runs in a dedicated background thread to keep the API responsive.

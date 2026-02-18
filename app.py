@@ -1,18 +1,20 @@
 from __future__ import annotations
 
+import nest_asyncio
+nest_asyncio.apply()  # Allow asyncio.run() inside gunicorn gthread worker threads
+
 import asyncio
 import logging
 import os
 import socket
 import uuid
 from ipaddress import ip_address
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional
 import time
-from dataclasses import asdict
 from urllib.parse import urlparse
 import json
-
-from pathlib import Path
+import sqlite3
+import threading
 from flask import Flask, jsonify, request, g
 
 from qa_tool import qa_toolConfig, run_qa_tool
@@ -135,122 +137,353 @@ def _parse_payload(payload: Dict[str, Any]) -> Dict[str, Any]:
     }
 
 
-import threading
+# ---------------------------------------------------------------------------
+# Production-grade Job Manager backed by SQLite
+# ---------------------------------------------------------------------------
+# Schema overview:
+#
+#   jobs          – one row per QA run, stores all job metadata + crawl summary
+#   page_reports  – one row per crawled page, linked to jobs via job_id (FK)
+#
+# No result data is ever written to the filesystem; everything lives in the DB.
+# ---------------------------------------------------------------------------
 
-RESULTS_DIR = Path(settings.api.results_dir)
-RESULTS_DIR.mkdir(parents=True, exist_ok=True)
+_JOBS_DDL = """
+CREATE TABLE IF NOT EXISTS jobs (
+    -- Identity
+    id                      TEXT PRIMARY KEY,
+    request_id              TEXT,
 
-# Job Manager
+    -- Lifecycle
+    status                  TEXT NOT NULL DEFAULT 'pending',
+    submitted_at            REAL NOT NULL,
+    started_at              REAL,
+    finished_at             REAL,
+    updated_at              REAL NOT NULL,
+
+    -- Request parameters (denormalised for quick inspection)
+    url                     TEXT NOT NULL,
+    max_pages               INTEGER,
+    max_depth               INTEGER,
+    run_ai                  INTEGER NOT NULL DEFAULT 1,   -- BOOLEAN (0/1)
+    timeout_seconds         INTEGER NOT NULL DEFAULT 0,
+
+    -- Crawl-level results (populated on success)
+    base_domain             TEXT,
+    master_qa_audit         TEXT,
+    total_internal_pages    INTEGER,
+    total_external_pages    INTEGER,
+
+    -- Failure info
+    error                   TEXT
+);
+"""
+
+_PAGE_REPORTS_DDL = """
+CREATE TABLE IF NOT EXISTS page_reports (
+    id                      INTEGER PRIMARY KEY AUTOINCREMENT,
+    job_id                  TEXT NOT NULL REFERENCES jobs(id) ON DELETE CASCADE,
+
+    -- Classification
+    page_type               TEXT NOT NULL CHECK(page_type IN ('internal', 'external')),
+    url                     TEXT NOT NULL,
+
+    -- URL health (from url_report)
+    http_status             INTEGER,
+    status_label            TEXT,
+    redirect_detected       INTEGER,   -- BOOLEAN (0/1)
+    load_time_seconds       REAL,
+    navigation_time_seconds REAL,
+
+    -- Structured sub-reports stored as JSON text
+    console_errors          TEXT,      -- JSON array
+    layout_report           TEXT,      -- JSON object
+
+    -- AI output
+    agent_summary           TEXT,
+
+    -- Per-page error (if analysis itself failed)
+    error                   TEXT
+);
+"""
+
+_PAGE_REPORTS_IDX = """
+CREATE INDEX IF NOT EXISTS idx_page_reports_job_id ON page_reports(job_id);
+"""
+
+
 class JobManager:
-    def __init__(self) -> None:
-        self._jobs: Dict[str, Dict[str, Any]] = {}
-        self._lock = threading.Lock()
+    """Thread-safe SQLite-backed job store.
 
-    def create_job(self, config: qa_toolConfig, request_id: Optional[str] = None) -> str:
+    All QA results are persisted to the database; no files are written to disk.
+    Each connection is created per-call so that multiple threads can safely
+    read/write without sharing a single connection object.
+    """
+
+    def __init__(self, db_path: str) -> None:
+        self.db_path = db_path
+        # Ensure the parent directory exists (important for Railway volume paths like /data/jobs.db)
+        from pathlib import Path
+        Path(db_path).parent.mkdir(parents=True, exist_ok=True)
+        self._init_db()
+
+    # ------------------------------------------------------------------
+    # Internal helpers
+    # ------------------------------------------------------------------
+
+    def _connect(self) -> sqlite3.Connection:
+        conn = sqlite3.connect(self.db_path, timeout=30)
+        conn.execute("PRAGMA journal_mode=WAL;")   # concurrent readers + one writer
+        conn.execute("PRAGMA foreign_keys=ON;")
+        conn.row_factory = sqlite3.Row
+        return conn
+
+    def _init_db(self) -> None:
+        with self._connect() as conn:
+            conn.executescript(_JOBS_DDL + _PAGE_REPORTS_DDL + _PAGE_REPORTS_IDX)
+
+    # ------------------------------------------------------------------
+    # Public API
+    # ------------------------------------------------------------------
+
+    def create_job(
+        self,
+        url: str,
+        max_pages: Optional[int],
+        max_depth: Optional[int],
+        run_ai: bool,
+        timeout_seconds: int,
+        request_id: Optional[str] = None,
+    ) -> str:
+        """Insert a new job row and return the generated job_id."""
         job_id = str(uuid.uuid4())
-        job_data = {
-            "id": job_id,
-            "status": "pending",
-            "submitted_at": time.time(),
-            "config": asdict(config),
-            "request_id": request_id,
-            "result": None,
-            "error": None
-        }
-        with self._lock:
-            self._jobs[job_id] = job_data
+        now = time.time()
+        with self._connect() as conn:
+            conn.execute(
+                """
+                INSERT INTO jobs
+                    (id, request_id, status, submitted_at, updated_at,
+                     url, max_pages, max_depth, run_ai, timeout_seconds)
+                VALUES (?, ?, 'pending', ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (job_id, request_id, now, now,
+                 url, max_pages, max_depth, int(run_ai), timeout_seconds),
+            )
         return job_id
 
+    def mark_running(self, job_id: str) -> None:
+        now = time.time()
+        with self._connect() as conn:
+            conn.execute(
+                "UPDATE jobs SET status='running', started_at=?, updated_at=? WHERE id=?",
+                (now, now, job_id),
+            )
+
+    def mark_success(self, job_id: str, crawl_result: Dict[str, Any]) -> None:
+        """Persist the full crawl result into normalised DB columns."""
+        now = time.time()
+
+        internal_reports: List[Dict[str, Any]] = crawl_result.get("internal_reports", [])
+        external_reports: List[Dict[str, Any]] = crawl_result.get("external_reports", [])
+
+        with self._connect() as conn:
+            # Update the jobs row with crawl-level summary
+            conn.execute(
+                """
+                UPDATE jobs SET
+                    status               = 'success',
+                    finished_at          = ?,
+                    updated_at           = ?,
+                    base_domain          = ?,
+                    master_qa_audit      = ?,
+                    total_internal_pages = ?,
+                    total_external_pages = ?
+                WHERE id = ?
+                """,
+                (
+                    now, now,
+                    crawl_result.get("base_domain"),
+                    crawl_result.get("master_qa_audit"),
+                    crawl_result.get("total_internal_pages_visited", len(internal_reports)),
+                    len(external_reports),
+                    job_id,
+                ),
+            )
+
+            # Insert one row per internal page
+            for report in internal_reports:
+                self._insert_page_report(conn, job_id, "internal", report)
+
+            # Insert one row per external page
+            for report in external_reports:
+                self._insert_page_report(conn, job_id, "external", report)
+
+    def mark_failed(self, job_id: str, error: str) -> None:
+        now = time.time()
+        with self._connect() as conn:
+            conn.execute(
+                "UPDATE jobs SET status='failed', finished_at=?, updated_at=?, error=? WHERE id=?",
+                (now, now, error, job_id),
+            )
+
     def get_job(self, job_id: str) -> Optional[Dict[str, Any]]:
-        with self._lock:
-            # If job is in memory, return a copy
-            if job_id in self._jobs:
-                job = self._jobs[job_id].copy()
-            else:
-                job = None
-            
-        # If result is missing in memory (e.g. after server restart or saved to disk)
-        if job is None or (job["status"] == "success" and job.get("result") is None):
-            result_path = RESULTS_DIR / f"{job_id}.json"
-            if result_path.exists():
-                try:
-                    with open(result_path, "r", encoding="utf-8") as f:
-                        result_data = json.load(f)
-                    
-                    if job is None:
-                        # Reconstruct basic job metadata from disk if it was lost from memory
-                        job = {
-                            "id": job_id,
-                            "status": "success",
-                            "submitted_at": None,
-                            "finished_at": result_path.stat().st_mtime,
-                            "config": {"initial_url": result_data.get("initial_url")},
-                            "result": result_data,
-                            "error": None
-                        }
-                        # Add back to memory for faster future access
-                        with self._lock:
-                            self._jobs[job_id] = job
-                    else:
-                        # Just update the result field for the existing memory entry
-                        job["result"] = result_data
-                except Exception as e:
-                    logger.error(f"Failed to load result from disk for job {job_id}: {e}")
-        return job
+        """Return the full job record including all page reports."""
+        try:
+            with self._connect() as conn:
+                row = conn.execute(
+                    "SELECT * FROM jobs WHERE id = ?", (job_id,)
+                ).fetchone()
 
-    def update_job(self, job_id: str, updates: Dict[str, Any]) -> None:
-        with self._lock:
-            if job_id in self._jobs:
-                self._jobs[job_id].update(updates)
-                self._jobs[job_id]["updated_at"] = time.time()
+                if not row:
+                    return None
 
-job_manager = JobManager()
+                job = dict(row)
+                job["run_ai"] = bool(job["run_ai"])
 
+                # Attach page reports only when the job has finished
+                if job["status"] == "success":
+                    page_rows = conn.execute(
+                        "SELECT * FROM page_reports WHERE job_id = ? ORDER BY id",
+                        (job_id,),
+                    ).fetchall()
+
+                    internal_reports = []
+                    external_reports = []
+                    for pr in page_rows:
+                        pr_dict = self._deserialise_page_report(dict(pr))
+                        if pr_dict["page_type"] == "internal":
+                            internal_reports.append(pr_dict)
+                        else:
+                            external_reports.append(pr_dict)
+
+                    job["result"] = {
+                        "initial_url": job["url"],
+                        "base_domain": job["base_domain"],
+                        "master_qa_audit": job["master_qa_audit"],
+                        "total_internal_pages_visited": job["total_internal_pages"],
+                        "total_external_pages_visited": job["total_external_pages"],
+                        "internal_reports": internal_reports,
+                        "external_reports": external_reports,
+                    }
+                else:
+                    job["result"] = None
+
+                return job
+
+        except Exception as exc:
+            logger.error("Failed to fetch job %s from DB: %s", job_id, exc)
+            return None
+
+    def list_jobs(self, limit: int = 50, offset: int = 0) -> List[Dict[str, Any]]:
+        """Return a lightweight list of jobs (no page reports)."""
+        try:
+            with self._connect() as conn:
+                rows = conn.execute(
+                    """
+                    SELECT id, status, url, submitted_at, finished_at,
+                           total_internal_pages, total_external_pages, error
+                    FROM jobs
+                    ORDER BY submitted_at DESC
+                    LIMIT ? OFFSET ?
+                    """,
+                    (limit, offset),
+                ).fetchall()
+                return [dict(r) for r in rows]
+        except Exception as exc:
+            logger.error("Failed to list jobs: %s", exc)
+            return []
+
+    # ------------------------------------------------------------------
+    # Private helpers
+    # ------------------------------------------------------------------
+
+    @staticmethod
+    def _insert_page_report(
+        conn: sqlite3.Connection,
+        job_id: str,
+        page_type: str,
+        report: Dict[str, Any],
+    ) -> None:
+        url_report: Dict[str, Any] = report.get("url_report") or {}
+        layout_report = report.get("layout_report")
+        console_errors = url_report.get("console_errors") or []
+
+        conn.execute(
+            """
+            INSERT INTO page_reports
+                (job_id, page_type, url,
+                 http_status, status_label, redirect_detected,
+                 load_time_seconds, navigation_time_seconds,
+                 console_errors, layout_report,
+                 agent_summary, error)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                job_id,
+                page_type,
+                report.get("url"),
+                url_report.get("http_status"),
+                url_report.get("status_label"),
+                int(bool(url_report.get("redirect_detected"))),
+                url_report.get("load_time_seconds"),
+                url_report.get("navigation_time_seconds"),
+                json.dumps(console_errors) if console_errors else None,
+                json.dumps(layout_report) if layout_report is not None else None,
+                report.get("agent_summary"),
+                report.get("error"),
+            ),
+        )
+
+    @staticmethod
+    def _deserialise_page_report(row: Dict[str, Any]) -> Dict[str, Any]:
+        """Convert raw DB row back to the API-facing dict shape."""
+        row["redirect_detected"] = bool(row.get("redirect_detected"))
+        for json_col in ("console_errors", "layout_report"):
+            raw = row.get(json_col)
+            row[json_col] = json.loads(raw) if raw else None
+        # Remove internal FK column from output
+        row.pop("job_id", None)
+        return row
+
+
+job_manager = JobManager(settings.api.db_path)
+
+
+# ---------------------------------------------------------------------------
+# Background worker
+# ---------------------------------------------------------------------------
 
 def _run_qa_background(job_id: str, cfg: qa_toolConfig, timeout: int) -> None:
-    """Worker function to run the QA tool in a separate thread."""
+    """Worker function executed in a daemon thread per QA job."""
     try:
-        logger.info("Background QA process started [job_id=%s]", job_id)
-        job_manager.update_job(job_id, {"status": "running"})
-        
+        logger.info("Background QA started [job_id=%s]", job_id)
+        job_manager.mark_running(job_id)
+
         if timeout > 0:
             result = asyncio.run(asyncio.wait_for(run_qa_tool(cfg), timeout=timeout))
         else:
             result = asyncio.run(run_qa_tool(cfg))
-        
-        import json
-        result_path = RESULTS_DIR / f"{job_id}.json"
-        with open(result_path, "w", encoding="utf-8") as f:
-            json.dump(result, f, indent=2)
 
-        job_manager.update_job(job_id, {
-            "status": "success",
-            "result": None,  # Keep memory clear, load from disk on request
-            "finished_at": time.time()
-        })
-        logger.info("Background QA process succeeded [job_id=%s], result saved to disk", job_id)
-        
+        job_manager.mark_success(job_id, result)
+        logger.info("Background QA succeeded [job_id=%s]", job_id)
+
     except asyncio.TimeoutError:
-        job_manager.update_job(job_id, {
-            "status": "failed",
-            "error": f"QA run exceeded timeout ({timeout}s).",
-            "finished_at": time.time()
-        })
-        logger.warning("Background QA process timed out [job_id=%s]", job_id)
-    except Exception as err:
-        logger.exception("Background QA process failed [job_id=%s]: %s", job_id, err)
-        job_manager.update_job(job_id, {
-            "status": "failed",
-            "error": str(err),
-            "finished_at": time.time()
-        })
+        msg = f"QA run exceeded timeout ({timeout}s)."
+        job_manager.mark_failed(job_id, msg)
+        logger.warning("Background QA timed out [job_id=%s]", job_id)
 
+    except Exception as err:
+        logger.exception("Background QA failed [job_id=%s]: %s", job_id, err)
+        job_manager.mark_failed(job_id, str(err))
+
+
+# ---------------------------------------------------------------------------
+# Flask application
+# ---------------------------------------------------------------------------
 
 def create_app() -> Flask:
     app = Flask(__name__)
     app.config["MAX_CONTENT_LENGTH"] = settings.api.max_body_bytes
-    # Preserve insertion order in JSON responses (do not alphabetically sort keys).
-    app.config["JSON_SORT_KEYS"] = False
     app.json.sort_keys = False
 
     @app.before_request
@@ -266,32 +499,14 @@ def create_app() -> Flask:
     @app.errorhandler(ApiError)
     def _handle_api_error(err: ApiError):  # type: ignore[no-untyped-def]
         return (
-            jsonify(
-                {
-                    "ok": False,
-                    "error": {
-                        "code": err.code,
-                        "message": err.message,
-                    },
-                    "request_id": g.get("request_id"),
-                }
-            ),
+            jsonify({"ok": False, "error": {"code": err.code, "message": err.message}, "request_id": g.get("request_id")}),
             err.status_code,
         )
 
     @app.errorhandler(413)
     def _handle_too_large(_err):  # type: ignore[no-untyped-def]
         return (
-            jsonify(
-                {
-                    "ok": False,
-                    "error": {
-                        "code": "payload_too_large",
-                        "message": "Request body is too large.",
-                    },
-                    "request_id": g.get("request_id"),
-                }
-            ),
+            jsonify({"ok": False, "error": {"code": "payload_too_large", "message": "Request body is too large."}, "request_id": g.get("request_id")}),
             413,
         )
 
@@ -299,37 +514,17 @@ def create_app() -> Flask:
     def _handle_unexpected(err: Exception):  # type: ignore[no-untyped-def]
         logger.exception("Unhandled API error [request_id=%s]: %s", g.get("request_id"), err)
         return (
-            jsonify(
-                {
-                    "ok": False,
-                    "error": {
-                        "code": "internal_error",
-                        "message": "Internal server error.",
-                    },
-                    "request_id": g.get("request_id"),
-                }
-            ),
+            jsonify({"ok": False, "error": {"code": "internal_error", "message": "Internal server error."}, "request_id": g.get("request_id")}),
             500,
         )
 
-    @app.get("/api/status/<job_id>")
-    def get_status_endpoint(job_id: str): # type: ignore[no-untyped-def]
-        job = job_manager.get_job(job_id)
-        if not job:
-            raise ApiError("Job not found.", status_code=404, code="not_found")
-        
-        return jsonify({
-            "ok": True,
-            "job_id": job["id"],
-            "status": job["status"],
-            "error": job.get("error"),
-            "result": job.get("result"),
-            "submitted_at": job.get("submitted_at"),
-            "finished_at": job.get("finished_at")
-        }), 200
+    # ------------------------------------------------------------------
+    # Endpoints
+    # ------------------------------------------------------------------
 
     @app.post("/api/run-qa")
     def run_qa_endpoint():  # type: ignore[no-untyped-def]
+        """Enqueue a new QA crawl job. Returns 202 with job_id immediately."""
         if not request.is_json:
             raise ApiError("Content-Type must be application/json.", status_code=415, code="unsupported_media_type")
 
@@ -348,35 +543,68 @@ def create_app() -> Flask:
             output_file=None,
         )
 
-        job_id = job_manager.create_job(config=cfg, request_id=g.get("request_id"))
+        job_id = job_manager.create_job(
+            url=parsed["url"],
+            max_pages=parsed["max_pages"],
+            max_depth=parsed["max_depth"],
+            run_ai=parsed["run_ai"],
+            timeout_seconds=parsed["timeout_seconds"],
+            request_id=g.get("request_id"),
+        )
 
         logger.info(
             "Enqueued QA run [job_id=%s, request_id=%s, url=%s]",
-            job_id,
-            g.get("request_id"),
-            parsed["url"]
+            job_id, g.get("request_id"), parsed["url"],
         )
 
-        # Start background thread
         thread = threading.Thread(
             target=_run_qa_background,
             args=(job_id, cfg, parsed["timeout_seconds"]),
-            daemon=True
+            daemon=True,
         )
         thread.start()
 
         return (
-            jsonify(
-                {
-                    "ok": True,
-                    "job_id": job_id,
-                    "request_id": g.get("request_id"),
-                    "status": "pending",
-                    "message": "QA run enqueued successfully."
-                }
-            ),
+            jsonify({
+                "ok": True,
+                "job_id": job_id,
+                "request_id": g.get("request_id"),
+                "status": "pending",
+                "message": "QA run enqueued successfully.",
+            }),
             202,
         )
+
+    @app.get("/api/status/<job_id>")
+    def get_status_endpoint(job_id: str):  # type: ignore[no-untyped-def]
+        """Poll the status (and result) of a previously submitted job."""
+        job = job_manager.get_job(job_id)
+        if not job:
+            raise ApiError("Job not found.", status_code=404, code="not_found")
+
+        return jsonify({
+            "ok": True,
+            "job_id": job["id"],
+            "status": job["status"],
+            "url": job["url"],
+            "submitted_at": job["submitted_at"],
+            "started_at": job.get("started_at"),
+            "finished_at": job.get("finished_at"),
+            "error": job.get("error"),
+            "result": job.get("result"),
+        }), 200
+
+    @app.get("/api/jobs")
+    def list_jobs_endpoint():  # type: ignore[no-untyped-def]
+        """Return a paginated list of all jobs (lightweight, no page reports)."""
+        try:
+            limit = min(int(request.args.get("limit", 50)), 200)
+            offset = max(int(request.args.get("offset", 0)), 0)
+        except ValueError:
+            raise ApiError("'limit' and 'offset' must be integers.", status_code=400, code="validation_error")
+
+        jobs = job_manager.list_jobs(limit=limit, offset=offset)
+        return jsonify({"ok": True, "jobs": jobs, "limit": limit, "offset": offset}), 200
 
     return app
 
@@ -387,5 +615,5 @@ app = create_app()
 if __name__ == "__main__":
     app.run(
         host=os.getenv("HOST", settings.api.host),
-        port=int(os.getenv("PORT", str(settings.api.port)))
+        port=int(os.getenv("PORT", str(settings.api.port))),
     )
