@@ -15,7 +15,7 @@ from dataclasses import asdict
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
-from flask import Flask, jsonify, request, g
+from flask import Flask, jsonify, request, g, render_template
 from qa_tool import qa_toolConfig, run_qa_tool
 from config import settings
 
@@ -328,36 +328,24 @@ def create_app() -> Flask:
 
     @app.errorhandler(404)
     def _handle_404(e):
-        return jsonify({
-            "ok": False,
-            "error": {"code": "not_found", "message": "Resource not found."},
-            "request_id": g.get("request_id")
-        }), 404
-
-    @app.errorhandler(405)
-    def _handle_405(e):
-        return jsonify({
-            "ok": False,
-            "error": {"code": "method_not_allowed", "message": f"Method {request.method} not allowed."},
-            "request_id": g.get("request_id")
-        }), 405
-
-    @app.errorhandler(413)
-    def _handle_too_large(e):
-        return jsonify({
-            "ok": False,
-            "error": {"code": "payload_too_large", "message": "Request body exceeds maximum size."},
-            "request_id": g.get("request_id")
-        }), 413
+        if request.path.startswith("/api/"):
+            return jsonify({
+                "ok": False,
+                "error": {"code": "not_found", "message": "Resource not found."},
+                "request_id": g.get("request_id")
+            }), 404
+        return render_template("dashboard.html"), 200 # SPA fallback
 
     @app.errorhandler(Exception)
     def _handle_unexpected(e):
         logger.exception("Internal error: %s", e)
-        return jsonify({
-            "ok": False,
-            "error": {"code": "internal_error", "message": "An unexpected error occurred."},
-            "request_id": g.get("request_id")
-        }), 500
+        if request.path.startswith("/api/"):
+            return jsonify({
+                "ok": False,
+                "error": {"code": "internal_error", "message": "An unexpected error occurred."},
+                "request_id": g.get("request_id")
+            }), 500
+        return "Internal Server Error", 500
 
     # API ENDPOINTS
 
@@ -429,6 +417,10 @@ def create_app() -> Flask:
             "limit": limit,
             "offset": offset
         }), 200
+
+    @app.route("/", methods=["GET"])
+    def index():
+        return render_template("dashboard.html")
 
     @app.route("/health", methods=["GET"])
     def health():

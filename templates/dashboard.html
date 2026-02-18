@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QA TOOL Dashboard</title>
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <!-- Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+</head>
+
+<body>
+    <aside id="sidebar">
+        <div class="sidebar-header">
+            <h2><i data-lucide="shield-check"></i> QA TOOL</h2>
+        </div>
+        <div class="sidebar-content" id="job-history">
+            <!-- Job history items will be injected here -->
+            <div class="empty-state">No past jobs</div>
+        </div>
+    </aside>
+
+    <main id="main-content">
+        <header>
+            <div class="url-input-container">
+                <input type="text" id="url-input" placeholder="Enter URL to analyze (e.g., https://example.com)">
+            </div>
+
+            <div class="flags">
+                <div class="flag-group">
+                    <label for="max-pages">Max Pages:</label>
+                    <input type="number" id="max-pages" value="1" min="1"
+                        style="width:60px; background:none; color:white; border:1px solid var(--glass-border); border-radius:4px; padding:4px;">
+                </div>
+                <div class="flag-group">
+                    <label for="max-depth">Max Depth:</label>
+                    <input type="number" id="max-depth" value="0" min="0"
+                        style="width:60px; background:none; color:white; border:1px solid var(--glass-border); border-radius:4px; padding:4px;">
+                </div>
+                <div class="flag-group">
+                    <input type="checkbox" id="run-ai" checked>
+                    <label for="run-ai">Run AI</label>
+                </div>
+                <button id="run-btn" class="run-btn">Run Audit</button>
+            </div>
+        </header>
+
+        <section id="report-viewer">
+            <div id="idle-state" class="status-section">
+                <i data-lucide="search" style="width:64px; height:64px; opacity:0.2; margin-bottom:24px;"></i>
+                <h3 style="font-size:1.5rem; margin-bottom:12px;">Ready to Analyze</h3>
+                <p style="color:var(--text-secondary);">Enter a URL above to start a comprehensive QA audit.</p>
+            </div>
+
+            <div id="loading-state" class="status-section" style="display:none;">
+                <div class="animation-container" id="status-animation">
+                    <!-- Dynamic animation injected here -->
+                </div>
+                <h3 id="status-text" style="font-size:1.5rem; margin-bottom:8px;">Queueing Job...</h3>
+                <p id="status-detail" style="color:var(--text-secondary);"></p>
+                <div id="job-id-display" style="margin-top:24px; font-family:monospace; opacity:0.5; font-size:0.8rem;">
+                </div>
+            </div>
+
+            <div id="result-state" style="display:none;">
+                <div id="master-summary-container"></div>
+                <div id="reports-container" class="report-grid"></div>
+            </div>
+        </section>
+    </main>
+
+    <!-- App Scripts -->
+    <script src="{{ url_for('static', filename='js/api.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/ui.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+    <script>
+        // Initialise Lucide icons
+        lucide.createIcons();
+    </script>
+</body>
+
+</html>
