@@ -1,11 +1,8 @@
 [phases.setup]
-nixPkgs = ["python311", "chromium", "nss", "nspr", "atk", "cups", "libdrm", "dbus", "libxkbcommon", "xorg.libXcomposite", "xorg.libXdamage", "xorg.libXfixes", "xorg.libXrandr", "xorg.libxcb", "mesa", "expat", "xorg.libX11", "xorg.libXext", "xorg.libXtst", "alsa-lib", "pango", "cairo", "glib", "gtk3", "gdk-pixbuf"]
+nixPkgs = ["python311", "chromium", "nss", "nspr", "atk", "cups", "libdrm", "dbus", "libxkbcommon", "xorg.libXcomposite", "xorg.libXdamage", "xorg.libXfixes", "xorg.libXrandr", "xorg.libxcb", "mesa", "expat", "xorg.libX11", "xorg.libXext", "xorg.libXtst", "alsa-lib", "pango", "cairo", "glib", "gtk3", "gdk-pixbuf", "bash"]
 
 [phases.install]
-cmds = [
-  "pip install -r requirements.txt",
-  "playwright install chromium"
-]
+cmds = ["pip install -r requirements.txt"]
 
 [start]
-cmd = "gunicorn app:app --worker-class gthread --workers 1 --threads 8 --timeout 600 --bind 0.0.0.0:$PORT --log-level info --access-logfile - --error-logfile -"
+cmd = "bash start.sh"
