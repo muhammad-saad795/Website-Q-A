@@ -10,11 +10,8 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy source code
+# Copy source code (including gunicorn.conf.py)
 COPY . .
 
-# Make the entrypoint script executable
-RUN chmod +x /app/entrypoint.sh
-
-# Use the entrypoint script
-CMD ["/bin/bash", "/app/entrypoint.sh"]
+# We use the Python configuration file to avoid all shell expansion issues
+CMD ["gunicorn", "-c", "gunicorn.conf.py", "app:app"]
