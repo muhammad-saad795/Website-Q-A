@@ -597,8 +597,8 @@ class BFSCrawler:
         agent = GeminiAgent(api_key=api_key)
         master_task = (
             f"You are a Lead QA Engineer. I have crawled the website starting at {self.config.initial_url}.\n"
-            f"Total Internal Pages Visited: {len(self.results.internal_reports)}\n"
-            f"Total External Links Verified: {len(self.results.external_reports)}\n\n"
+            f"Total Internal Pages Visited: {self.results.total_internal_pages_visited or len(self.results.internal_reports)}\n"
+            f"Total External Links Verified: {self.results.total_external_pages_visited or len(self.results.external_reports)}\n\n"
             "Here is a summary of the findings for internal pages:\n"
 
             f"{json.dumps(condensed_results, indent=2)}\n\n"
@@ -616,9 +616,9 @@ class BFSCrawler:
             self.results.master_qa_audit = f"Error generating report: {e}"
 
         logger.info(f"📊 CRAWL METRICS:")
-        logger.info(f" - Internal Pages Visited: {len(self.results.internal_reports)}")
-        logger.info(f" - External Links Verified: {len(self.results.external_reports)}")
-        logger.info(f" - Total Unique URLs Processed: {len(self.results.visited_urls)}")
+        logger.info(f" - Internal Pages Visited: {self.results.total_internal_pages_visited or len(self.results.internal_reports)}")
+        logger.info(f" - External Links Verified: {self.results.total_external_pages_visited or len(self.results.external_reports)}")
+        logger.info(f" - Total Discovered URLs: {self.results.total_internal_pages_visited + self.results.total_external_pages_visited}")
 
         logger.info(f"{'#'*80}\n")
 

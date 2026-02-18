@@ -286,8 +286,8 @@ class JobManager:
             
             job = dict(row)
             
-            # If success, fetch individual page reports (OPTIMIZED)
-            if job['status'] == 'success':
+            # Fetch individual page reports if they exist (allows Master Audit to fetch during crawl)
+            if True: # job['status'] in ('success', 'running'):
                 internal = []
                 external = []
                 
