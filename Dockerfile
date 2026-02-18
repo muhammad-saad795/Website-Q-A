@@ -1,24 +1,24 @@
-# ── Stage 1: Use the official Playwright image (Chromium pre-installed) ──────
-# This image ships with Chromium, all system dependencies, and Python.
-# No browser download needed at runtime — it's baked into the image.
+# Use the official Playwright image (Chromium pre-installed)
 FROM mcr.microsoft.com/playwright/python:v1.50.0-noble
+
+# Set production environment
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PORT=8080
 
 WORKDIR /app
 
-# Install Python dependencies
+# Install dependencies directly into system Python (no venv needed in Docker)
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy application source
+# Copy source code
 COPY . .
 
-# Railway injects $PORT at runtime; default to 8080 for local docker run
-ENV PORT=8080
-
-# Expose for documentation purposes
+# Expose port
 EXPOSE 8080
 
-# Start gunicorn
+# Start gunicorn with 1 worker and multiple threads (best for async QA tasks)
 CMD gunicorn app:app \
     --worker-class gthread \
     --workers 1 \
