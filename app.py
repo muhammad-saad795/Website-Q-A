@@ -91,6 +91,18 @@ _DDL_INDEX = """
 CREATE INDEX IF NOT EXISTS idx_pages_job_id ON pages(job_id);
 """
 
+_DDL_FRONTIER = """
+CREATE TABLE IF NOT EXISTS crawl_frontier (
+    job_id TEXT NOT NULL,
+    url TEXT NOT NULL,
+    depth INTEGER NOT NULL,
+    status TEXT NOT NULL DEFAULT 'pending', -- 'pending', 'processing', 'completed', 'failed'
+    is_internal INTEGER NOT NULL, -- 0/1
+    PRIMARY KEY (job_id, url),
+    FOREIGN KEY (job_id) REFERENCES jobs (id) ON DELETE CASCADE
+);
+"""
+
 # ─────────────────────────────────────────────────────────────────────────────
 # JOB MANAGER
 # ─────────────────────────────────────────────────────────────────────────────
@@ -111,7 +123,7 @@ class JobManager:
 
     def _init_db(self):
         with self._connect() as conn:
-            conn.executescript(_DDL_JOBS + _DDL_PAGES + _DDL_INDEX)
+            conn.executescript(_DDL_JOBS + _DDL_PAGES + _DDL_INDEX + _DDL_FRONTIER)
 
     def create_job(self, url: str, cfg: qa_toolConfig, request_id: str) -> str:
         job_id = str(uuid.uuid4())
@@ -148,14 +160,11 @@ class JobManager:
             )
 
     def mark_success(self, job_id: str, results: Any):
-        """Stores the full results into the database."""
+        """Finalizes the job status and master report."""
         now = time.time()
-        
-        # results is a CrawlResult object (or asdict'd mapping)
         res_dict = results if isinstance(results, dict) else asdict(results)
         
         with self._connect() as conn:
-            # 1. Update overall job
             conn.execute(
                 """
                 UPDATE jobs SET 
@@ -173,18 +182,76 @@ class JobManager:
                     res_dict.get('base_domain'),
                     json.dumps(res_dict.get('master_qa_audit')) if not isinstance(res_dict.get('master_qa_audit'), str) else res_dict.get('master_qa_audit'),
                     res_dict.get('total_internal_pages_visited', 0),
-                    len(res_dict.get('external_reports', [])),
+                    res_dict.get('total_external_pages_visited', 0),
                     job_id
                 )
             )
+            # Cleanup frontier to save DB space
+            conn.execute("DELETE FROM crawl_frontier WHERE job_id=?", (job_id,))
+
+    def add_to_frontier(self, job_id: str, urls_with_depth: List[tuple[str, int, bool]]):
+        """Adds a batch of URLs to the persistent frontier."""
+        with self._connect() as conn:
+            conn.executemany(
+                "INSERT OR IGNORE INTO crawl_frontier (job_id, url, depth, is_internal) VALUES (?, ?, ?, ?)",
+                [(job_id, url, depth, 1 if internal else 0) for url, depth, internal in urls_with_depth]
+            )
+
+    def get_next_queued_url(self, job_id: str) -> Optional[Dict[str, Any]]:
+        """Atomically gets the next pending URL and marks it as processing."""
+        with self._connect() as conn:
+            row = conn.execute(
+                "SELECT url, depth, is_internal FROM crawl_frontier WHERE job_id=? AND status='pending' LIMIT 1",
+                (job_id,)
+            ).fetchone()
             
-            # 2. Insert internal pages
-            for report in res_dict.get('internal_reports', []):
-                self._insert_page(conn, job_id, 'internal', report)
-            
-            # 3. Insert external pages
-            for report in res_dict.get('external_reports', []):
-                self._insert_page(conn, job_id, 'external', report)
+            if row:
+                data = dict(row)
+                conn.execute(
+                    "UPDATE crawl_frontier SET status='processing' WHERE job_id=? AND url=?",
+                    (job_id, data['url'])
+                )
+                return data
+            return None
+
+    def mark_frontier_completed(self, job_id: str, url: str):
+        with self._connect() as conn:
+            conn.execute(
+                "UPDATE crawl_frontier SET status='completed' WHERE job_id=? AND url=?",
+                (job_id, url)
+            )
+
+    def mark_frontier_failed(self, job_id: str, url: str):
+        with self._connect() as conn:
+            conn.execute(
+                "UPDATE crawl_frontier SET status='failed' WHERE job_id=? AND url=?",
+                (job_id, url)
+            )
+
+    def get_crawl_stats(self, job_id: str) -> Dict[str, int]:
+        with self._connect() as conn:
+            internal = conn.execute(
+                "SELECT COUNT(*) FROM crawl_frontier WHERE job_id=? AND is_internal=1 AND status='completed'",
+                (job_id,)
+            ).fetchone()[0]
+            external = conn.execute(
+                "SELECT COUNT(*) FROM crawl_frontier WHERE job_id=? AND is_internal=0 AND status='completed'",
+                (job_id,)
+            ).fetchone()[0]
+            discovered = conn.execute(
+                "SELECT COUNT(*) FROM crawl_frontier WHERE job_id=?",
+                (job_id,)
+            ).fetchone()[0]
+            return {
+                "internal_count": internal,
+                "external_count": external,
+                "discovered_count": discovered
+            }
+
+    def save_page_report(self, job_id: str, page_type: str, report: Dict[str, Any]):
+        """Persists a single page report immediately."""
+        with self._connect() as conn:
+            self._insert_page(conn, job_id, page_type, report)
 
     def _insert_page(self, conn: sqlite3.Connection, job_id: str, page_type: str, report: Dict[str, Any]):
         url_report = report.get('url_report') or {}
@@ -219,30 +286,60 @@ class JobManager:
             
             job = dict(row)
             
-            # If success, fetch individual page reports
+            # If success, fetch individual page reports (OPTIMIZED)
             if job['status'] == 'success':
                 internal = []
                 external = []
-                page_rows = conn.execute("SELECT * FROM pages WHERE job_id=?", (job_id,)).fetchall()
+                
+                # Fetch only columns needed for the summary view
+                # We fetch 'url', 'page_type', 'http_status', 'status_label', 'redirected', 'final_url', 'load_time', 'nav_time'
+                # and we selectively parse portions of full_report if needed.
+                # To save memory, we skip loading 'full_report' entirely for external pages.
+                
+                page_rows = conn.execute(
+                    "SELECT url, page_type, http_status, status_label, redirected, final_url, load_time, nav_time, full_report FROM pages WHERE job_id=?", 
+                    (job_id,)
+                ).fetchall()
+                
                 for pr in page_rows:
                     p_dict = dict(pr)
-                    # For the API, we can decide what to expose.
-                    # By default, we'll expose the deserialised full_report if requested,
-                    # or a summarized version.
-                    full_p = json.loads(p_dict['full_report']) if p_dict['full_report'] else {}
                     
+                    # Prepare basic url_report structure as expected by UI
+                    url_report_sum = {
+                        "http_status": p_dict['http_status'],
+                        "status_label": p_dict['status_label'],
+                        "redirected": bool(p_dict['redirected']),
+                        "final_url": p_dict['final_url'],
+                        "performance": {
+                            "total_load_seconds": p_dict['load_time'],
+                            "navigation_seconds": p_dict['nav_time']
+                        }
+                    }
+
                     if p_dict['page_type'] == 'internal':
-                        # Internal: url, url_report, agent_summary
+                        # For internal pages, we also need agent_summary and console_logs from full_report
+                        agent_summary = None
+                        console_logs = []
+                        if p_dict['full_report']:
+                            try:
+                                full_p = json.loads(p_dict['full_report'])
+                                agent_summary = full_p.get("agent_summary")
+                                console_logs = full_p.get("url_report", {}).get("console_logs", [])
+                            except:
+                                pass
+                        
+                        url_report_sum["console_logs"] = console_logs
+                        
                         internal.append({
-                            "url": full_p.get("url"),
-                            "url_report": full_p.get("url_report"),
-                            "agent_summary": full_p.get("agent_summary")
+                            "url": p_dict['url'],
+                            "url_report": url_report_sum,
+                            "agent_summary": agent_summary
                         })
                     else:
-                        # External: url, url_report
+                        # External pages are minimal
                         external.append({
-                            "url": full_p.get("url"),
-                            "url_report": full_p.get("url_report")
+                            "url": p_dict['url'],
+                            "url_report": url_report_sum
                         })
                 
                 # Deserialise master audit
@@ -290,9 +387,9 @@ def _run_qa_background(job_id: str, cfg: qa_toolConfig, timeout: int):
         asyncio.set_event_loop(loop)
         
         if timeout > 0:
-            result = loop.run_until_complete(asyncio.wait_for(run_qa_tool(cfg), timeout=timeout))
+            result = loop.run_until_complete(asyncio.wait_for(run_qa_tool(cfg, sink=job_manager, job_id=job_id), timeout=timeout))
         else:
-            result = loop.run_until_complete(run_qa_tool(cfg))
+            result = loop.run_until_complete(run_qa_tool(cfg, sink=job_manager, job_id=job_id))
             
         job_manager.mark_success(job_id, result)
         logger.info(f"Background job {job_id} completed successfully.")

@@ -20,9 +20,10 @@ class Viewport(BaseModel):
 
 class BrowserSettings(BaseModel):
     headless: bool = True
-    max_load_seconds: int = 60
     nav_timeout_ms: int = 30000
     settle_time_ms: int = 1000
+    max_load_seconds: int = 60
+    recycle_pages_threshold: int = 20
     retries: int = 3
     deep_analysis: bool = False
     viewports: Dict[str, Viewport] = {

@@ -73,6 +73,9 @@ class LayoutValidator:
         Returns:
             List of detected layout issues
         """
+        if not snapshot_data:
+            return self.issues
+
         viewport = snapshot_data.get('viewport', {})
         elements = snapshot_data.get('elements', [])
         
@@ -553,11 +556,11 @@ def validate_layout(data: Dict[str, Any]) -> Dict:
     validator = LayoutValidator()
 
     # Validate desktop snapshot
-    if 'layout_snapshot_desktop' in data:
+    if data.get('layout_snapshot_desktop'):
         validator.validate_snapshot(data['layout_snapshot_desktop'], 'desktop')
 
     # Validate mobile snapshot
-    if 'layout_snapshot_mobile' in data:
+    if data.get('layout_snapshot_mobile'):
         validator.validate_snapshot(data['layout_snapshot_mobile'], 'mobile')
 
     report = validator.generate_report()

@@ -57,9 +57,13 @@ class CrawlResult:
     base_domain: str
     internal_reports: List[Dict[str, Any]] = field(default_factory=list)
     external_reports: List[Dict[str, Any]] = field(default_factory=list)
-    visited_urls: Set[str] = field(default_factory=set)  # Tracks ALL unique URLs to avoid re-visits
-    internal_visited: Set[str] = field(default_factory=set) # Tracks only internal URLs for accurate count
+    visited_urls: Set[str] = field(default_factory=set)  
+    internal_visited: Set[str] = field(default_factory=set)
     master_qa_audit: str = "Not generated"
+    
+    # Heap optimization fields
+    total_internal_pages_visited: int = 0
+    total_external_pages_visited: int = 0
 
     def to_dict(self) -> Dict[str, Any]:
         """Returns the structured report precisely matching the defined schema."""
@@ -69,7 +73,8 @@ class CrawlResult:
             "master_qa_audit": self.master_qa_audit,
             "internal_reports": self.internal_reports,
             "external_reports": self.external_reports,
-            "total_internal_pages_visited": len(self.internal_visited),
+            "total_internal_pages_visited": self.total_internal_pages_visited or len(self.internal_visited),
+            "total_external_pages_visited": self.total_external_pages_visited or len(self.external_reports),
         }
 
 
@@ -103,7 +108,7 @@ class PageAnalyzer:
 
             # Silence layout validator stdout for external urls if requested
             layout_report = None
-            if deep_analysis:
+            if deep_analysis and loader_result.get("status") == "success":
                 with redirect_stdout(io.StringIO()):
                     layout_report = validate_layout(loader_result)
 
@@ -392,13 +397,25 @@ class PageAnalyzer:
 class BFSCrawler:
     """Manages the Breadth-First Search crawl process."""
 
-    def __init__(self, config: qa_toolConfig):
+    def __init__(self, config: qa_toolConfig, sink: Optional[Any] = None, job_id: Optional[str] = None):
         self.config = config
+        self.sink = sink
+        self.job_id = job_id
+        
         self.base_domain = self._get_base_domain(config.initial_url)
         self.queue = deque([(config.initial_url, 0)])
         self.results = CrawlResult(initial_url=config.initial_url, base_domain=self.base_domain)
         self.loader = PageLoader(headless=config.headless)
         self.analyzer = PageAnalyzer(self.loader)
+        
+        # Recycling state
+        self.pages_processed = 0
+        self.recycle_threshold = getattr(settings.browser, "recycle_pages_threshold", 20)
+
+        # Initialize persistent frontier if sink is provided
+        if self.sink and self.job_id:
+            self.sink.add_to_frontier(self.job_id, [(config.initial_url, 0, True)])
+            self.queue = deque() # Clear in-memory queue, we will use sink
 
     def _get_base_domain(self, url: str) -> str:
         parsed = urlparse(url)
@@ -416,42 +433,76 @@ class BFSCrawler:
         await self.loader.start()
         
         try:
-            while self.queue:
-                # Stop if we hit the max pages limit
-                if self.config.max_pages is not None and len(self.results.visited_urls) >= self.config.max_pages:
+            while True:
+                # 1. Get next URL
+                if self.sink and self.job_id:
+                    next_item = self.sink.get_next_queued_url(self.job_id)
+                    if not next_item:
+                        break
+                    current_url, current_depth = next_item['url'], next_item['depth']
+                    is_internal = bool(next_item['is_internal'])
+                else:
+                    if not self.queue:
+                        break
+                    current_url, current_depth = self.queue.popleft()
+                    # Dedupe in-memory
+                    normalized_url = self._normalize_url(current_url)
+                    if normalized_url in self.results.visited_urls:
+                        continue
+                    self.results.visited_urls.add(normalized_url)
+                    is_internal = self._is_internal(current_url)
+
+                # 2. Stop if we hit max pages (only for non-sink mode or global limit)
+                # Note: For production with sink, we usually want max_pages to be a property of the job
+                processed_count = getattr(self.results, "total_internal_pages_visited", 0) + getattr(self.results, "total_external_pages_visited", 0)
+                if self.config.max_pages is not None and processed_count >= self.config.max_pages:
                     logger.info("Reached max pages limit.")
                     break
 
-                current_url, current_depth = self.queue.popleft()
-                normalized_url = self._normalize_url(current_url)
-                
-                if normalized_url in self.results.visited_urls:
+                # 3. Analyze page
+                try:
+                    report = await self.analyzer.analyze(
+                        current_url, 
+                        deep_analysis=is_internal, 
+                        run_ai=is_internal and self.config.run_ai,
+                        interactive=self.config.interactive
+                    )
+                except Exception as e:
+                    logger.error(f"Critical error analyzing {current_url}: {e}")
+                    if self.sink and self.job_id:
+                        self.sink.mark_frontier_failed(self.job_id, current_url)
                     continue
-                
-                self.results.visited_urls.add(normalized_url)
-                
-                # Determine if internal or external
-                is_internal = self._is_internal(current_url)
-                if is_internal:
-                    self.results.internal_visited.add(normalized_url)
-                
-                # Analyze page
-                report = await self.analyzer.analyze(
-                    current_url, 
-                    deep_analysis=is_internal, 
-                    run_ai=is_internal and self.config.run_ai,
-                    interactive=self.config.interactive
-                )
 
-                if is_internal:
-                    self.results.internal_reports.append(report)
+                # 4. Handle Results (Stream or Accumulate)
+                if self.sink and self.job_id:
+                    page_type = 'internal' if is_internal else 'external'
+                    self.sink.save_page_report(self.job_id, page_type, report)
+                    self.sink.mark_frontier_completed(self.job_id, current_url)
                     
-                    if self.config.max_depth is None or current_depth < self.config.max_depth:
-                        self._discover_urls(current_url, report, current_depth)
+                    if is_internal:
+                        self.results.total_internal_pages_visited += 1
+                        if self.config.max_depth is None or current_depth < self.config.max_depth:
+                            self._discover_urls(current_url, report, current_depth)
+                    else:
+                        self.results.total_external_pages_visited += 1
                 else:
-                    self.results.external_reports.append(report)
-                
+                    if is_internal:
+                        self.results.internal_reports.append(report)
+                        self.results.internal_visited.add(self._normalize_url(current_url))
+                        if self.config.max_depth is None or current_depth < self.config.max_depth:
+                            self._discover_urls(current_url, report, current_depth)
+                    else:
+                        self.results.external_reports.append(report)
+
                 self._log_report(current_url, report)
+
+                # 5. Browser Recycling
+                self.pages_processed += 1
+                if self.pages_processed >= self.recycle_threshold:
+                    logger.info(f"♻️ Recycling browser after {self.pages_processed} pages...")
+                    await self.loader.stop()
+                    await self.loader.start()
+                    self.pages_processed = 0
 
 
             if self.config.run_ai:
@@ -491,7 +542,8 @@ class BFSCrawler:
 
         # Combine all sources
         discovered_raw = discovered_urls + interactive_routes + network_docs
-
+        
+        to_add_to_frontier = []
         for raw_url in discovered_raw:
             if not raw_url or not isinstance(raw_url, str):
                 continue
@@ -501,10 +553,16 @@ class BFSCrawler:
             full_url = urljoin(current_url, raw_url)
             norm_discovered = self._normalize_url(full_url)
             
-            if norm_discovered not in self.results.visited_urls:
-                # Add to queue regardless of internal/external,
-                # the run loop will handle the analysis logic.
-                self.queue.append((full_url, current_depth + 1))
+            if self.sink and self.job_id:
+                # Add to persistent frontier batch
+                internal = self._is_internal(full_url)
+                to_add_to_frontier.append((full_url, current_depth + 1, internal))
+            else:
+                if norm_discovered not in self.results.visited_urls:
+                    self.queue.append((full_url, current_depth + 1))
+
+        if to_add_to_frontier and self.sink and self.job_id:
+            self.sink.add_to_frontier(self.job_id, to_add_to_frontier)
 
 
     async def _generate_master_report(self):
@@ -514,10 +572,18 @@ class BFSCrawler:
             logger.warning("Skipping Master Report: Missing API key.")
             return
 
+        reports_to_audit = self.results.internal_reports
+        if not reports_to_audit and self.sink and self.job_id:
+            # Fetch summary data from DB to avoid loading full reports into memory
+            job_data = self.sink.get_job(self.job_id)
+            if job_data and job_data.get('result'):
+                reports_to_audit = job_data['result'].get('internal_reports', [])
+
         condensed_results = []
-        for r in self.results.internal_reports:
+        for r in reports_to_audit:
             url = r.get("url", "unknown")
-            status = r.get("url_report", {}).get("status_label", "Error")
+            url_rep = r.get("url_report") or {}
+            status = url_rep.get("status_label", "Error")
             # Safe truncation
             summary = str(r.get("agent_summary", "No summary available."))[:500]
             condensed_results.append({
@@ -557,8 +623,8 @@ class BFSCrawler:
         logger.info(f"{'#'*80}\n")
 
 
-async def run_qa_tool(config: qa_toolConfig) -> Dict[str, Any]:
-    crawler = BFSCrawler(config)
+async def run_qa_tool(config: qa_toolConfig, sink: Optional[Any] = None, job_id: Optional[str] = None) -> Dict[str, Any]:
+    crawler = BFSCrawler(config, sink=sink, job_id=job_id)
     result = await crawler.run()
     return result.to_dict()
 

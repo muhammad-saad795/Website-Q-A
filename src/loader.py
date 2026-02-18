@@ -139,88 +139,86 @@ class PageLoader:
         page.on("response", on_response)
         page.on("console", on_console)
 
-        # ── Navigate ──
-        start_time = time.perf_counter()
-        response = await page.goto(url, wait_until="domcontentloaded", timeout=settings.browser.nav_timeout_ms)
-        navigation_time = time.perf_counter() - start_time
-
-        
-        if not response:
-            raise RuntimeError("No response received")
-
-        result["final_url"] = page.url
-        result["http_status"] = response.status
-        result["status"] = "success" if response.ok else "failed"
-        result["navigation_time_seconds"] = navigation_time
-
         try:
-            await page.wait_for_load_state("networkidle", timeout=settings.browser.nav_timeout_ms)
-            result["load_time_seconds"] = time.perf_counter() - start_time
-        except PlaywrightError:
-            logger.warning("networkidle not reached, continuing")
-            result["load_time_seconds"] = time.perf_counter() - start_time
+            # ── Navigate ──
+            start_time = time.perf_counter()
+            response = await page.goto(url, wait_until="domcontentloaded", timeout=settings.browser.nav_timeout_ms)
+            navigation_time = time.perf_counter() - start_time
 
-        if not deep_analysis:
-            # Clean up listeners and exit early for minimal load
-            page.remove_listener("response", on_response)
-            page.remove_listener("console", on_console)
-            return
+            if not response:
+                raise RuntimeError("No response received")
 
-        # ── Deep Analysis Blocks ──
-        
-        # ── Lazy-load scrolling ──
-        await self._scroll_page(page)
-        await page.wait_for_timeout(settings.browser.settle_time_ms)
+            result["final_url"] = page.url
+            result["http_status"] = response.status
+            result["status"] = "success" if response.ok else "failed"
+            result["navigation_time_seconds"] = navigation_time
 
+            try:
+                await page.wait_for_load_state("networkidle", timeout=settings.browser.nav_timeout_ms)
+                result["load_time_seconds"] = time.perf_counter() - start_time
+            except PlaywrightError:
+                logger.warning("networkidle not reached, continuing")
+                result["load_time_seconds"] = time.perf_counter() - start_time
 
-        # ── Capture visible text, and layout snapshot ──
-        result["visible_text"] = await self._extract_visible_text(page)
-        #Discover urls
-        result["discovered_urls"] = await self._capture_dynamic_links(page)
+            if not deep_analysis:
+                return
 
-        # Desktop
-        #----Page already in desktop mode----
-        result["layout_snapshot_desktop"] = await self._capture_layout_snapshot(page)
-        
-        # Mobile
-        mobile_vp = settings.browser.viewports["mobile"]
-        await page.set_viewport_size({"width": mobile_vp.width, "height": mobile_vp.height})
-        await page.wait_for_timeout(settings.browser.settle_time_ms)
-        result["layout_snapshot_mobile"] = await self._capture_layout_snapshot(page)
-        #-----Set back to desktop mode (Maximized)-----
-        desktop_vp = settings.browser.viewports["desktop"]
-        await page.set_viewport_size({"width": desktop_vp.width, "height": desktop_vp.height})
-        await page.wait_for_timeout(settings.browser.settle_time_ms)
-
-
-        # ── Add network & console logs ──
-        result["network_requests"] = network_requests
-        result["console_errors"] = console_errors
-
-        # Explicitly remove listeners to stop tracking
-        page.remove_listener("response", on_response)
-        page.remove_listener("console", on_console)
-        #logger.info("Stopped network and console listeners.")
-        
-        # ── Form Detection (Before Interactive Discovery) ──
-        #logger.info("Scanning forms (canonical)...")
-        scanned_forms = await self._scan_forms(page)
-        result["forms_html"] = scanned_forms
-
-        # 🔑 CRITICAL: make scan available to sibling scripts
-        await page.evaluate(
-            "forms => window.__FORMS_STATE__ = forms",
-            scanned_forms
-        )
-
-        # ── Interactive Route Discovery ──
-        #logger.info("Starting interactive route discovery...")
-        result["interactive_routes"] = await self._discover_interactive_routes(page)
-        
-        if page.url != url:
-            #logger.info(f"Returning to original URL: {url}")
-            await page.goto(url, wait_until="domcontentloaded")
+            # ── Deep Analysis Blocks ──
+            await self._scroll_page(page)
             await page.wait_for_timeout(settings.browser.settle_time_ms)
+
+            # ── Capture visible text, and layout snapshot ──
+            result["visible_text"] = await self._extract_visible_text(page)
+            result["discovered_urls"] = await self._capture_dynamic_links(page)
+
+            # Desktop
+            result["layout_snapshot_desktop"] = await self._capture_layout_snapshot(page)
+            
+            # Mobile
+            mobile_vp = settings.browser.viewports["mobile"]
+            await page.set_viewport_size({"width": mobile_vp.width, "height": mobile_vp.height})
+            await page.wait_for_timeout(settings.browser.settle_time_ms)
+            result["layout_snapshot_mobile"] = await self._capture_layout_snapshot(page)
+
+            #-----Set back to desktop mode (Maximized)-----
+            desktop_vp = settings.browser.viewports["desktop"]
+            await page.set_viewport_size({"width": desktop_vp.width, "height": desktop_vp.height})
+            await page.wait_for_timeout(settings.browser.settle_time_ms)
+
+            # ── Add network & console logs ──
+            result["network_requests"] = network_requests
+            result["console_errors"] = console_errors
+
+            # ── Form Detection ──
+            scanned_forms = await self._scan_forms(page)
+            result["forms_html"] = scanned_forms
+
+            # 🔑 CRITICAL: make scan available to sibling scripts
+            await page.evaluate(
+                "forms => window.__FORMS_STATE__ = forms",
+                scanned_forms
+            )
+
+            # ── Interactive Route Discovery ──
+            result["interactive_routes"] = await self._discover_interactive_routes(page)
+            
+            if page.url != url:
+                await page.goto(url, wait_until="domcontentloaded")
+                await page.wait_for_timeout(settings.browser.settle_time_ms)
+
+        except asyncio.CancelledError:
+            logger.warning(f"Analysis of {url} was cancelled (likely due to timeout)")
+            raise
+        except Exception as e:
+            logger.error(f"Error during page processing for {url}: {e}")
+            raise
+        finally:
+            # Explicitly remove listeners to stop tracking and avoid TargetClosedError in background
+            try:
+                page.remove_listener("response", on_response)
+                page.remove_listener("console", on_console)
+            except:
+                pass
 
 
 
