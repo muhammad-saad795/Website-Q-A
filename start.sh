@@ -1,9 +1,7 @@
 #!/usr/bin/env bash
 set -e
 
-echo "==> Installing Playwright browsers..."
-playwright install chromium
-echo "==> Playwright ready."
+export PLAYWRIGHT_BROWSERS_PATH=/app/pw-browsers
 
 echo "==> Starting gunicorn..."
 exec gunicorn app:app \

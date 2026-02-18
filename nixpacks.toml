@@ -1,8 +1,11 @@
 [phases.setup]
-nixPkgs = ["python311", "chromium", "nss", "nspr", "atk", "cups", "libdrm", "dbus", "libxkbcommon", "xorg.libXcomposite", "xorg.libXdamage", "xorg.libXfixes", "xorg.libXrandr", "xorg.libxcb", "mesa", "expat", "xorg.libX11", "xorg.libXext", "xorg.libXtst", "alsa-lib", "pango", "cairo", "glib", "gtk3", "gdk-pixbuf", "bash"]
+nixPkgs = ["python311", "bash"]
 
 [phases.install]
-cmds = ["pip install -r requirements.txt"]
+cmds = [
+  "pip install -r requirements.txt",
+  "PLAYWRIGHT_BROWSERS_PATH=/app/pw-browsers playwright install --with-deps chromium"
+]
 
 [start]
-cmd = "bash start.sh"
+cmd = "PLAYWRIGHT_BROWSERS_PATH=/app/pw-browsers bash start.sh"
