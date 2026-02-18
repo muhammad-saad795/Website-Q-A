@@ -9,3 +9,5 @@ result.json
 # SQLite DB is runtime state — not committed to git.
 # On Railway, mount a persistent volume at /data and set API__DB_PATH=/data/jobs.db
 *.db
+*.db-shm
+*.db-wal
