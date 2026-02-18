@@ -10,16 +10,11 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy source
+# Copy source code
 COPY . .
 
-# Railway provides $PORT. We use the Shell form of CMD to ensure variable expansion.
-CMD gunicorn app:app \
-    --worker-class gthread \
-    --workers 1 \
-    --threads 8 \
-    --timeout 600 \
-    --bind 0.0.0.0:$PORT \
-    --log-level info \
-    --access-logfile - \
-    --error-logfile -
+# Make the entrypoint script executable
+RUN chmod +x /app/entrypoint.sh
+
+# Use the entrypoint script
+CMD ["/bin/bash", "/app/entrypoint.sh"]
