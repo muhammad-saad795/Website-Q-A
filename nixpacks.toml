@@ -2,10 +2,7 @@
 nixPkgs = ["python311", "bash"]
 
 [phases.install]
-cmds = [
-  "pip install -r requirements.txt",
-  "PLAYWRIGHT_BROWSERS_PATH=/app/pw-browsers playwright install --with-deps chromium"
-]
+cmds = ["pip install -r requirements.txt"]
 
 [start]
-cmd = "PLAYWRIGHT_BROWSERS_PATH=/app/pw-browsers bash start.sh"
+cmd = "gunicorn app:app --worker-class gthread --workers 1 --threads 8 --timeout 600 --bind 0.0.0.0:$PORT --log-level info --access-logfile - --error-logfile -"
