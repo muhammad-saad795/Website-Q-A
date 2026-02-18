@@ -13,10 +13,7 @@ from typing import Any, Dict
 from google import genai
 from google.genai import types
 from google.genai import errors as genai_errors
-from dotenv import load_dotenv
 
-# Load environment variables from the src/.env file
-load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), "..", "src", ".env"), override=True)
 
 
 TOOL_NAME = "text_verifier"
@@ -83,11 +80,7 @@ GEMINI_TOOL_SPEC: Dict[str, Any] = {
 
 
 def _get_api_key() -> str:
-    return (
-        os.environ.get("GEMINI_API_KEY")
-        or os.environ.get("GOOGLE_API_KEY")
-        or ""
-    )
+    return settings.gemini.api_key
 
 
 def _call_gemini(visible_text: str, model: str | None = None) -> Dict[str, Any]:
