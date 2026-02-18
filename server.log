@@ -1,2 +1,6 @@
 nohup: ignoring input
-nohup: failed to run command 'gunicorn': No such file or directory
+[2026-02-18 13:57:38 +0500] [308551] [INFO] Starting gunicorn 25.1.0
+[2026-02-18 13:57:38 +0500] [308551] [INFO] Listening at: http://0.0.0.0:8000 (308551)
+[2026-02-18 13:57:38 +0500] [308551] [INFO] Using worker: gthread
+[2026-02-18 13:57:38 +0500] [308551] [INFO] Control socket listening at /home/ali/Downloads/Website QA/gunicorn.ctl
+[2026-02-18 13:57:38 +0500] [308560] [INFO] Booting worker with pid: 308560
