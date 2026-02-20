@@ -291,7 +291,7 @@ async def main():
     loader = PageLoader(headless=False)
     await loader.start()
     
-    url = "https://qabrains.com/"
+    url = "https://www.testriq.com/"
     
     logger.info(f"Step 1: Minimal Loading: {url}")
     result = await loader.load(url, deep_analysis=True)

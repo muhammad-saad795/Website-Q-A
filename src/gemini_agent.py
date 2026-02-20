@@ -74,7 +74,12 @@ SYSTEM_INSTRUCTION = (
     "• Observe tool outputs carefully—they contain crucial diagnostic data.\n"
     "• Never repeat the same test twice unless explicitly investigating flakiness.\n"
     "• If a form has multiple tabs/sections, ensure all fields are visible before filling.\n"
-    "• Think step-by-step: Plan → Execute → Verify → Report."
+    "• Think step-by-step: Plan → Execute → Verify → Report.\n\n"
+
+    "🚫 STRICT OUTPUT RULES:\n"
+    "• NEVER include a date, timestamp, 'Report Date', 'Generated On', or any time reference in your output.\n"
+    "• You do not have access to the current date or time — do not guess, infer, or fabricate one.\n"
+    "• Omit all temporal metadata from every report, summary, or response you generate."
 )
 
 
