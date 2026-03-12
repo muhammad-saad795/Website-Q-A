@@ -8,6 +8,11 @@
 
 gemini:
   model: "gemini-2.5-flash"
+  max_steps: 25
+
+# Fallback when GEMINI_API_KEY is missing or Gemini fails
+openai:
+  model: "gpt-4o"
 
 browser:
   headless: true

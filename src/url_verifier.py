@@ -51,14 +51,18 @@ class URLVerifier:
 
         # 2. Check HTTP Status
         if http_status:
-            if not (200 <= http_status < 400):
+            if 400 <= http_status < 500:
+                report.is_ok = False
+                report.status_label = "Client Error"
+                report.issues.append(f"HTTP Client Error: {http_status}")
+            elif http_status >= 500:
+                report.is_ok = False
+                report.status_label = "Server Error"
+                report.issues.append(f"HTTP Server Error: {http_status}")
+            elif not (200 <= http_status < 400):
                 report.is_ok = False
                 report.status_label = "Unhealthy"
-                report.issues.append(f"HTTP Status: {http_status}")
-            elif http_status >= 400:
-                report.is_ok = False
-                report.status_label = "Error Status"
-                report.issues.append(f"HTTP Error: {http_status}")
+                report.issues.append(f"Unexpected HTTP Status: {http_status}")
         elif status == "failed":
             report.is_ok = False
             report.status_label = "Failed"

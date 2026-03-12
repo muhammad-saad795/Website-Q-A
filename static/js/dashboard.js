@@ -2,15 +2,16 @@ const Dashboard = {
     history: [],
     currentJobId: null,
     pollInterval: null,
+    eventSource: null,
+    pagesCompleted: 0,
 
     async init() {
         this.loadHistory();
         this.bindEvents();
 
-        // Initial check for active jobs in history
         this.history.forEach(job => {
             if (job.status === 'pending' || job.status === 'running') {
-                this.pollJob(job.id);
+                this.streamJob(job.id);
             }
         });
 
@@ -58,7 +59,6 @@ const Dashboard = {
             const data = await API.runQA(url, options);
             this.currentJobId = data.job_id;
 
-            // Add to history
             this.history.unshift({
                 id: data.job_id,
                 url: url,
@@ -67,13 +67,86 @@ const Dashboard = {
             });
 
             this.saveHistory();
-            this.pollJob(data.job_id);
+            this.streamJob(data.job_id);
 
         } catch (err) {
             alert(`Failed to start job: ${err.message}`);
             UI.showState('idle');
         } finally {
             UI.elements.runBtn.disabled = false;
+        }
+    },
+
+    _closeStream() {
+        if (this.eventSource) {
+            this.eventSource.close();
+            this.eventSource = null;
+        }
+        if (this.pollInterval) {
+            clearInterval(this.pollInterval);
+            this.pollInterval = null;
+        }
+    },
+
+    streamJob(jobId) {
+        this._closeStream();
+        this.pagesCompleted = 0;
+
+        UI.setLoadingStatus('running', 'Connecting to live stream...', jobId);
+
+        const idx = this.history.findIndex(j => j.id === jobId);
+        if (idx !== -1) {
+            this.history[idx].status = 'running';
+            this.saveHistory();
+        }
+
+        try {
+            const es = new EventSource(`/api/jobs/${jobId}/stream`);
+            this.eventSource = es;
+
+            es.onmessage = async (e) => {
+                try {
+                    const data = JSON.parse(e.data);
+
+                    if (data.event === 'page_completed') {
+                        this.pagesCompleted++;
+                        if (jobId === this.currentJobId) {
+                            UI.setLoadingStatus('running',
+                                `Analyzed ${this.pagesCompleted} page(s) — latest: ${data.url || ''}`,
+                                jobId);
+                        }
+                    }
+
+                    if (data.event === 'job_done') {
+                        es.close();
+                        this.eventSource = null;
+                        const freshIdx = this.history.findIndex(j => j.id === jobId);
+                        if (freshIdx !== -1) {
+                            this.history[freshIdx].status = data.status;
+                            this.saveHistory();
+                        }
+                        if (jobId === this.currentJobId) {
+                            const job = await API.getStatus(jobId);
+                            if (data.status === 'success') {
+                                UI.renderReport(job);
+                            } else {
+                                UI.setLoadingStatus('failed', job.error || data.error || 'Job failed', jobId);
+                            }
+                        }
+                    }
+                } catch (err) {
+                    console.warn('SSE parse error', err);
+                }
+            };
+
+            es.onerror = () => {
+                es.close();
+                this.eventSource = null;
+                console.warn('SSE connection lost, falling back to polling');
+                this.pollJob(jobId);
+            };
+        } catch {
+            this.pollJob(jobId);
         }
     },
 
@@ -84,7 +157,6 @@ const Dashboard = {
             try {
                 const job = await API.getStatus(jobId);
 
-                // Update history item
                 const idx = this.history.findIndex(j => j.id === jobId);
                 if (idx !== -1) {
                     this.history[idx].status = job.status;
@@ -101,11 +173,7 @@ const Dashboard = {
                     } else {
                         UI.setLoadingStatus(job.status, `Updating status: ${job.status}...`, jobId);
                     }
-                } else if (['success', 'failed'].includes(job.status)) {
-                    // Stop polling if we aren't looking at this job anymore but it finished
-                    // (Actually we might want to keep history polling broadly, but for now simple)
                 }
-
             } catch (err) {
                 console.error('Poll failed', err);
             }
@@ -116,6 +184,7 @@ const Dashboard = {
     },
 
     async loadJob(jobId) {
+        this._closeStream();
         this.currentJobId = jobId;
         UI.renderHistory(this.history, jobId);
 
@@ -124,13 +193,11 @@ const Dashboard = {
             const job = await API.getStatus(jobId);
 
             if (job.status === 'success') {
-                if (this.pollInterval) clearInterval(this.pollInterval);
                 UI.renderReport(job);
             } else if (job.status === 'failed') {
-                if (this.pollInterval) clearInterval(this.pollInterval);
                 UI.setLoadingStatus('failed', job.error, jobId);
             } else {
-                this.pollJob(jobId);
+                this.streamJob(jobId);
             }
         } catch (err) {
             UI.setLoadingStatus('error', err.message, jobId);
@@ -138,7 +205,6 @@ const Dashboard = {
     }
 };
 
-// Global entry point for history clicks
 window.loadJob = (jobId) => Dashboard.loadJob(jobId);
 
 document.addEventListener('DOMContentLoaded', () => Dashboard.init());

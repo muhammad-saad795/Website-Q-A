@@ -10,11 +10,8 @@ import json
 import os
 from typing import Any, Dict
 
-from google import genai
-from google.genai import types
-from google.genai import errors as genai_errors
-
 from config import settings
+from src.llm_client import generate_text_simple
 
 TOOL_NAME = "text_verifier"
 
@@ -79,51 +76,30 @@ GEMINI_TOOL_SPEC: Dict[str, Any] = {
 }
 
 
-def _get_api_key() -> str:
-    return settings.gemini.api_key
-
-
-def _call_gemini(visible_text: str, model: str | None = None) -> Dict[str, Any]:
-    api_key = _get_api_key()
-    if not api_key:
-        return {"error": "Missing API key. Set GEMINI_API_KEY or GOOGLE_API_KEY."}
-
-    client = genai.Client(api_key=api_key)
+def _call_llm(visible_text: str, model: str | None = None) -> Dict[str, Any]:
+    """Use Gemini first; fall back to OpenAI if key missing or call fails."""
     prompt = TEXT_ANALYSIS_PROMPT.format(visible_text=visible_text.strip())
-    used_model = model or os.environ.get("GEMINI_MODEL", "gemini-2.5-flash")
+    model_gemini = model or os.environ.get("GEMINI_MODEL") or settings.gemini.model
+    model_openai = os.environ.get("OPENAI_MODEL") or settings.openai.model
 
     try:
-        response = client.models.generate_content(
-            model=used_model,
-            contents=prompt,
-            config=types.GenerateContentConfig(
-                responseMimeType="application/json",
-            ),
+        text = generate_text_simple(
+            prompt,
+            model_gemini=model_gemini or None,
+            model_openai=model_openai or None,
+            json_mode=True,
         )
-    except genai_errors.APIError as exc:
-        return {
-            "error": "Gemini API error",
-            "details": str(exc),
-        }
+    except RuntimeError as exc:
+        return {"error": str(exc)}
     except Exception as exc:
-        return {
-            "error": "Unexpected error calling Gemini",
-            "details": str(exc),
-        }
+        return {"error": "LLM call failed", "details": str(exc)}
 
-    candidate = (response.candidates or [None])[0]
-    if candidate is None or candidate.content is None:
-        return {"error": "No response from model."}
-
-    parts = candidate.content.parts or []
-    text = "".join([p.text for p in parts if p.text]).strip()
     if not text:
         return {"error": "Empty model response."}
 
     try:
         return json.loads(text)
     except json.JSONDecodeError:
-        # Best-effort fallback: return raw text for debugging.
         return {"error": "Model returned non-JSON output.", "raw": text}
 
 
@@ -142,7 +118,7 @@ def run_text_verifier_tool(args: Dict[str, Any]) -> Dict[str, Any]:
         return {"error": "Missing or invalid 'visible_text'."}
 
     model = args.get("model")
-    return _call_gemini(visible_text=visible_text, model=model)
+    return _call_llm(visible_text=visible_text, model=model)
 
 
 __all__ = [

@@ -1,0 +1,9 @@
+You are a Lead QA Engineer. I have crawled the website starting at {initial_url}.
+Total Internal Pages Visited: {total_internal}
+Total External Links Verified: {total_external}
+
+Here is a summary of the findings for internal pages:
+{condensed_results}
+
+YOUR MISSION:
+Provide a high-level 'Master QA Audit' for the entire website. Highlight recurring issues, overall site health, and critical areas that need attention. DO NOT call any tools. Provide your response as a professional, thorough text-only report.

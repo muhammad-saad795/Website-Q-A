@@ -35,7 +35,27 @@ class PageLoader:
         self.fill_forms_script_path = self.scripts_dir / "fill_forms.js"
         self.active_page: Optional[Page] = None
 
+        self._script_cache: Dict[str, Optional[str]] = {}
+
+    def _load_scripts_into_cache(self):
+        """Read all JS scripts from disk once and cache their contents."""
+        paths = {
+            "scroll": self.scroll_script_path,
+            "text": self.text_script_path,
+            "layout": self.layout_snapshot_script_path,
+            "links": self.dynamic_links_script_path,
+            "routes": self.interactive_route_discovery_path,
+            "scan_forms": self.form_html_extractor_script_path,
+            "fill_forms": self.fill_forms_script_path,
+        }
+        for key, path in paths.items():
+            self._script_cache[key] = path.read_text() if path.exists() else None
+
+    def _get_script(self, key: str) -> Optional[str]:
+        return self._script_cache.get(key)
+
     async def start(self):
+        self._load_scripts_into_cache()
         self.playwright = await async_playwright().start()
         self.browser = await self.playwright.chromium.launch(headless=self.headless)
         self.context = await self.browser.new_context(ignore_https_errors=True) 
@@ -49,20 +69,20 @@ class PageLoader:
             await self.playwright.stop()
 
     async def _scroll_page(self, page: Page):
-        if not self.scroll_script_path.exists():
+        script = self._get_script("scroll")
+        if not script:
             logger.warning("Scroll script not found, skipping scroll.")
             return
-        script = self.scroll_script_path.read_text()
         try:
             await page.evaluate(script)
         except PlaywrightError as e:
             logger.warning(f"Scroll script execution failed: {e}")
 
     async def _extract_visible_text(self, page: Page) -> str:
-        if not self.text_script_path.exists():
+        script = self._get_script("text")
+        if not script:
             logger.warning("Text extraction script not found.")
             return ""
-        script = self.text_script_path.read_text()
         try:
             return await page.evaluate(script)
         except PlaywrightError as e:
@@ -70,10 +90,10 @@ class PageLoader:
             return ""
 
     async def _capture_layout_snapshot(self, page: Page) -> Dict[str, Any]:
-        if not self.layout_snapshot_script_path.exists():
+        script = self._get_script("layout")
+        if not script:
             logger.warning("Layout snapshot script not found.")
             return {}
-        script = self.layout_snapshot_script_path.read_text()
         try:
             return await page.evaluate(script)
         except PlaywrightError as e:
@@ -81,32 +101,35 @@ class PageLoader:
             return {}
     
     async def _capture_dynamic_links(self, page: Page) -> List[str]:
-        if self.dynamic_links_script_path.exists():
-            return await page.evaluate(self.dynamic_links_script_path.read_text())
+        script = self._get_script("links")
+        if script:
+            return await page.evaluate(script)
         return []
 
     async def _discover_interactive_routes(self, page: Page):
-        if self.interactive_route_discovery_path.exists():
-            return await page.evaluate(self.interactive_route_discovery_path.read_text())
-            page.wait_for_timeout(settings.browser.settle_time_ms)
+        script = self._get_script("routes")
+        if script:
+            result = await page.evaluate(script)
+            await page.wait_for_timeout(settings.browser.settle_time_ms)
+            return result
         return []
 
     async def _scan_forms(self, page: Page):
-        if self.form_html_extractor_script_path.exists():
-            return await page.evaluate(self.form_html_extractor_script_path.read_text())
+        script = self._get_script("scan_forms")
+        if script:
+            return await page.evaluate(script)
         return []
 
     async def _fill_forms(self, page: Page, form_payload: Dict[str, Any]) -> Dict[str, Any]:
-        if not self.fill_forms_script_path.exists():
+        script = self._get_script("fill_forms")
+        if not script:
             logger.warning("Fill forms script not found.")
             return {"error": "Fill forms script not found."}
         
-        # Ensure scan ran
         state_exists = await page.evaluate("() => !!window.__FORMS_STATE__")
         if not state_exists:
             return {"error": "Form state missing. scan_forms.js must run first."}
 
-        script = self.fill_forms_script_path.read_text()
         try:
             return await page.evaluate(script, form_payload)
         except PlaywrightError as e:

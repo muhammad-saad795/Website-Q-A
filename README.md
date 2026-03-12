@@ -30,11 +30,18 @@ pip install -r requirements.txt
 playwright install
 ```
 
-### 2. Configure API Key
-Create a `.env` file in the root directory:
+### 2. Configure API Key(s)
+Create a `.env` file in the root directory. **Gemini is used by default**; **OpenAI is used as fallback** if the Gemini key is missing or Gemini calls fail.
+
 ```env
 GEMINI_API_KEY=your_gemini_api_key_here
+# Optional fallback when Gemini is unavailable or fails:
+OPENAI_API_KEY=your_openai_api_key_here
 ```
+
+### 3. Further documentation
+- **[TESTING_AND_DEPLOYMENT.md](TESTING_AND_DEPLOYMENT.md)** — How to run the system (CLI + API), run tests, and deploy (Railway, Docker, production).
+- **[CODEBASE_EXPLANATION.md](CODEBASE_EXPLANATION.md)** — Full codebase reference and architecture.
 
 ---
 

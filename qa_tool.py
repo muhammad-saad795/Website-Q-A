@@ -24,12 +24,23 @@ from contextlib import redirect_stdout
 from urllib.parse import urlparse, urljoin
 from typing import Any, Dict, List, Set, Optional
 from dataclasses import dataclass, asdict, field
+import threading
 
 from config import settings
 from src.loader import PageLoader
 from src.layout_validator import validate_layout
 from src.url_verifier import URLVerifier
-from src.gemini_agent import GeminiAgent, _get_api_key
+from src.gemini_agent import GeminiAgent, get_agent, _get_api_key
+
+_PROMPTS_DIR = Path(__file__).parent / "src" / "prompts"
+
+
+def _load_prompt(name: str) -> str:
+    path = _PROMPTS_DIR / name
+    if path.exists():
+        return path.read_text(encoding="utf-8").strip()
+    logger.warning(f"Prompt file not found: {path}")
+    return ""
 
 
 # Configure logging
@@ -203,204 +214,75 @@ class PageAnalyzer:
             logger.info("  (No manual data provided, skipping interactive test)")
 
     async def _run_agent_interactive_testing(self, url: str, report: Dict[str, Any], user_input_map: List[Dict[str, Any]]) -> None:
-        """Force the AI agent to use specific manual inputs for form testing."""
-        api_key = _get_api_key()
-        if not api_key:
+        """Force the AI agent to use specific manual inputs for form testing (Gemini first, fallback OpenAI)."""
+        agent = get_agent(loader=self.loader, prefer_gemini=True)
+        if not agent:
             return
 
-        agent = GeminiAgent(api_key=api_key, loader=self.loader)
-        
-        # Prepare a specialized task for the agent
-        interactive_task = (
-            f"🎯 INTERACTIVE FORM TESTING SESSION for {url}\n\n"
-            
-            "═══════════════════════════════════════════════════════════════\n"
-            "👤 USER-PROVIDED TEST DATA\n"
-            "═══════════════════════════════════════════════════════════════\n"
-            "The user has manually provided specific test values for form validation.\n"
-            "This is a targeted test to verify custom scenarios or reproduce specific issues.\n\n"
-            f"{json.dumps(user_input_map, indent=2)}\n\n"
-            
-            "═══════════════════════════════════════════════════════════════\n"
-            "🤖 YOUR MISSION\n"
-            "═══════════════════════════════════════════════════════════════\n\n"
-            
-            "STEP 1: FORM IDENTIFICATION\n"
-            "├─ Locate the form(s) referenced in the user data (by form_index)\n"
-            "├─ Verify all fields mentioned in 'inputs' exist in the form structure\n"
-            "└─ If a field is not found by name/ID, intelligently match by label or selector\n\n"
-            
-            "STEP 2: INTELLIGENT FORM FILLING\n"
-            "├─ Use 'intelligent_form_filler' tool with the user's EXACT values\n"
-            "├─ Construct the payload: Include ALL normal fields from the form, replacing user-specified ones\n"
-            "├─ Field Order: MUST follow HTML top-to-bottom sequence\n"
-            "├─ Submit Button: If 'submitSelector' is missing, you MUST find it from the form structure or HTML\n"
-            "└─ Set 'submit': true to trigger submission\n\n"
-            
-            "STEP 3: OUTCOME DIAGNOSIS\n"
-            "After submission, perform comprehensive analysis:\n"
-            "├─ URL Change: Compare 'url_after_submission' to original URL\n"
-            "├─ Success Signals: Search 'visible_text_after_submission' for success messages\n"
-            "├─ Error Signals: Look for validation errors, warnings, or failure messages\n"
-            "├─ Network Issues: Check 'network_requests_after_submit' for 4xx/5xx errors\n"
-            "├─ Console Errors: Review 'console_errors_after_submit' for JavaScript exceptions\n"
-            "└─ Root Cause: Determine WHY the submission succeeded or failed\n\n"
-            
-            "STEP 4: DETAILED REPORTING\n"
-            "Generate a professional test report with:\n"
-            "├─ Test Scenario: Describe what was tested (e.g., 'Registration with custom email format')\n"
-            "├─ Inputs Used: List all field values submitted\n"
-            "├─ Expected Outcome: What should have happened?\n"
-            "├─ Actual Outcome: What actually happened? (success/failure/partial)\n"
-            "├─ Diagnostic Data: URL changes, messages, network/console logs\n"
-            "├─ Root Cause Analysis: Why did it succeed/fail?\n"
-            "└─ Recommendations: Next steps or fixes needed\n\n"
-            
-            "⚡ CRITICAL GUIDELINES:\n"
-            "• Treat user values as sacred—use them EXACTLY as provided\n"
-            "• If you cannot find a submit button, intelligently search for common selectors\n"
-            "• Focus on diagnosing the OUTCOME, not just executing the submission\n"
-            "• Provide actionable insights the user can act on immediately\n\n"
-            
-            "Return a clear, professional summary of the test execution and results."
+        interactive_task = _load_prompt("interactive_task.txt").format(
+            url=url,
+            user_input_json=json.dumps(user_input_map, indent=2),
         )
-        
+
         try:
             agent_response = await asyncio.to_thread(agent.run, task=interactive_task, max_steps=10)
-            # Store interactive result separately to avoid overwriting initial audit
-
             report["interactive_session_result"] = agent_response
             logger.info(f"\n🏆 INTERACTIVE TEST RESULT:\n{agent_response}\n")
         except Exception as e:
             logger.error(f"Interactive agent analysis failed for {url}: {e}")
-            report["interactive_agent_error"] = str(e)
+            fallback = get_agent(loader=self.loader, prefer_gemini=False)
+            if fallback and type(fallback) != type(agent):
+                try:
+                    agent_response = await asyncio.to_thread(fallback.run, task=interactive_task, max_steps=10)
+                    report["interactive_session_result"] = agent_response
+                except Exception as e2:
+                    report["interactive_agent_error"] = str(e2)
+            else:
+                report["interactive_agent_error"] = str(e)
 
     async def _run_agent_analysis(self, url: str, report: Dict[str, Any]) -> None:
-        """Runs the Gemini agent to analyze the page report."""
-        api_key = _get_api_key()
-
-        if not api_key:
-            report["agent_error"] = "Missing API key for Gemini Agent."
+        """Runs the QA agent (Gemini first, fallback OpenAI) to analyze the page report."""
+        agent = get_agent(loader=self.loader, prefer_gemini=True)
+        if not agent:
+            report["agent_error"] = "Missing API key. Set GEMINI_API_KEY and/or OPENAI_API_KEY."
             return
 
-        agent = GeminiAgent(api_key=api_key, loader=self.loader)
-        
-        task = (
-            f"🎯 MISSION: Comprehensive QA Analysis for {url}\n\n"
-            
-            "═══════════════════════════════════════════════════════════════\n"
-            "📦 SYSTEM DATA PROVIDED\n"
-            "═══════════════════════════════════════════════════════════════\n"
-            f"1️⃣ URL HEALTH REPORT:\n{json.dumps(report['url_report'], indent=2)}\n\n"
-            f"2️⃣ LAYOUT INTEGRITY REPORT:\n{json.dumps(report['layout_report'], indent=2)}\n\n"
-            f"3️⃣ PAGE CONTENT (Full Text):\n{report['visible_text'][:4000]}{'...' if len(report['visible_text']) > 4000 else ''}\n\n"
-            f"4️⃣ DETECTED FORMS:\n{json.dumps(report['forms_html'], indent=2)}\n\n"
-            
-            "═══════════════════════════════════════════════════════════════\n"
-            "🧠 YOUR ANALYTICAL MISSION\n"
-            "═══════════════════════════════════════════════════════════════\n\n"
-            
-            "PHASE 1: CONTENT VALIDATION\n"
-            "├─ Use 'text_verifier' to analyze the visible page text.\n"
-            "├─ Verify the content matches the page's inferred purpose (login, registration, product page, etc.).\n"
-            "└─ Flag any placeholder text, lorem ipsum, or unfinished content.\n\n"
-            
-            "PHASE 2: INTELLIGENT FORM TESTING (CRITICAL)\n"
-            "If forms are detected, perform EXACTLY 3 DISTINCT test scenarios per form:\n\n"
-            
-            "  Test 1 - Happy Path (Valid Data):\n"
-            "  ├─ Use realistic, valid input for all fields\n"
-            "  ├─ Example: Real email format, strong password, typical names\n"
-            "  └─ Expected: Successful submission (URL redirect or success message)\n\n"
-            
-            "  Test 2 - Edge Case (Invalid/Boundary Data):\n"
-            "  ├─ Use invalid formats: malformed email, weak password, special characters\n"
-            "  ├─ Example: 'invalid-email', 'aaa@', '123', or empty strings\n"
-            "  └─ Expected: Client-side validation error or server rejection\n\n"
-            
-            "  Test 3 - Error Handling (Missing Required Fields):\n"
-            "  ├─ Omit at least one required field (set to empty string '')\n"
-            "  ├─ Example: Leave 'name' or 'email' blank\n"
-            "  └─ Expected: Clear error message identifying the missing field\n\n"
-            
-            "🔍 POST-SUBMISSION ANALYSIS (MANDATORY FOR EACH TEST):\n"
-            "After EVERY form submission, perform deep diagnostics:\n"
-            "├─ EXAMINE the 'url_after_submission': Did it redirect? Stay on the same page?\n"
-            "├─ ANALYZE 'visible_text_after_submission': Look for success messages, error text, validation warnings\n"
-            "├─ INSPECT 'network_requests_after_submit': Check for 4xx/5xx errors, failed API calls\n"
-            "├─ REVIEW 'console_errors_after_submit': Identify JavaScript exceptions that prevented submission\n"
-            "└─ CORRELATE all signals to determine TRUE outcome (success/fail) and ROOT CAUSE of any issues\n\n"
-            
-            "⚠️ CRITICAL RULES:\n"
-            "• Field Order: MUST match HTML top-to-bottom sequence (validate against forms_html structure)\n"
-            "• No Repetition: Do NOT run the same scenario twice. Move to next test immediately.\n"
-            "• Stop After 3: Complete exactly 3 scenarios, then STOP form testing.\n"
-            "• Multi-Form: If multiple forms exist, test each one following the same 3-scenario protocol.\n\n"
-            
-            "═══════════════════════════════════════════════════════════════\n"
-            "📊 FINAL QA AUDIT REPORT\n"
-            "═══════════════════════════════════════════════════════════════\n"
-            "Generate a comprehensive, production-ready QA report with these sections:\n\n"
-            
-            "1. EXECUTIVE SUMMARY\n"
-            "   • Overall page health (PASS/WARNING/FAIL)\n"
-            "   • Critical issues count and severity breakdown\n\n"
-            
-            "2. URL HEALTH ASSESSMENT\n"
-            "   • HTTP status, redirect behavior, performance metrics\n"
-            "   • Console errors from initial load\n\n"
-            
-            "3. LAYOUT INTEGRITY\n"
-            "   • Mobile vs Desktop issues\n"
-            "   • Accessibility violations (touch targets, contrast, etc.)\n"
-            "   • Severity classification (CRITICAL/WARNING/INFO)\n\n"
-            
-            "4. CONTENT ACCURACY\n"
-            "   • Text verification results\n"
-            "   • Alignment with page purpose\n\n"
-            
-            "5. FORM FUNCTIONALITY (Detailed Test Report)\n"
-            "   For EACH form tested, document:\n"
-            "   ┌─ Form Identification (index, ID, purpose)\n"
-            "   ├─ Field Structure (order, types, required fields)\n"
-            "   ├─ Scenario 1 Results: [Inputs] → [Outcome] → [Analysis]\n"
-            "   ├─ Scenario 2 Results: [Inputs] → [Outcome] → [Analysis]\n"
-            "   ├─ Scenario 3 Results: [Inputs] → [Outcome] → [Analysis]\n"
-            "   └─ Root Cause Analysis: Why did failures occur? (e.g., server error, validation bug, missing endpoint)\n\n"
-            
-            "6. DIAGNOSTIC INSIGHTS\n"
-            "   • Network failures: Which endpoints failed and why?\n"
-            "   • Console errors: JavaScript exceptions and their impact\n"
-            "   • Validation gaps: Missing or insufficient error messages\n\n"
-            
-            "7. RECOMMENDATIONS\n"
-            "   • Prioritized action items for developers\n"
-            "   • Quick wins vs. long-term fixes\n"
-            "   • Impact assessment (user experience, security, accessibility)\n\n"
-            
-            "Use professional QA language, quantify all findings, and provide actionable next steps. "
-            "Your report should be ready to present to the development team."
+        visible_text = report.get('visible_text') or ''
+        task = _load_prompt("qa_task.txt").format(
+            url=url,
+            url_report=json.dumps(report['url_report'], indent=2),
+            layout_report=json.dumps(report['layout_report'], indent=2),
+            visible_text=visible_text[:4000] + ('...' if len(visible_text) > 4000 else ''),
+            forms_html=json.dumps(report['forms_html'], indent=2),
         )
-        
-        logger.info(f"🤖 Tasking AI agent for {url}...")
+
+        logger.info(f"Tasking AI agent for {url}...")
         try:
-            # Removed a CAP of max_steps=10 to allow agent to complete the task
-            # WARNING: This may cause the agent to run for a long or infinite time
-            # NEEDS proper testing and trust
-            agent_response = await asyncio.to_thread(agent.run, task=task)#max_steps=10
+            agent_response = await asyncio.to_thread(agent.run, task=task)
             report["agent_summary"] = agent_response
+            report["_tokens_used"] = getattr(agent, "total_tokens_used", 0)
         except Exception as e:
             logger.error(f"Agent analysis failed for {url}: {e}")
-            report["agent_error"] = str(e)
+            fallback = get_agent(loader=self.loader, prefer_gemini=False)
+            if fallback and type(fallback) != type(agent):
+                try:
+                    agent_response = await asyncio.to_thread(fallback.run, task=task)
+                    report["agent_summary"] = agent_response
+                    report["_tokens_used"] = getattr(fallback, "total_tokens_used", 0)
+                except Exception as e2:
+                    report["agent_error"] = str(e2)
+            else:
+                report["agent_error"] = str(e)
 
 
 class BFSCrawler:
     """Manages the Breadth-First Search crawl process."""
 
-    def __init__(self, config: qa_toolConfig, sink: Optional[Any] = None, job_id: Optional[str] = None):
+    def __init__(self, config: qa_toolConfig, sink: Optional[Any] = None, job_id: Optional[str] = None, cancel_event: Optional[threading.Event] = None):
         self.config = config
         self.sink = sink
         self.job_id = job_id
+        self.cancel_event = cancel_event
         
         self.base_domain = self._get_base_domain(config.initial_url)
         self.queue = deque([(config.initial_url, 0)])
@@ -434,6 +316,11 @@ class BFSCrawler:
         
         try:
             while True:
+                # 0. Check cancellation
+                if self.cancel_event and self.cancel_event.is_set():
+                    logger.info("Crawl cancelled by user.")
+                    break
+
                 # 1. Get next URL
                 if self.sink and self.job_id:
                     next_item = self.sink.get_next_queued_url(self.job_id)
@@ -478,7 +365,11 @@ class BFSCrawler:
                     page_type = 'internal' if is_internal else 'external'
                     self.sink.save_page_report(self.job_id, page_type, report)
                     self.sink.mark_frontier_completed(self.job_id, current_url)
-                    
+
+                    tokens = report.pop("_tokens_used", 0)
+                    if tokens and hasattr(self.sink, "add_tokens"):
+                        self.sink.add_tokens(self.job_id, tokens)
+
                     if is_internal:
                         self.results.total_internal_pages_visited += 1
                         if self.config.max_depth is None or current_depth < self.config.max_depth:
@@ -566,12 +457,7 @@ class BFSCrawler:
 
 
     async def _generate_master_report(self):
-        """Generates the final AI master report."""
-        api_key = _get_api_key()
-        if not api_key:
-            logger.warning("Skipping Master Report: Missing API key.")
-            return
-
+        """Generates the final AI master report (Gemini first, fallback OpenAI)."""
         reports_to_audit = self.results.internal_reports
         if not reports_to_audit and self.sink and self.job_id:
             # Fetch summary data from DB to avoid loading full reports into memory
@@ -593,27 +479,34 @@ class BFSCrawler:
             })
 
         logger.info("🤖 Generating AI Master QA Audit for the whole site...")
-        
-        agent = GeminiAgent(api_key=api_key)
-        master_task = (
-            f"You are a Lead QA Engineer. I have crawled the website starting at {self.config.initial_url}.\n"
-            f"Total Internal Pages Visited: {self.results.total_internal_pages_visited or len(self.results.internal_reports)}\n"
-            f"Total External Links Verified: {self.results.total_external_pages_visited or len(self.results.external_reports)}\n\n"
-            "Here is a summary of the findings for internal pages:\n"
-
-            f"{json.dumps(condensed_results, indent=2)}\n\n"
-            "YOUR MISSION:\n"
-            "Provide a high-level 'Master QA Audit' for the entire website. "
-            "Highlight recurring issues, overall site health, and critical areas that need attention. "
-            "DO NOT call any tools. Provide your response as a professional, thorough text-only report."
+        agent = get_agent(loader=None, prefer_gemini=True)
+        if not agent:
+            logger.warning("Skipping Master Report: No API key (GEMINI_API_KEY or OPENAI_API_KEY).")
+            return
+        master_task = _load_prompt("master_report_task.txt").format(
+            initial_url=self.config.initial_url,
+            total_internal=self.results.total_internal_pages_visited or len(self.results.internal_reports),
+            total_external=self.results.total_external_pages_visited or len(self.results.external_reports),
+            condensed_results=json.dumps(condensed_results, indent=2),
         )
-        
         try:
             self.results.master_qa_audit = await asyncio.to_thread(agent.run, task=master_task)
+            tokens = getattr(agent, "total_tokens_used", 0)
+            if tokens and self.sink and self.job_id and hasattr(self.sink, "add_tokens"):
+                self.sink.add_tokens(self.job_id, tokens)
         except Exception as e:
-
             logger.error(f"Failed to generate master report: {e}")
-            self.results.master_qa_audit = f"Error generating report: {e}"
+            fallback = get_agent(loader=None, prefer_gemini=False)
+            if fallback and type(fallback) != type(agent):
+                try:
+                    self.results.master_qa_audit = await asyncio.to_thread(fallback.run, task=master_task)
+                    tokens = getattr(fallback, "total_tokens_used", 0)
+                    if tokens and self.sink and self.job_id and hasattr(self.sink, "add_tokens"):
+                        self.sink.add_tokens(self.job_id, tokens)
+                except Exception as e2:
+                    self.results.master_qa_audit = f"Error generating report: {e2}"
+            else:
+                self.results.master_qa_audit = f"Error generating report: {e}"
 
         logger.info(f"📊 CRAWL METRICS:")
         logger.info(f" - Internal Pages Visited: {self.results.total_internal_pages_visited or len(self.results.internal_reports)}")
@@ -623,8 +516,8 @@ class BFSCrawler:
         logger.info(f"{'#'*80}\n")
 
 
-async def run_qa_tool(config: qa_toolConfig, sink: Optional[Any] = None, job_id: Optional[str] = None) -> Dict[str, Any]:
-    crawler = BFSCrawler(config, sink=sink, job_id=job_id)
+async def run_qa_tool(config: qa_toolConfig, sink: Optional[Any] = None, job_id: Optional[str] = None, cancel_event: Optional[threading.Event] = None) -> Dict[str, Any]:
+    crawler = BFSCrawler(config, sink=sink, job_id=job_id, cancel_event=cancel_event)
     result = await crawler.run()
     return result.to_dict()
 

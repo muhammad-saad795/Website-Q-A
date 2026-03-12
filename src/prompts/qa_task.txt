@@ -1,0 +1,100 @@
+MISSION: Comprehensive QA Analysis for {url}
+
+===============================================================
+SYSTEM DATA PROVIDED
+===============================================================
+1. URL HEALTH REPORT:
+{url_report}
+
+2. LAYOUT INTEGRITY REPORT:
+{layout_report}
+
+3. PAGE CONTENT (Full Text):
+{visible_text}
+
+4. DETECTED FORMS:
+{forms_html}
+
+===============================================================
+YOUR ANALYTICAL MISSION
+===============================================================
+
+PHASE 1: CONTENT VALIDATION
+- Use 'text_verifier' to analyze the visible page text.
+- Verify the content matches the page's inferred purpose (login, registration, product page, etc.).
+- Flag any placeholder text, lorem ipsum, or unfinished content.
+
+PHASE 2: INTELLIGENT FORM TESTING (CRITICAL)
+If forms are detected, perform EXACTLY 3 DISTINCT test scenarios per form:
+
+  Test 1 - Happy Path (Valid Data):
+  - Use realistic, valid input for all fields
+  - Example: Real email format, strong password, typical names
+  - Expected: Successful submission (URL redirect or success message)
+
+  Test 2 - Edge Case (Invalid/Boundary Data):
+  - Use invalid formats: malformed email, weak password, special characters
+  - Example: 'invalid-email', 'aaa@', '123', or empty strings
+  - Expected: Client-side validation error or server rejection
+
+  Test 3 - Error Handling (Missing Required Fields):
+  - Omit at least one required field (set to empty string '')
+  - Example: Leave 'name' or 'email' blank
+  - Expected: Clear error message identifying the missing field
+
+POST-SUBMISSION ANALYSIS (MANDATORY FOR EACH TEST):
+After EVERY form submission, perform deep diagnostics:
+- EXAMINE the 'url_after_submission': Did it redirect? Stay on the same page?
+- ANALYZE 'visible_text_after_submission': Look for success messages, error text, validation warnings
+- INSPECT 'network_requests_after_submit': Check for 4xx/5xx errors, failed API calls
+- REVIEW 'console_errors_after_submit': Identify JavaScript exceptions that prevented submission
+- CORRELATE all signals to determine TRUE outcome (success/fail) and ROOT CAUSE of any issues
+
+CRITICAL RULES:
+- Field Order: MUST match HTML top-to-bottom sequence (validate against forms_html structure)
+- No Repetition: Do NOT run the same scenario twice. Move to next test immediately.
+- Stop After 3: Complete exactly 3 scenarios, then STOP form testing.
+- Multi-Form: If multiple forms exist, test each one following the same 3-scenario protocol.
+
+===============================================================
+FINAL QA AUDIT REPORT
+===============================================================
+Generate a comprehensive, production-ready QA report with these sections:
+
+1. EXECUTIVE SUMMARY
+   - Overall page health (PASS/WARNING/FAIL)
+   - Critical issues count and severity breakdown
+
+2. URL HEALTH ASSESSMENT
+   - HTTP status, redirect behavior, performance metrics
+   - Console errors from initial load
+
+3. LAYOUT INTEGRITY
+   - Mobile vs Desktop issues
+   - Accessibility violations (touch targets, contrast, etc.)
+   - Severity classification (CRITICAL/WARNING/INFO)
+
+4. CONTENT ACCURACY
+   - Text verification results
+   - Alignment with page purpose
+
+5. FORM FUNCTIONALITY (Detailed Test Report)
+   For EACH form tested, document:
+   - Form Identification (index, ID, purpose)
+   - Field Structure (order, types, required fields)
+   - Scenario 1 Results: [Inputs] -> [Outcome] -> [Analysis]
+   - Scenario 2 Results: [Inputs] -> [Outcome] -> [Analysis]
+   - Scenario 3 Results: [Inputs] -> [Outcome] -> [Analysis]
+   - Root Cause Analysis: Why did failures occur? (e.g., server error, validation bug, missing endpoint)
+
+6. DIAGNOSTIC INSIGHTS
+   - Network failures: Which endpoints failed and why?
+   - Console errors: JavaScript exceptions and their impact
+   - Validation gaps: Missing or insufficient error messages
+
+7. RECOMMENDATIONS
+   - Prioritized action items for developers
+   - Quick wins vs. long-term fixes
+   - Impact assessment (user experience, security, accessibility)
+
+Use professional QA language, quantify all findings, and provide actionable next steps. Your report should be ready to present to the development team.

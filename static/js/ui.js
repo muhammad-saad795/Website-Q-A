@@ -73,7 +73,7 @@ const UI = {
                         <i data-lucide="sparkles"></i> AI Master Audit
                     </h3>
                     <div style="line-height:1.6; color:var(--text-primary); font-size:0.95rem;">
-                        ${this._parseSimpleMarkdown(res.master_qa_audit)}
+                        ${this._parseSimpleMarkdown(this._escapeHtml(res.master_qa_audit))}
                     </div>
                 </div>
             `;
@@ -107,7 +107,7 @@ const UI = {
                     <div style="font-size:0.75rem; color:var(--accent-blue); font-weight:bold; margin-bottom:4px;">${report.type.toUpperCase()} PAGE</div>
                     <span class="status-badge badge-${statusClass}">${statusLabel}</span>
                 </div>
-                <div class="url" style="font-weight:600; font-size:0.9rem; word-break:break-all; margin-bottom:12px;">${report.url}</div>
+                <div class="url" style="font-weight:600; font-size:0.9rem; word-break:break-all; margin-bottom:12px;">${this._escapeHtml(report.url)}</div>
                 
                 <div class="performance-grid">
                     <div class="perf-item">
@@ -124,7 +124,7 @@ const UI = {
                     <div style="margin-top:16px; padding-top:16px; border-top:1px solid var(--glass-border);">
                         <div class="perf-label" style="margin-bottom:8px;">AI Page Summary</div>
                         <div style="font-size:0.85rem; color:var(--text-secondary); line-height:1.5;">
-                            ${report.agent_summary}
+                            ${this._parseSimpleMarkdown(this._escapeHtml(report.agent_summary))}
                         </div>
                     </div>
                 ` : ''}

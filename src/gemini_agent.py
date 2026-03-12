@@ -4,10 +4,13 @@ import argparse
 import json
 import os
 from logging import getLogger
+from pathlib import Path
 from typing import Any, Dict, List, Tuple, Optional
 
 from google import genai
 from google.genai import types
+from google.genai import errors as genai_errors
+from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception
 
 from config import settings
 
@@ -27,60 +30,36 @@ from src.loader import PageLoader
 
 
 DEFAULT_MODEL = settings.gemini.model
-## REMOVED the max step limit for the agent , but it needs proper testing and trust
-#DEFAULT_MAX_STEPS = settings.gemini.max_steps
+DEFAULT_MAX_STEPS = settings.gemini.max_steps
 
 
+def _is_transient_gemini_error(exc: BaseException) -> bool:
+    """Return True for Gemini errors worth retrying (rate-limit, server errors)."""
+    if isinstance(exc, genai_errors.APIError):
+        code = getattr(exc, "code", None) or getattr(exc, "status_code", None)
+        if code in (429, 500, 502, 503, 504):
+            return True
+    return False
 
-SYSTEM_INSTRUCTION = (
-    "You are an Elite QA Automation Engineer with expert-level analytical capabilities. Your mission is to perform "
-    "comprehensive, production-grade verification that uncovers hidden issues and provides actionable insights.\n\n"
-    
-    "🧠 REASONING & ANALYSIS PRINCIPLES:\n"
-    "1. THINK DEEPLY: Before every action, analyze the context, predict outcomes, and consider edge cases.\n"
-    "2. CORRELATE DATA: Connect console errors, network failures, and page state to diagnose root causes.\n"
-    "3. VALIDATE ASSUMPTIONS: Don't assume success based on status codes alone—verify actual outcomes.\n"
-    "4. PROGRESSIVE TESTING: Start simple, then systematically test boundary conditions and error paths.\n"
-    "5. CONTEXT AWARENESS: Understand the page's purpose and validate that functionality aligns with intent.\n\n"
-    
-    "📋 FORM TESTING PROTOCOL:\n"
-    "• STRICT FIELD SEQUENCING: Generate payload keys in EXACT top-to-bottom, left-to-right HTML order.\n"
-    "• PAYLOAD STRUCTURE: Include 'formIndex' (int), all field selectors in sequence, 'submitSelector' (CSS), 'submit': true.\n"
-    "• MANDATORY TEST SCENARIOS (3 per form):\n"
-    "  1️⃣ Happy Path: Valid, realistic data that should succeed.\n"
-    "  2️⃣ Edge Case: Invalid formats, boundary values, special characters.\n"
-    "  3️⃣ Error Handling: Missing required fields, empty submissions.\n"
-    "• OUTCOME VERIFICATION: After EACH submission, analyze:\n"
-    "  - URL changes (success redirects vs. staying on page)\n"
-    "  - Visible success/error messages in page text\n"
-    "  - Network requests (check for 4xx/5xx errors)\n"
-    "  - Console errors (JavaScript exceptions, warnings)\n"
-    "• MULTI-FORM HANDLING: Test all forms sequentially, maintaining context between tests.\n\n"
-    
-    "🔍 DIAGNOSTIC INTELLIGENCE:\n"
-    "• If a form submission fails, investigate WHY (validation error? server error? missing endpoint?).\n"
-    "• If network logs show 404/500, report the specific failing endpoint and likely cause.\n"
-    "• If console errors appear, explain their impact on functionality.\n"
-    "• If text contains error messages, quote them exactly and classify the error type.\n\n"
-    
-    "📊 REPORTING EXCELLENCE:\n"
-    "• Structure reports as: Summary → Detailed Findings → Root Cause Analysis → Recommendations.\n"
-    "• Use professional QA terminology (regression, validation, smoke test, etc.).\n"
-    "• Quantify issues (e.g., '2 critical layout issues', '1 failed API call').\n"
-    "• Provide severity levels: CRITICAL (blocks functionality), WARNING (degrades UX), INFO (minor).\n"
-    "• Always conclude with actionable next steps for developers.\n\n"
-    
-    "⚡ EXECUTION DISCIPLINE:\n"
-    "• Observe tool outputs carefully—they contain crucial diagnostic data.\n"
-    "• Never repeat the same test twice unless explicitly investigating flakiness.\n"
-    "• If a form has multiple tabs/sections, ensure all fields are visible before filling.\n"
-    "• Think step-by-step: Plan → Execute → Verify → Report.\n\n"
 
-    "🚫 STRICT OUTPUT RULES:\n"
-    "• NEVER include a date, timestamp, 'Report Date', 'Generated On', or any time reference in your output.\n"
-    "• You do not have access to the current date or time — do not guess, infer, or fabricate one.\n"
-    "• Omit all temporal metadata from every report, summary, or response you generate."
+_gemini_retry = retry(
+    retry=retry_if_exception(_is_transient_gemini_error),
+    wait=wait_exponential(multiplier=1, min=2, max=30),
+    stop=stop_after_attempt(4),
+    reraise=True,
 )
+
+
+_PROMPTS_DIR = Path(__file__).parent / "prompts"
+
+def _load_prompt(name: str) -> str:
+    path = _PROMPTS_DIR / name
+    if path.exists():
+        return path.read_text(encoding="utf-8").strip()
+    logger.warning(f"Prompt file not found: {path}")
+    return ""
+
+SYSTEM_INSTRUCTION = _load_prompt("system_instruction.txt")
 
 
 def _build_tools() -> List[types.Tool]:
@@ -127,12 +106,40 @@ def _run_tool_call(call: types.FunctionCall, loader: Optional[PageLoader] = None
         except json.JSONDecodeError:
             return {"error": "Invalid tool arguments (not JSON)."}
 
-    if call.name == TEXT_VERIFIER_TOOL_NAME:
+    return _run_tool_by_name(call.name, args, loader)
+
+
+def _run_tool_by_name(
+    name: str, args: Dict[str, Any], loader: Optional[PageLoader] = None
+) -> Dict[str, Any]:
+    """Run a tool by name and args; used by both Gemini and OpenAI agents."""
+    if name == TEXT_VERIFIER_TOOL_NAME:
         return run_text_verifier_tool(args)
-    elif call.name == FORM_FILLER_TOOL_NAME:
+    if name == FORM_FILLER_TOOL_NAME:
         return run_form_filler_tool(args, loader=loader)
-    
-    return {"error": f"Unknown tool: {call.name}"}
+    return {"error": f"Unknown tool: {name}"}
+
+
+def _openai_tools() -> List[Dict[str, Any]]:
+    """Tool definitions in OpenAI chat completions format."""
+    return [
+        {
+            "type": "function",
+            "function": {
+                "name": TEXT_VERIFIER_SPEC["name"],
+                "description": TEXT_VERIFIER_SPEC["description"],
+                "parameters": TEXT_VERIFIER_SPEC["parameters"],
+            },
+        },
+        {
+            "type": "function",
+            "function": {
+                "name": FORM_FILLER_SPEC["name"],
+                "description": FORM_FILLER_SPEC["description"],
+                "parameters": FORM_FILLER_SPEC["parameters"],
+            },
+        },
+    ]
 
 
 class GeminiAgent:
@@ -141,8 +148,17 @@ class GeminiAgent:
         self.model = model
         self.loader = loader
         self.tools = _build_tools()
-    # REMOVED the max step limit for the agent , but it needs proper testing and trust
-    def run(self, task: str, max_steps: Optional[int] = None) -> str:
+        self.total_tokens_used: int = 0
+
+    def _track_usage(self, response):
+        """Accumulate token counts from the response metadata."""
+        meta = getattr(response, "usage_metadata", None)
+        if meta:
+            prompt = getattr(meta, "prompt_token_count", 0) or 0
+            candidates = getattr(meta, "candidates_token_count", 0) or 0
+            self.total_tokens_used += prompt + candidates
+
+    def run(self, task: str, max_steps: Optional[int] = DEFAULT_MAX_STEPS) -> str:
         history: List[types.Content] = [
             types.Content(role="user", parts=[types.Part(text=task)])
         ]
@@ -159,11 +175,12 @@ class GeminiAgent:
                     return "Stopped: reached max tool steps without a final answer."
                 step += 1
 
-                response = self.client.models.generate_content(
+                response = _gemini_retry(self.client.models.generate_content)(
                     model=self.model,
                     contents=history,
                     config=config,
                 )
+                self._track_usage(response)
 
                 text, calls, model_content = _extract_text_and_calls(response)
                 history.append(model_content)
@@ -191,6 +208,130 @@ class GeminiAgent:
             return f"Agent Error: {str(exc)}"
 
 
+class OpenAIAgent:
+    """Agent using OpenAI chat completions with tool-calling; same interface as GeminiAgent."""
+
+    def __init__(
+        self,
+        api_key: str,
+        model: str | None = None,
+        loader: Optional[PageLoader] = None,
+    ):
+        from openai import OpenAI
+        self.client = OpenAI(api_key=api_key)
+        self.model = model or settings.openai.model
+        self.loader = loader
+        self.openai_tools = _openai_tools()
+        self.total_tokens_used: int = 0
+
+    def run(self, task: str, max_steps: Optional[int] = DEFAULT_MAX_STEPS) -> str:
+        messages: List[Dict[str, Any]] = [
+            {"role": "system", "content": SYSTEM_INSTRUCTION},
+            {"role": "user", "content": task},
+        ]
+        step = 0
+        try:
+            while True:
+                if max_steps is not None and step >= max_steps:
+                    return "Stopped: reached max tool steps without a final answer."
+                step += 1
+
+                response = self.client.chat.completions.create(
+                    model=self.model,
+                    messages=messages,
+                    tools=self.openai_tools,
+                )
+                msg = response.choices and response.choices[0] and response.choices[0].message
+                if not msg:
+                    return "No response from model."
+
+                usage = getattr(response, "usage", None)
+                if usage:
+                    self.total_tokens_used += (getattr(usage, "prompt_tokens", 0) or 0) + (
+                        getattr(usage, "completion_tokens", 0) or 0
+                    )
+
+                if not getattr(msg, "tool_calls", None):
+                    return (msg.content or "").strip() or "No response generated."
+
+                # Append assistant message with tool_calls
+                messages.append({
+                    "role": "assistant",
+                    "content": msg.content or None,
+                    "tool_calls": [
+                        {
+                            "id": tc.id,
+                            "type": "function",
+                            "function": {"name": tc.function.name, "arguments": tc.function.arguments},
+                        }
+                        for tc in msg.tool_calls
+                    ],
+                })
+
+                for tc in msg.tool_calls:
+                    name = tc.function.name
+                    try:
+                        args = json.loads(tc.function.arguments or "{}")
+                    except json.JSONDecodeError:
+                        args = {}
+                    result = _run_tool_by_name(name, args, self.loader)
+                    messages.append({
+                        "role": "tool",
+                        "tool_call_id": tc.id,
+                        "content": json.dumps(result, ensure_ascii=False),
+                    })
+        except Exception as exc:
+            logger.error("OpenAI agent execution failed: %s", exc)
+            return f"Agent Error: {str(exc)}"
+
+
+def get_agent(
+    loader: Optional[PageLoader] = None,
+    prefer_gemini: bool = True,
+):
+    """Return an agent: prefer Gemini if key exists, else OpenAI. Returns None if no key is set."""
+    if prefer_gemini and (settings.gemini.api_key or "").strip():
+        return GeminiAgent(
+            api_key=settings.gemini.api_key,
+            model=settings.gemini.model,
+            loader=loader,
+        )
+    if (settings.openai.api_key or "").strip():
+        return OpenAIAgent(
+            api_key=settings.openai.api_key,
+            model=settings.openai.model,
+            loader=loader,
+        )
+    if not prefer_gemini and (settings.gemini.api_key or "").strip():
+        return GeminiAgent(
+            api_key=settings.gemini.api_key,
+            model=settings.gemini.model,
+            loader=loader,
+        )
+    return None
+
+
+def run_agent_with_fallback(
+    task: str,
+    loader: Optional[PageLoader] = None,
+    max_steps: Optional[int] = DEFAULT_MAX_STEPS,
+):
+    """Run agent with Gemini first; on failure, retry with OpenAI if available."""
+    agent = get_agent(loader=loader, prefer_gemini=True)
+    if not agent:
+        raise RuntimeError(
+            "No LLM API key. Set GEMINI_API_KEY and/or OPENAI_API_KEY in the environment."
+        )
+    try:
+        return agent.run(task=task, max_steps=max_steps)
+    except Exception as exc:
+        logger.warning("Primary agent failed (%s), trying fallback: %s", type(agent).__name__, exc)
+        fallback = get_agent(loader=loader, prefer_gemini=not isinstance(agent, GeminiAgent))
+        if fallback is not None and type(fallback) != type(agent):
+            return fallback.run(task=task, max_steps=max_steps)
+        raise
+
+
 def run_from_payload(api_key: str, model: str, payload: Dict[str, Any]) -> str:
     url_report = payload.get("url_report")
     layout_report = payload.get("layout_report")
@@ -204,7 +345,6 @@ def run_from_payload(api_key: str, model: str, payload: Dict[str, Any]) -> str:
             f"{text_report.get('details', '')}".strip()
         )
 
-    client = genai.Client(api_key=api_key)
     prompt = (
         "You are a web QA agent. Generate a concise final report based only on the data provided.\n"
         "Return STRICT JSON with these fields:\n"
@@ -223,12 +363,13 @@ def run_from_payload(api_key: str, model: str, payload: Dict[str, Any]) -> str:
         f"{json.dumps(text_report, ensure_ascii=False)}\n"
     )
 
-    response = client.models.generate_content(
-        model=model,
-        contents=prompt,
+    from src.llm_client import generate_text_simple
+    return generate_text_simple(
+        prompt,
+        model_gemini=model or None,
+        model_openai=None,
+        json_mode=True,
     )
-    text, _, _ = _extract_text_and_calls(response)
-    return text or "No response generated."
 
 
 def run_from_agent_payload(
@@ -244,12 +385,18 @@ def run_from_agent_payload(
 
 
 def _get_api_key() -> str:
-    return settings.gemini.api_key
-
+    """Preferred API key (Gemini first, then OpenAI) for CLI compatibility."""
+    if (settings.gemini.api_key or "").strip():
+        return settings.gemini.api_key
+    if (settings.openai.api_key or "").strip():
+        return settings.openai.api_key
+    return ""
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Run Gemini tool-using agent.")
+    parser = argparse.ArgumentParser(
+        description="Run QA agent (Gemini by default, falls back to OpenAI if needed)."
+    )
     parser.add_argument("--task", required=True, help="User task or prompt.")
     parser.add_argument(
         "--agent-input-json",
@@ -258,7 +405,7 @@ def main() -> None:
     parser.add_argument(
         "--model",
         default=DEFAULT_MODEL,
-        help="Gemini model name (default from GEMINI_MODEL or gemini-2.0-flash).",
+        help="Model name for report generation (Gemini or OpenAI from config).",
     )
     parser.add_argument(
         "--max-steps",
@@ -269,17 +416,23 @@ def main() -> None:
 
     args = parser.parse_args()
     api_key = _get_api_key()
-    if not api_key:
+    if not api_key and not (settings.gemini.api_key or settings.openai.api_key):
         raise SystemExit(
-            "Missing API key. Set GEMINI_API_KEY or GOOGLE_API_KEY in the environment."
+            "Missing API key. Set GEMINI_API_KEY and/or OPENAI_API_KEY in the environment."
         )
 
     if args.agent_input_json:
         answer = run_from_agent_payload(
-            api_key=api_key, model=args.model, payload_path=args.agent_input_json
+            api_key=api_key or settings.gemini.api_key or settings.openai.api_key,
+            model=args.model,
+            payload_path=args.agent_input_json,
         )
     else:
-        agent = GeminiAgent(api_key=api_key, model=args.model)
+        agent = get_agent(loader=None, prefer_gemini=True)
+        if not agent:
+            raise SystemExit(
+                "Missing API key. Set GEMINI_API_KEY and/or OPENAI_API_KEY in the environment."
+            )
         answer = agent.run(task=args.task, max_steps=args.max_steps)
     print(answer)
 

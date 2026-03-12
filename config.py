@@ -11,8 +11,12 @@ load_dotenv()
 class GeminiSettings(BaseModel):
     api_key: str = Field(default_factory=lambda: os.getenv("GEMINI_API_KEY", ""))
     model: str = "gemini-2.5-flash"
-    ## REMOVED the max step limit for the agent , but it needs proper testing and trust
-    # max_steps: int = 15
+    max_steps: int = 25
+
+
+class OpenAISettings(BaseModel):
+    api_key: str = Field(default_factory=lambda: os.getenv("OPENAI_API_KEY", ""))
+    model: str = "gpt-4o"
 
 class Viewport(BaseModel):
     width: int
@@ -50,6 +54,7 @@ class Settings(BaseSettings):
     )
 
     gemini: GeminiSettings = GeminiSettings()
+    openai: OpenAISettings = OpenAISettings()
     browser: BrowserSettings = BrowserSettings()
     crawler: CrawlerSettings = CrawlerSettings()
     api: ApiSettings = ApiSettings()
@@ -83,6 +88,9 @@ class Settings(BaseSettings):
         if os.getenv("GEMINI_API_KEY"):
             data.setdefault("gemini", {})
             data["gemini"]["api_key"] = os.getenv("GEMINI_API_KEY")
+        if os.getenv("OPENAI_API_KEY"):
+            data.setdefault("openai", {})
+            data["openai"]["api_key"] = os.getenv("OPENAI_API_KEY")
 
         return cls(**data)
 

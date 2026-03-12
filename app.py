@@ -15,7 +15,11 @@ from dataclasses import asdict
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
-from flask import Flask, jsonify, request, g, render_template
+import ipaddress
+import socket
+from urllib.parse import urlparse as stdlib_urlparse
+
+from flask import Flask, Response, jsonify, request, g, render_template
 from qa_tool import qa_toolConfig, run_qa_tool
 from config import settings
 
@@ -61,7 +65,8 @@ CREATE TABLE IF NOT EXISTS jobs (
     total_external_visited INTEGER DEFAULT 0,
     
     -- Errors
-    error TEXT
+    error TEXT,
+    total_tokens INTEGER DEFAULT 0
 );
 """
 
@@ -151,6 +156,16 @@ class JobManager:
                 (now, now, job_id)
             )
 
+    def add_tokens(self, job_id: str, tokens: int):
+        """Atomically increment token count for a job."""
+        if tokens <= 0:
+            return
+        with self._connect() as conn:
+            conn.execute(
+                "UPDATE jobs SET total_tokens = COALESCE(total_tokens, 0) + ? WHERE id=?",
+                (tokens, job_id)
+            )
+
     def mark_failed(self, job_id: str, error_msg: str):
         now = time.time()
         with self._connect() as conn:
@@ -158,6 +173,7 @@ class JobManager:
                 "UPDATE jobs SET status='failed', finished_at=?, updated_at=?, error=? WHERE id=?",
                 (now, now, error_msg, job_id)
             )
+        _sse_publish(job_id, {"event": "job_done", "status": "failed", "error": error_msg})
 
     def mark_success(self, job_id: str, results: Any):
         """Finalizes the job status and master report."""
@@ -186,8 +202,8 @@ class JobManager:
                     job_id
                 )
             )
-            # Cleanup frontier to save DB space
             conn.execute("DELETE FROM crawl_frontier WHERE job_id=?", (job_id,))
+        _sse_publish(job_id, {"event": "job_done", "status": "success"})
 
     def add_to_frontier(self, job_id: str, urls_with_depth: List[tuple[str, int, bool]]):
         """Adds a batch of URLs to the persistent frontier."""
@@ -252,6 +268,12 @@ class JobManager:
         """Persists a single page report immediately."""
         with self._connect() as conn:
             self._insert_page(conn, job_id, page_type, report)
+        _sse_publish(job_id, {
+            "event": "page_completed",
+            "url": report.get("url"),
+            "page_type": page_type,
+            "http_status": (report.get("url_report") or {}).get("http_status"),
+        })
 
     def _insert_page(self, conn: sqlite3.Connection, job_id: str, page_type: str, report: Dict[str, Any]):
         url_report = report.get('url_report') or {}
@@ -374,11 +396,114 @@ class JobManager:
 
 job_manager = JobManager(settings.api.db_path)
 
+
+# ─────────────────────────────────────────────────────────────────────────────
+# SSRF PROTECTION
+# ─────────────────────────────────────────────────────────────────────────────
+
+def _validate_url(url: str) -> Optional[str]:
+    """Return an error message if the URL is unsafe, or None if OK."""
+    try:
+        parsed = stdlib_urlparse(url)
+    except Exception:
+        return "Malformed URL."
+
+    if parsed.scheme not in ("http", "https"):
+        return f"Unsupported scheme: {parsed.scheme}. Only http/https allowed."
+
+    hostname = parsed.hostname
+    if not hostname:
+        return "URL has no hostname."
+
+    blocked_hosts = {"localhost", "127.0.0.1", "::1", "0.0.0.0"}
+    if hostname.lower() in blocked_hosts:
+        return "Localhost URLs are not allowed."
+
+    try:
+        resolved = socket.getaddrinfo(hostname, None, socket.AF_UNSPEC, socket.SOCK_STREAM)
+        for family, _, _, _, addr in resolved:
+            ip = ipaddress.ip_address(addr[0])
+            if ip.is_private or ip.is_loopback or ip.is_link_local or ip.is_reserved:
+                return f"URL resolves to a private/reserved IP ({ip}). Not allowed."
+    except socket.gaierror:
+        pass  # DNS failure is fine — browser will report it during crawl
+
+    return None
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# SSE EVENT BUS
+# ─────────────────────────────────────────────────────────────────────────────
+
+import queue as _queue
+
+_sse_subscribers: Dict[str, List[_queue.Queue]] = {}
+_sse_lock = threading.Lock()
+
+
+def _sse_publish(job_id: str, event_data: Dict[str, Any]):
+    """Push a JSON event to all SSE subscribers for this job."""
+    with _sse_lock:
+        subs = _sse_subscribers.get(job_id, [])
+        for q in subs:
+            try:
+                q.put_nowait(event_data)
+            except _queue.Full:
+                pass
+
+
+def _sse_subscribe(job_id: str) -> _queue.Queue:
+    q: _queue.Queue = _queue.Queue(maxsize=100)
+    with _sse_lock:
+        _sse_subscribers.setdefault(job_id, []).append(q)
+    return q
+
+
+def _sse_unsubscribe(job_id: str, q: _queue.Queue):
+    with _sse_lock:
+        subs = _sse_subscribers.get(job_id, [])
+        if q in subs:
+            subs.remove(q)
+        if not subs:
+            _sse_subscribers.pop(job_id, None)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# CANCELLATION REGISTRY
+# ─────────────────────────────────────────────────────────────────────────────
+
+_cancel_events: Dict[str, threading.Event] = {}
+_cancel_lock = threading.Lock()
+
+
+def _register_cancel_event(job_id: str) -> threading.Event:
+    evt = threading.Event()
+    with _cancel_lock:
+        _cancel_events[job_id] = evt
+    return evt
+
+
+def _unregister_cancel_event(job_id: str):
+    with _cancel_lock:
+        _cancel_events.pop(job_id, None)
+
+
+def cancel_job(job_id: str) -> bool:
+    """Signal a running job to stop. Returns True if the job was found and signalled."""
+    with _cancel_lock:
+        evt = _cancel_events.get(job_id)
+    if evt:
+        evt.set()
+        return True
+    return False
+
+
 # ─────────────────────────────────────────────────────────────────────────────
 # BACKGROUND WORKER
 # ─────────────────────────────────────────────────────────────────────────────
 
 def _run_qa_background(job_id: str, cfg: qa_toolConfig, timeout: int):
+    cancel_event = _register_cancel_event(job_id)
     try:
         logger.info(f"Background job {job_id} started.")
         job_manager.mark_running(job_id)
@@ -387,12 +512,21 @@ def _run_qa_background(job_id: str, cfg: qa_toolConfig, timeout: int):
         asyncio.set_event_loop(loop)
         
         if timeout > 0:
-            result = loop.run_until_complete(asyncio.wait_for(run_qa_tool(cfg, sink=job_manager, job_id=job_id), timeout=timeout))
+            result = loop.run_until_complete(asyncio.wait_for(
+                run_qa_tool(cfg, sink=job_manager, job_id=job_id, cancel_event=cancel_event),
+                timeout=timeout,
+            ))
         else:
-            result = loop.run_until_complete(run_qa_tool(cfg, sink=job_manager, job_id=job_id))
-            
-        job_manager.mark_success(job_id, result)
-        logger.info(f"Background job {job_id} completed successfully.")
+            result = loop.run_until_complete(
+                run_qa_tool(cfg, sink=job_manager, job_id=job_id, cancel_event=cancel_event)
+            )
+
+        if cancel_event.is_set():
+            job_manager.mark_failed(job_id, "Cancelled by user.")
+            logger.info(f"Background job {job_id} cancelled.")
+        else:
+            job_manager.mark_success(job_id, result)
+            logger.info(f"Background job {job_id} completed successfully.")
     except asyncio.TimeoutError:
         job_manager.mark_failed(job_id, f"Timeout after {timeout} seconds.")
         logger.warning(f"Background job {job_id} timed out.")
@@ -401,6 +535,7 @@ def _run_qa_background(job_id: str, cfg: qa_toolConfig, timeout: int):
         job_manager.mark_failed(job_id, str(e))
     finally:
         loop.close()
+        _unregister_cancel_event(job_id)
 
 # ─────────────────────────────────────────────────────────────────────────────
 # FLASK APPLICATION & ENDPOINTS
@@ -456,6 +591,10 @@ def create_app() -> Flask:
         if not url:
             return jsonify({"ok": False, "error": {"code": "missing_url", "message": "Target URL is required."}}), 400
 
+        url_error = _validate_url(url)
+        if url_error:
+            return jsonify({"ok": False, "error": {"code": "invalid_url", "message": url_error}}), 400
+
         # Build Config
         cfg = qa_toolConfig(
             initial_url=url,
@@ -496,6 +635,7 @@ def create_app() -> Flask:
             "started_at": job.get("started_at"),
             "finished_at": job.get("finished_at"),
             "error": job.get("error"),
+            "total_tokens": job.get("total_tokens", 0),
             "result": job.get("result")
         }), 200
 
@@ -514,6 +654,42 @@ def create_app() -> Flask:
             "limit": limit,
             "offset": offset
         }), 200
+
+    @app.route("/api/jobs/<job_id>/stream", methods=["GET"])
+    def stream_job(job_id: str):
+        job = job_manager.get_job(job_id)
+        if not job:
+            return jsonify({"ok": False, "error": {"code": "not_found", "message": "Job not found."}}), 404
+
+        q = _sse_subscribe(job_id)
+
+        def generate():
+            try:
+                while True:
+                    try:
+                        event = q.get(timeout=30)
+                        yield f"data: {json.dumps(event)}\n\n"
+                        if event.get("event") == "job_done":
+                            break
+                    except _queue.Empty:
+                        yield ": heartbeat\n\n"
+            finally:
+                _sse_unsubscribe(job_id, q)
+
+        return Response(generate(), mimetype="text/event-stream",
+                        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"})
+
+    @app.route("/api/jobs/<job_id>/cancel", methods=["POST"])
+    def cancel_job_endpoint(job_id: str):
+        job = job_manager.get_job(job_id)
+        if not job:
+            return jsonify({"ok": False, "error": {"code": "not_found", "message": "Job not found."}}), 404
+        if job["status"] not in ("pending", "running"):
+            return jsonify({"ok": False, "error": {"code": "invalid_state", "message": f"Job is already {job['status']}."}}), 409
+        signalled = cancel_job(job_id)
+        if not signalled:
+            job_manager.mark_failed(job_id, "Cancelled by user.")
+        return jsonify({"ok": True, "message": "Cancellation requested.", "job_id": job_id}), 200
 
     @app.route("/", methods=["GET"])
     def index():

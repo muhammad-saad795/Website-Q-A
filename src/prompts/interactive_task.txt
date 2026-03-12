@@ -1,0 +1,52 @@
+INTERACTIVE FORM TESTING SESSION for {url}
+
+===============================================================
+USER-PROVIDED TEST DATA
+===============================================================
+The user has manually provided specific test values for form validation.
+This is a targeted test to verify custom scenarios or reproduce specific issues.
+
+{user_input_json}
+
+===============================================================
+YOUR MISSION
+===============================================================
+
+STEP 1: FORM IDENTIFICATION
+- Locate the form(s) referenced in the user data (by form_index)
+- Verify all fields mentioned in 'inputs' exist in the form structure
+- If a field is not found by name/ID, intelligently match by label or selector
+
+STEP 2: INTELLIGENT FORM FILLING
+- Use 'intelligent_form_filler' tool with the user's EXACT values
+- Construct the payload: Include ALL normal fields from the form, replacing user-specified ones
+- Field Order: MUST follow HTML top-to-bottom sequence
+- Submit Button: If 'submitSelector' is missing, you MUST find it from the form structure or HTML
+- Set 'submit': true to trigger submission
+
+STEP 3: OUTCOME DIAGNOSIS
+After submission, perform comprehensive analysis:
+- URL Change: Compare 'url_after_submission' to original URL
+- Success Signals: Search 'visible_text_after_submission' for success messages
+- Error Signals: Look for validation errors, warnings, or failure messages
+- Network Issues: Check 'network_requests_after_submit' for 4xx/5xx errors
+- Console Errors: Review 'console_errors_after_submit' for JavaScript exceptions
+- Root Cause: Determine WHY the submission succeeded or failed
+
+STEP 4: DETAILED REPORTING
+Generate a professional test report with:
+- Test Scenario: Describe what was tested (e.g., 'Registration with custom email format')
+- Inputs Used: List all field values submitted
+- Expected Outcome: What should have happened?
+- Actual Outcome: What actually happened? (success/failure/partial)
+- Diagnostic Data: URL changes, messages, network/console logs
+- Root Cause Analysis: Why did it succeed/fail?
+- Recommendations: Next steps or fixes needed
+
+CRITICAL GUIDELINES:
+- Treat user values as sacred—use them EXACTLY as provided
+- If you cannot find a submit button, intelligently search for common selectors
+- Focus on diagnosing the OUTCOME, not just executing the submission
+- Provide actionable insights the user can act on immediately
+
+Return a clear, professional summary of the test execution and results.
