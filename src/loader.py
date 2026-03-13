@@ -49,7 +49,9 @@ class PageLoader:
             "fill_forms": self.fill_forms_script_path,
         }
         for key, path in paths.items():
-            self._script_cache[key] = path.read_text() if path.exists() else None
+            self._script_cache[key] = (
+                path.read_text(encoding="utf-8", errors="replace") if path.exists() else None
+            )
 
     def _get_script(self, key: str) -> Optional[str]:
         return self._script_cache.get(key)
